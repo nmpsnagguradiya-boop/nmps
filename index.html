@@ -25,7 +25,7 @@ header {
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 2000;
+    z-index: 3000; /* highest for header */
     display: flex;
     justify-content: center;
     align-items: center;
@@ -37,7 +37,7 @@ header {
     top: 15px;
     font-size: 24px;
     cursor: pointer;
-    z-index: 2100; /* above everything */
+    z-index: 3100; /* above everything */
 }
 
 .side-menu {
@@ -50,7 +50,7 @@ header {
     color: white;
     padding: 20px;
     transition: 0.3s;
-    z-index: 2050; /* above overlay */
+    z-index: 3050; /* above overlay */
     overflow-y: auto;
 }
 
@@ -77,7 +77,7 @@ header {
     height:100%;
     background: rgba(0,0,0,0.4);
     display: none;
-    z-index: 2000;
+    z-index: 3040; /* below side-menu */
 }
 
 .top-buttons {
@@ -90,7 +90,7 @@ header {
     top: 70px;
     width: 100%;
     background: #f2f2f2;
-    z-index: 1999; /* below menu-btn */
+    z-index: 2999; /* below menu */
 }
 
 .top-buttons button {
@@ -154,7 +154,7 @@ header {
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 2200; /* above everything */
+    z-index: 3200; /* above everything */
 }
 
 .popup-content {
@@ -272,67 +272,57 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Load Gallery
+// Gallery
 async function loadGallery(){
     const snap = await getDocs(collection(db,"gallery"));
     const container = document.getElementById("gallery");
     container.innerHTML = "";
-    snap.forEach(doc => {
+    snap.forEach(doc=>{
         const d = doc.data();
-        if(d.type === "image"){
+        if(d.type==="image"){
             const img = document.createElement("img");
-            img.src = d.url;
+            img.src=d.url;
             container.appendChild(img);
-        } else if(d.type === "video"){
-            const video = document.createElement("video");
-            video.src = d.url;
-            video.controls = true;
+        } else if(d.type==="video"){
+            const video=document.createElement("video");
+            video.src=d.url;
+            video.controls=true;
             container.appendChild(video);
         }
     });
 }
 loadGallery();
 
-// Load Latest Notice
+// Notice popup
 async function loadNotice(){
     const q = query(collection(db,"notices"), orderBy("created_at","desc"), limit(1));
     const snap = await getDocs(q);
     if(!snap.empty){
-        const doc = snap.docs[0];
-        const d = doc.data();
+        const d = snap.docs[0].data();
         document.getElementById("noticeText").innerText = d.message;
-        document.getElementById("popup").style.display = "flex";
+        document.getElementById("popup").style.display="flex";
     }
 }
 loadNotice();
 
-window.closePopup = function(){
-    document.getElementById("popup").style.display = "none";
+window.closePopup=function(){
+    document.getElementById("popup").style.display="none";
 }
 
-// Menu functions
+// Menu
 function openMenu(){
-    document.getElementById("sideMenu").style.left = "0";
-    document.getElementById("overlay").style.display = "block";
+    document.getElementById("sideMenu").style.left="0";
+    document.getElementById("overlay").style.display="block";
 }
-
 function closeMenu(){
-    document.getElementById("sideMenu").style.left = "-250px";
-    document.getElementById("overlay").style.display = "none";
+    document.getElementById("sideMenu").style.left="-250px";
+    document.getElementById("overlay").style.display="none";
 }
 
 // Slider
-const images = [
-    "https://picsum.photos/800/200?1",
-    "https://picsum.photos/800/200?2",
-    "https://picsum.photos/800/200?3"
-];
-let i = 0;
-setInterval(()=>{
-    i++;
-    if(i>=images.length) i=0;
-    document.getElementById("slide").src = images[i];
-},3000);
+const images = ["https://picsum.photos/800/200?1","https://picsum.photos/800/200?2","https://picsum.photos/800/200?3"];
+let i=0;
+setInterval(()=>{i++; if(i>=images.length)i=0; document.getElementById("slide").src=images[i];},3000);
 </script>
 
 </body>
