@@ -3,185 +3,98 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Fees Portal - NMPS</title>
+<title>NMPS Student Fees Portal</title>
 <style>
-body{
-    margin:0;
-    font-family:Arial,sans-serif;
-    background:#f2f2f2;
-}
-.container{
-    max-width:600px;
-    margin:100px auto;
-    padding:20px;
-}
-.card{
-    background:white;
-    padding:20px;
-    margin-bottom:20px;
-    border-radius:10px;
-    box-shadow:0 0 10px rgba(0,0,0,0.1);
-}
-input,button{
-    width:100%;
-    padding:10px;
-    margin:10px 0;
-    border-radius:5px;
-    border:1px solid #ccc;
-}
-button{
-    background:#004aad;
-    color:white;
-    border:none;
-    cursor:pointer;
-}
-label{
-    font-weight:bold;
-    display:block;
-    margin-top:10px;
-}
+body, html {margin:0; padding:0; font-family: Arial,sans-serif; background:#f2f2f2;}
+header {background:#82caff; color:white; padding:15px; text-align:center;}
+.container {max-width:600px; margin:20px auto; padding:20px;}
+.card {background:white; padding:20px; margin:20px 0; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
+input, button {width:100%; padding:10px; margin:5px 0;}
+button {background:#82caff; color:white; border:none; cursor:pointer; border-radius:5px;}
+table {width:100%; border-collapse: collapse; margin-top:10px;}
+table, th, td {border:1px solid #ddd;}
+th, td {padding:8px; text-align:left;}
+img.qr-preview {width:80px; height:80px; margin-top:5px;}
 </style>
 </head>
 <body>
 
-<div class="container" id="loginContainer">
-<h2>Student Login</h2>
-<input type="text" id="sssmId" placeholder="Enter SSSM ID">
-<input type="text" id="mobile" placeholder="Enter Mobile Number">
-<button onclick="studentLogin()">Login</button>
-</div>
+<header>
+  <h2>NMPS Student Fees Portal</h2>
+</header>
 
-<div class="container" id="feesContainer" style="display:none">
-<h2>Fees Dashboard</h2>
-<div class="card">
-<label>Total Fees:</label>
-<div id="totalFees">₹0</div>
+<div class="container">
+  <div class="card">
+    <h3>Login to View Fees</h3>
+    <input type="text" id="mobileOrSSSM" placeholder="Enter Mobile Number or SSSM ID">
+    <button id="loginBtn">View Fees</button>
+  </div>
 
-<label>Old Fees:</label>
-<div id="oldFees">₹0</div>
+  <div id="feesCard" class="card" style="display:none;">
+    <h3>Fees Details</h3>
+    <p><b>Student Name:</b> <span id="studentName"></span></p>
+    <p><b>Class:</b> <span id="className"></span></p>
+    <p><b>Account Number:</b> <span id="accountNumber"></span></p>
+    <p><b>Vehicle Fees:</b> ₹<span id="vehicleFees"></span></p>
+    <p><b>Old Fees:</b> ₹<span id="oldFees"></span></p>
+    <p><b>Total Fees:</b> ₹<span id="totalFees"></span></p>
+    <p><b>Installment:</b> ₹<span id="installment"></span></p>
+    <p><b>Pending Fees:</b> ₹<span id="totalUpdate"></span></p>
+    <p><b>QR Code for Payment:</b></p>
+    <img id="qrCode" src="" class="qr-preview" alt="">
+  </div>
 
-<label>Vehicle Fees:</label>
-<div id="vehicleFees">₹0</div>
-
-<label>Paid Fees:</label>
-<div id="paidFees">₹0</div>
-
-<label>Pending Fees:</label>
-<div id="pendingFees">₹0</div>
-</div>
-
-<div class="card">
-<h3>Online Payment</h3>
-<label>Admin Account Number:</label>
-<div id="accountNumber"></div>
-
-<label>QR Code:</label>
-<img id="qrCode" src="" style="width:150px;height:150px;display:block;margin-bottom:10px;">
-
-<label>Upload Payment Screenshot:</label>
-<input type="file" id="paymentScreenshot">
-<button onclick="uploadPayment()">Upload Screenshot</button>
-</div>
-
-<div class="card">
-<h3>Download Receipt</h3>
-<button onclick="downloadReceipt()">Download Receipt</button>
-</div>
-
-<button onclick="logout()">Logout</button>
+  <div id="errorCard" class="card" style="display:none; color:red;">
+    <p>No record found. Please check your Mobile Number or SSSM ID.</p>
+  </div>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId: "nmpsnagguradiya-b9b94",
-storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
-messagingSenderId: "811957568318",
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+  apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+  authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+  projectId: "nmpsnagguradiya-b9b94",
+  storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
+  messagingSenderId: "811957568318",
+  appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
-let studentDocId = "";
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const value = document.getElementById('mobileOrSSSM').value.trim();
+  if(!value) return alert('Enter Mobile Number or SSSM ID');
 
-function studentLogin(){
-    const sssm = document.getElementById("sssmId").value;
-    const mobile = document.getElementById("mobile").value;
-    if(!sssm || !mobile){ alert("Enter both SSSM ID and Mobile"); return; }
+  const feesRef = collection(db,'fees');
+  const snapshot = await getDocs(feesRef);
+  let found = null;
+  snapshot.forEach(docSnap=>{
+    const data = docSnap.data();
+    if(data.mobileNumber == value || data.sssmId == value){
+      found = data;
+    }
+  });
 
-    getDoc(doc(db,"students",sssm)).then(docSnap=>{
-        if(docSnap.exists() && docSnap.data().mobile===mobile){
-            studentDocId = sssm;
-            document.getElementById("loginContainer").style.display="none";
-            document.getElementById("feesContainer").style.display="block";
-            loadFees();
-            loadAdminInfo();
-        }else{
-            alert("Invalid SSSM ID or Mobile Number");
-        }
-    });
-}
-
-function loadFees(){
-    getDoc(doc(db,"fees",studentDocId)).then(docSnap=>{
-        if(docSnap.exists()){
-            const data = docSnap.data();
-            document.getElementById("totalFees").innerText="₹"+(data.totalFees || 0);
-            document.getElementById("oldFees").innerText="₹"+(data.oldFees || 0);
-            document.getElementById("vehicleFees").innerText="₹"+(data.vehicleFees || 0);
-            document.getElementById("paidFees").innerText="₹"+(data.paidFees || 0);
-            const pending = (data.totalFees || 0)+(data.oldFees||0)+(data.vehicleFees||0)-(data.paidFees||0);
-            document.getElementById("pendingFees").innerText="₹"+pending;
-        }else{
-            alert("Fees details not found.");
-        }
-    });
-}
-
-function loadAdminInfo(){
-    getDoc(doc(db,"admin","feesInfo")).then(docSnap=>{
-        if(docSnap.exists()){
-            const data = docSnap.data();
-            document.getElementById("accountNumber").innerText=data.accountNumber || "";
-            document.getElementById("qrCode").src=data.qrCode || "";
-        }
-    });
-}
-
-function uploadPayment(){
-    const file = document.getElementById("paymentScreenshot").files[0];
-    if(!file){ alert("Select screenshot"); return; }
-    const storageRef = ref(storage,"payments/"+studentDocId+"_"+Date.now());
-    uploadBytes(storageRef,file).then(snapshot=>{
-        getDownloadURL(snapshot.ref).then(url=>{
-            setDoc(doc(db,"payments",studentDocId),{screenshot:url},{merge:true});
-            alert("Payment uploaded successfully");
-        });
-    });
-}
-
-function downloadReceipt(){
-    getDoc(doc(db,"payments",studentDocId)).then(docSnap=>{
-        if(docSnap.exists() && docSnap.data().screenshot){
-            window.open(docSnap.data().screenshot,"_blank");
-        }else{
-            alert("No receipt found");
-        }
-    });
-}
-
-function logout(){
-    studentDocId="";
-    document.getElementById("loginContainer").style.display="block";
-    document.getElementById("feesContainer").style.display="none";
-}
+  if(found){
+    document.getElementById('feesCard').style.display='block';
+    document.getElementById('errorCard').style.display='none';
+    document.getElementById('studentName').innerText = found.studentName;
+    document.getElementById('className').innerText = found.className;
+    document.getElementById('accountNumber').innerText = found.accountNumber;
+    document.getElementById('vehicleFees').innerText = found.vehicleFees || 0;
+    document.getElementById('oldFees').innerText = found.oldFees || 0;
+    document.getElementById('totalFees').innerText = found.totalFees || 0;
+    document.getElementById('installment').innerText = found.installment || 0;
+    document.getElementById('totalUpdate').innerText = found.totalUpdate || 0;
+    document.getElementById('qrCode').src = found.qrURL || '';
+  }else{
+    document.getElementById('feesCard').style.display='none';
+    document.getElementById('errorCard').style.display='block';
+  }
+});
 </script>
 
 </body>
