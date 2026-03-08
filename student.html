@@ -55,6 +55,9 @@ th, td {
   padding:8px;
   text-align:left;
 }
+.selected-row {
+  background:#ffe0b2;
+}
 </style>
 </head>
 <body>
@@ -95,6 +98,14 @@ th, td {
       <input type="date" placeholder="Admission Date" id="admissionDate">
       <input type="text" placeholder="Scholar Number" id="scholarNo">
       <input type="email" placeholder="Email ID" id="email">
+      <select id="studentClass">
+        <option value="">Select Class</option>
+        <option value="Class 1">Class 1</option>
+        <option value="Class 2">Class 2</option>
+        <option value="Class 3">Class 3</option>
+        <option value="Class 4">Class 4</option>
+        <option value="Class 5">Class 5</option>
+      </select>
       <button type="submit">Add Student</button>
     </form>
   </div>
@@ -107,10 +118,26 @@ th, td {
   </div>
 
   <div class="card">
+    <h3>Class & Category Filter</h3>
+    <select id="filterClass">
+      <option value="">All Classes</option>
+      <option value="Class 1">Class 1</option>
+      <option value="Class 2">Class 2</option>
+      <option value="Class 3">Class 3</option>
+      <option value="Class 4">Class 4</option>
+      <option value="Class 5">Class 5</option>
+    </select>
+    <input type="text" id="filterCategory" placeholder="Category Filter">
+    <button onclick="applyFilter()">Apply Filter</button>
+    <button onclick="promoteSelected()">Promote Selected to Next Class</button>
+  </div>
+
+  <div class="card">
     <h3>Students List</h3>
     <table id="studentTable">
       <thead>
         <tr>
+          <th>Select</th>
           <th>Photo</th>
           <th>Name</th>
           <th>Father's Name</th>
@@ -133,6 +160,8 @@ th, td {
           <th>Admission Date</th>
           <th>Scholar No</th>
           <th>Email</th>
+          <th>Class</th>
+          <th>Actions</th>
         </tr>
       </thead>
       <tbody></tbody>
@@ -144,9 +173,10 @@ th, td {
 <script>
 let students = [];
 
-// Add student
+// Add / Edit student
 document.getElementById('studentForm').addEventListener('submit', function(e){
   e.preventDefault();
+  const editIndex = this.getAttribute('data-edit-index');
   const student = {
     photo: URL.createObjectURL(document.getElementById('photo').files[0]),
     name: document.getElementById('name').value,
@@ -169,20 +199,28 @@ document.getElementById('studentForm').addEventListener('submit', function(e){
     postalCode: document.getElementById('postalCode').value,
     admissionDate: document.getElementById('admissionDate').value,
     scholarNo: document.getElementById('scholarNo').value,
-    email: document.getElementById('email').value
+    email: document.getElementById('email').value,
+    studentClass: document.getElementById('studentClass').value
   };
-  students.push(student);
+  if(editIndex != null){
+    students[editIndex] = student;
+    this.removeAttribute('data-edit-index');
+  } else {
+    students.push(student);
+  }
   updateStudentTable();
   this.reset();
 });
 
 // Update table
-function updateStudentTable(){
+function updateStudentTable(filterClass='', filterCategory=''){
   const tbody = document.querySelector('#studentTable tbody');
   tbody.innerHTML = '';
-  students.forEach(s => {
+  students.forEach((s,i) => {
+    if((filterClass && s.studentClass !== filterClass) || (filterCategory && s.category.toLowerCase() !== filterCategory.toLowerCase())) return;
     const tr = document.createElement('tr');
     tr.innerHTML = `
+      <td><input type="checkbox" class="selectStudent" data-index="${i}"></td>
       <td><img src="${s.photo}" width="50"/></td>
       <td>${s.name}</td>
       <td>${s.fatherName}</td>
@@ -205,20 +243,81 @@ function updateStudentTable(){
       <td>${s.admissionDate}</td>
       <td>${s.scholarNo}</td>
       <td>${s.email}</td>
+      <td>${s.studentClass}</td>
+      <td>
+        <button onclick="editStudent(${i})">Edit</button>
+        <button onclick="deleteStudent(${i})">Delete</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
   document.getElementById('totalStudents').innerText = students.length;
 }
 
+// Edit/Delete
+function editStudent(i){
+  const s = students[i];
+  document.getElementById('name').value = s.name;
+  document.getElementById('fatherName').value = s.fatherName;
+  document.getElementById('motherName').value = s.motherName;
+  document.getElementById('address').value = s.address;
+  document.getElementById('sssmId').value = s.sssmId;
+  document.getElementById('familyId').value = s.familyId;
+  document.getElementById('aadhaar').value = s.aadhaar;
+  document.getElementById('rollNo').value = s.rollNo;
+  document.getElementById('dob').value = s.dob;
+  document.getElementById('aparId').value = s.aparId;
+  document.getElementById('caste').value = s.caste;
+  document.getElementById('category').value = s.category;
+  document.getElementById('mobile').value = s.mobile;
+  document.getElementById('gender').value = s.gender;
+  document.getElementById('post').value = s.post;
+  document.getElementById('district').value = s.district;
+  document.getElementById('state').value = s.state;
+  document.getElementById('postalCode').value = s.postalCode;
+  document.getElementById('admissionDate').value = s.admissionDate;
+  document.getElementById('scholarNo').value = s.scholarNo;
+  document.getElementById('email').value = s.email;
+  document.getElementById('studentClass').value = s.studentClass;
+  document.getElementById('studentForm').setAttribute('data-edit-index', i);
+}
+
+function deleteStudent(i){
+  if(confirm('Are you sure to delete this student?')){
+    students.splice(i,1);
+    updateStudentTable();
+  }
+}
+
+// Promote selected
+function promoteSelected(){
+  const checkboxes = document.querySelectorAll('.selectStudent:checked');
+  checkboxes.forEach(cb=>{
+    const index = cb.getAttribute('data-index');
+    let cls = students[index].studentClass;
+    if(cls){
+      const num = parseInt(cls.split(' ')[1]);
+      students[index].studentClass = 'Class ' + (num+1);
+    }
+  });
+  updateStudentTable();
+}
+
+// Filters
+function applyFilter(){
+  const fClass = document.getElementById('filterClass').value;
+  const fCat = document.getElementById('filterCategory').value;
+  updateStudentTable(fClass, fCat);
+}
+
 // Download Excel
 function downloadExcel(){
   const ws_data = [
-    ["Photo","Name","Father's Name","Mother's Name","Address","SSSM ID","Family ID","Aadhaar","Roll No","DOB","APAR ID","Caste","Category","Mobile","Gender","Post","District","State","Postal Code","Admission Date","Scholar No","Email"]
+    ["Photo","Name","Father's Name","Mother's Name","Address","SSSM ID","Family ID","Aadhaar","Roll No","DOB","APAR ID","Caste","Category","Mobile","Gender","Post","District","State","Postal Code","Admission Date","Scholar No","Email","Class"]
   ];
   students.forEach(s=>{
     ws_data.push([
-      s.photo,s.name,s.fatherName,s.motherName,s.address,s.sssmId,s.familyId,s.aadhaar,s.rollNo,s.dob,s.aparId,s.caste,s.category,s.mobile,s.gender,s.post,s.district,s.state,s.postalCode,s.admissionDate,s.scholarNo,s.email
+      s.photo,s.name,s.fatherName,s.motherName,s.address,s.sssmId,s.familyId,s.aadhaar,s.rollNo,s.dob,s.aparId,s.caste,s.category,s.mobile,s.gender,s.post,s.district,s.state,s.postalCode,s.admissionDate,s.scholarNo,s.email,s.studentClass
     ]);
   });
   const wb = XLSX.utils.book_new();
@@ -243,6 +342,7 @@ function uploadExcel(){
       const student = {};
       headers.forEach((h,i)=>{ student[h] = row[i] || ''; });
       if(student.Photo){ student.photo = student.Photo; }
+      if(student.Class){ student.studentClass = student.Class; }
       students.push(student);
     });
     updateStudentTable();
@@ -251,5 +351,6 @@ function uploadExcel(){
 }
 </script>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
-          </html>
+  </html>
