@@ -1,190 +1,208 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 
 <head>
-
 <meta charset="UTF-8">
-<title>School Website</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>New Mahankal Public School</title>
 
 <style>
-
-body{
-font-family:Arial;
-margin:0;
-background:#f2f2f2;
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: #f2f2f2;
 }
 
-header{
-background:#004aad;
-color:white;
-padding:15px;
-text-align:center;
-font-size:22px;
+header {
+    background: #004aad;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    font-size: 24px;
+    font-family: 'Cursive', Arial;
+    position: relative;
 }
 
-.slider{
-width:100%;
-height:200px;
-overflow:hidden;
+.menu-btn {
+    position: absolute;
+    left: 15px;
+    top: 15px;
+    font-size: 24px;
+    cursor: pointer;
 }
 
-.slider img{
-width:100%;
-height:200px;
-object-fit:cover;
+.login-btn {
+    position: absolute;
+    right: 15px;
+    top: 15px;
+    font-size: 16px;
+    background: #82caff;
+    border: none;
+    color: white;
+    padding: 5px 12px;
+    border-radius: 5px;
 }
 
-.container{
-padding:15px;
+.side-menu {
+    position: fixed;
+    top: 0;
+    left: -250px;
+    width: 220px;
+    height: 100%;
+    background: #004aad;
+    color: white;
+    padding: 20px;
+    transition: 0.3s;
+    z-index: 1000;
 }
 
-.menu{
-
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-gap:10px;
-
+.side-menu button {
+    display: block;
+    width: 100%;
+    margin: 10px 0;
+    background: white;
+    color: #004aad;
+    border: none;
+    padding: 10px;
+    border-radius: 5px;
+    cursor: pointer;
 }
 
-.menu button{
-
-padding:15px;
-border:none;
-background:white;
-border-radius:10px;
-box-shadow:0 0 5px rgba(0,0,0,0.2);
-font-size:14px;
-cursor:pointer;
-
+.overlay {
+    position: fixed;
+    top:0;
+    left:0;
+    width:100%;
+    height:100%;
+    background: rgba(0,0,0,0.4);
+    display: none;
+    z-index: 900;
 }
 
-.sectionTitle{
-margin-top:20px;
-font-size:18px;
-font-weight:bold;
+.slider {
+    width: 100%;
+    height: 200px;
+    overflow: hidden;
+    margin-top: 10px;
 }
 
-.gallery{
-
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(120px,1fr));
-gap:10px;
-margin-top:10px;
-
+.slider img {
+    width: 100%;
+    height: 200px;
+    object-fit: cover;
 }
 
-.gallery img{
-
-width:100%;
-border-radius:8px;
-
+.container {
+    padding: 15px;
 }
 
-.whatsapp{
-
-position:fixed;
-bottom:20px;
-right:20px;
-background:#25D366;
-color:white;
-padding:15px;
-border-radius:50%;
-font-size:20px;
-text-decoration:none;
-
+.section-title {
+    font-weight: bold;
+    font-size: 18px;
+    margin-top: 15px;
 }
 
-.popup{
-
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.6);
-display:none;
-align-items:center;
-justify-content:center;
-
+.gallery {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 10px;
+    margin-top: 10px;
 }
 
-.popupContent{
-
-background:white;
-padding:20px;
-border-radius:10px;
-max-width:300px;
-text-align:center;
-
+.gallery img, .gallery video {
+    width: 100%;
+    border-radius: 8px;
+    cursor: pointer;
 }
 
-.closeBtn{
-
-margin-top:10px;
-background:red;
-color:white;
-border:none;
-padding:8px;
-border-radius:5px;
-
+.whatsapp {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #25D366;
+    color: white;
+    padding: 15px;
+    border-radius: 50%;
+    font-size: 20px;
+    text-decoration: none;
 }
 
+.popup {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0,0,0,0.6);
+    display: none;
+    align-items: center;
+    justify-content: center;
+}
+
+.popup-content {
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    max-width: 300px;
+    text-align: center;
+}
+
+.close-btn {
+    margin-top: 10px;
+    background: red;
+    color: white;
+    border: none;
+    padding: 8px;
+    border-radius: 5px;
+}
 </style>
-
 </head>
 
 <body>
 
-<header>School Management System</header>
+<header>
+<span class="menu-btn" onclick="openMenu()">☰</span>
+New Mahankal Public School
+<button class="login-btn" onclick="location.href='admin_login.html'">Login</button>
+</header>
+
+<div class="side-menu" id="sideMenu">
+    <button onclick="location.href='admission.html'">Admission</button>
+    <button onclick="location.href='result.html'">Result</button>
+    <button onclick="location.href='complain.html'">Complaint</button>
+    <button onclick="location.href='study.html'">Online Study</button>
+    <button onclick="location.href='teacher.html'">Teachers</button>
+    <button onclick="location.href='event.html'">Events</button>
+    <button onclick="location.href='fees.html'">Fees</button>
+    <button onclick="location.href='carrier.html'">Career</button>
+    <button onclick="location.href='privacy.html'">Privacy</button>
+</div>
+
+<div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
 <div class="slider">
-
 <img id="slide" src="https://picsum.photos/800/200">
-
 </div>
 
 <div class="container">
-
-<div class="menu">
-
-<button onclick="location.href='admission.html'">Admission</button>
-<button onclick="location.href='result.html'">Result</button>
-<button onclick="location.href='complain.html'">Complaint</button>
-<button onclick="location.href='study.html'">Online Study</button>
-<button onclick="location.href='teacher.html'">Teachers</button>
-<button onclick="location.href='event.html'">Events</button>
-<button onclick="location.href='fees.html'">Fees</button>
-<button onclick="location.href='carrier.html'">Career</button>
-<button onclick="location.href='privacy.html'">Privacy</button>
-
-</div>
-
-<div class="sectionTitle">School Gallery</div>
-
+<div class="section-title">Gallery & Videos</div>
 <div class="gallery" id="gallery"></div>
-
 </div>
 
 <a class="whatsapp" href="https://wa.me/919999999999">W</a>
 
 <div class="popup" id="popup">
-
-<div class="popupContent">
-
+<div class="popup-content">
 <h3>Notice</h3>
-
 <p id="noticeText"></p>
-
-<button class="closeBtn" onclick="closePopup()">Close</button>
-
+<button class="close-btn" onclick="closePopup()">Close</button>
 </div>
-
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -199,56 +217,63 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 async function loadGallery(){
-
-const snap = await getDocs(collection(db,"gallery"));
-let html="";
-
-snap.forEach((doc)=>{
-const d = doc.data();
-html+=`<img src="${d.photo}">`;
-});
-
-document.getElementById("gallery").innerHTML=html;
-
+    const snap = await getDocs(collection(db,"gallery"));
+    const container = document.getElementById("gallery");
+    container.innerHTML = "";
+    snap.forEach(doc => {
+        const d = doc.data();
+        if(d.type === "image"){
+            const img = document.createElement("img");
+            img.src = d.url;
+            container.appendChild(img);
+        } else if(d.type === "video"){
+            const video = document.createElement("video");
+            video.src = d.url;
+            video.controls = true;
+            container.appendChild(video);
+        }
+    });
 }
-
 loadGallery();
 
 async function loadNotice(){
-
-const snap = await getDocs(collection(db,"notices"));
-snap.forEach((doc)=>{
-const d=doc.data();
-document.getElementById("noticeText").innerText=d.message;
-document.getElementById("popup").style.display="flex";
-});
-
+    const snap = await getDocs(collection(db,"notices"));
+    snap.forEach(doc=>{
+        const d = doc.data();
+        document.getElementById("noticeText").innerText = d.message;
+        document.getElementById("popup").style.display = "flex";
+    });
 }
-
 loadNotice();
 
-window.closePopup=function(){
-document.getElementById("popup").style.display="none";
+window.closePopup = function(){
+    document.getElementById("popup").style.display = "none";
 }
 
-/* Image Slider */
+function openMenu(){
+    document.getElementById("sideMenu").style.left = "0";
+    document.getElementById("overlay").style.display = "block";
+}
 
-const images=[
-"https://picsum.photos/800/200?1",
-"https://picsum.photos/800/200?2",
-"https://picsum.photos/800/200?3"
+function closeMenu(){
+    document.getElementById("sideMenu").style.left = "-250px";
+    document.getElementById("overlay").style.display = "none";
+}
+
+/* Slider */
+const images = [
+    "https://picsum.photos/800/200?1",
+    "https://picsum.photos/800/200?2",
+    "https://picsum.photos/800/200?3"
 ];
-
-let i=0;
-
+let i = 0;
 setInterval(()=>{
-i++;
-if(i>=images.length) i=0;
-document.getElementById("slide").src=images[i];
+    i++;
+    if(i>=images.length) i=0;
+    document.getElementById("slide").src = images[i];
 },3000);
 
 </script>
 
 </body>
-
   </html>
