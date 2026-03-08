@@ -199,62 +199,84 @@ button {
 <header>
   <span id="menuBtn">&#9776;</span>
   <div class="top-buttons">
-    <button onclick="alert('Result clicked')">Result</button>
-    <button onclick="alert('Admission clicked')">Admission</button>
-    <button onclick="alert('Event clicked')">Event</button>
-    <button onclick="alert('Fees clicked')">Fees</button>
+    <button onclick="window.location.href='result.html'">Result</button>
+    <button onclick="window.location.href='admission.html'">Admission</button>
+    <button onclick="window.location.href='event.html'">Event</button>
+    <button onclick="window.location.href='fees.html'">Fees</button>
   </div>
 </header>
 
 <div id="sideMenu">
-  <button onclick="showLogin()">Login</button>
-  <button onclick="alert('Fees')">Fees</button>
-  <button onclick="alert('Admission')">Admission</button>
-  <button onclick="alert('Event')">Event</button>
-  <button onclick="alert('Career')">Career</button>
-  <button onclick="alert('Social Media')">Social Media</button>
-  <button onclick="alert('Privacy Teacher')">Privacy Teacher</button>
-  <button onclick="alert('Result')">Result</button>
-  <button onclick="alert('Complain')">Complain</button>
+  <button onclick="window.location.href='login.html'">Login</button>
+  <button onclick="window.location.href='fees.html'">Fees</button>
+  <button onclick="window.location.href='admission.html'">Admission</button>
+  <button onclick="window.location.href='event.html'">Event</button>
+  <button onclick="window.location.href='carrier.html'">Career</button>
+  <button onclick="window.location.href='study.html'">Online Study</button>
+  <button onclick="window.location.href='teacher.html'">Teachers</button>
+  <button onclick="window.location.href='privacy.html'">Privacy</button>
+  <button onclick="window.location.href='result.html'">Result</button>
+  <button onclick="window.location.href='complain.html'">Complain</button>
 </div>
 
 <div class="container">
 
+  <!-- Admin forms: just visible, cannot submit -->
   <div id="loginBox" class="card">
     <h3>Admin Login</h3>
-    <input id="email" placeholder="Email">
-    <input id="password" type="password" placeholder="Password">
-    <button onclick="login()">Login</button>
+    <input placeholder="Email" disabled>
+    <input type="password" placeholder="Password" disabled>
+    <button disabled>Login</button>
   </div>
 
-  <div id="dashboard" style="display:none">
-
-    <div class="card">
-      <h3>Upload Notice</h3>
-      <textarea id="noticeText" placeholder="Notice Title"></textarea>
-      <button onclick="uploadNotice()">Post Notice</button>
-      <h4>Notice List</h4>
-      <div id="noticeList"></div>
+  <div id="dashboard" class="card">
+    <h3>Upload Notice (Preview Only)</h3>
+    <textarea placeholder="Notice Title" disabled></textarea>
+    <button disabled>Post Notice</button>
+    <h4>Notice List</h4>
+    <div>
+      <!-- Placeholder preview cards -->
+      <p>Notice Title 1</p>
+      <p>Notice Title 2</p>
     </div>
-
-    <div class="card">
-      <h3>Upload Photos (Multiple)</h3>
-      <input type="file" id="photoFiles" multiple>
-      <input id="photoTitle" placeholder="Photo Title">
-      <input id="photoLink" placeholder="Optional Link (URL)">
-      <input id="photoPrice" placeholder="Price (₹)">
-      <button onclick="uploadPhotos()">Upload</button>
-      <h4>Photo Gallery</h4>
-      <div id="photoList"></div>
-    </div>
-
   </div>
+
+  <div id="dashboardPhotos" class="card">
+    <h3>Upload Photos (Preview Only)</h3>
+    <input type="file" multiple disabled>
+    <input placeholder="Photo Title" disabled>
+    <input placeholder="Optional Link (URL)" disabled>
+    <input placeholder="Price (₹)" disabled>
+    <button disabled>Upload</button>
+    <h4>Photo Gallery</h4>
+    <div class="media-card">
+      <img src="https://via.placeholder.com/220x150" alt="">
+      <div class="card-body">
+        <h4>Photo Title 1</h4>
+        <p>₹100</p>
+        <a href="#">Open Link</a>
+        <button disabled>Like</button>
+        <button disabled>Share</button>
+      </div>
+    </div>
+    <div class="media-card">
+      <img src="https://via.placeholder.com/220x150" alt="">
+      <div class="card-body">
+        <h4>Photo Title 2</h4>
+        <p>₹150</p>
+        <a href="#">Open Link</a>
+        <button disabled>Like</button>
+        <button disabled>Share</button>
+      </div>
+    </div>
+  </div>
+
 </div>
 
 <div id="bottomBar">
-  <button onclick="whatsappPopup('Login')">Login</button>
-  <button onclick="whatsappPopup('Complain')">Complain</button>
-  <button onclick="whatsappPopup('Teacher')">Teacher</button>
+  <button onclick="window.location.href='login.html'">Login</button>
+  <button onclick="window.location.href='complain.html'">Complain</button>
+  <button onclick="window.location.href='teacher.html'">Teacher</button>
 </div>
 
 <div id="noticePopup">
@@ -262,21 +284,7 @@ button {
   <button onclick="closeNotice()">Close</button>
 </div>
 
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-const firebaseConfig = {
-  apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-  authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-  projectId: "nmpsnagguradiya-b9b94",
-  storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
-  messagingSenderId: "811957568318",
-  appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
-};
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
+<script>
 // Menu toggle
 const menuBtn=document.getElementById('menuBtn');
 const sideMenu=document.getElementById('sideMenu');
@@ -284,12 +292,7 @@ menuBtn.onclick = ()=> {
   sideMenu.style.left = sideMenu.style.left === '0px' ? '-250px' : '0px';
 }
 
-// WhatsApp popup
-function whatsappPopup(type){
-  window.open(`https://wa.me/917171234567?text=${type}`,'_blank');
-}
-
-// Notice popup
+// Notice popup (preview)
 function showNotice(text){
   document.getElementById('noticeContent').innerText = text;
   document.getElementById('noticePopup').style.display = 'block';
@@ -297,106 +300,7 @@ function showNotice(text){
 function closeNotice(){
   document.getElementById('noticePopup').style.display = 'none';
 }
-
-// Login
-window.login = function(){
-  const email=document.getElementById("email").value;
-  const password=document.getElementById("password").value;
-  if(email=="nmpsnagguradiya@gmail.com" && password=="Nmps@123"){
-    localStorage.setItem("adminLogin","true");
-    openDashboard();
-  } else { alert("Wrong Login"); }
-}
-function showLogin(){ alert('Login clicked') }
-
-if(localStorage.getItem("adminLogin")=="true"){
-  openDashboard();
-}
-
-// Dashboard functions
-async function uploadNotice(){
-  const text=document.getElementById("noticeText").value;
-  if(!text) return alert("Enter notice text");
-  await addDoc(collection(db,"notice"),{text:text});
-  alert("Notice Uploaded");
-  loadNotices();
-}
-
-async function loadNotices(){
-  const snapshot=await getDocs(collection(db,"notice"));
-  const list=document.getElementById("noticeList");
-  list.innerHTML="";
-  snapshot.forEach((d)=>{
-    const data=d.data();
-    const div=document.createElement("div");
-    div.innerHTML=`<p>${data.text}</p>
-      <button onclick="deleteNotice('${d.id}')">Delete</button>
-      <button onclick="showNotice('${data.text.replace(/'/g,"\\'")}')">View Popup</button>`;
-    list.appendChild(div);
-  });
-}
-window.deleteNotice=async function(id){
-  await deleteDoc(doc(db,"notice",id));
-  loadNotices();
-}
-
-// Photo Upload
-window.uploadPhotos = async function(){
-  const files=document.getElementById("photoFiles").files;
-  const title=document.getElementById("photoTitle").value;
-  const link=document.getElementById("photoLink").value;
-  const price=document.getElementById("photoPrice").value || "0";
-  if(files.length==0) return alert("Select files");
-  for(let i=0;i<files.length;i++){
-    const file=files[i];
-    const formData=new FormData();
-    formData.append("image",file);
-    const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
-      method:"POST", body:formData
-    });
-    const data=await res.json();
-    const url=data.data.url;
-    await addDoc(collection(db,"gallery"),{type:"image",url,title,link,price});
-  }
-  alert("Photos Uploaded Successfully");
-  loadPhotos();
-}
-
-async function loadPhotos(){
-  const snapshot=await getDocs(collection(db,"gallery"));
-  const list=document.getElementById("photoList");
-  list.innerHTML="";
-  snapshot.forEach((d)=>{
-    const data=d.data();
-    if(data.type==="image"){
-      const div=document.createElement("div");
-      div.className="media-card";
-      div.innerHTML=`<img src="${data.url}">
-        <div class="card-body">
-          <h4>${data.title}</h4>
-          <p>₹${data.price}</p>
-          ${data.link ? `<a href="${data.link}" target="_blank">Open Link</a>` : ''}
-          <button onclick="alert('Liked')">Like</button>
-          <button onclick="alert('Shared')">Share</button>
-          <button onclick="deletePhoto('${d.id}')">Delete</button>
-        </div>`;
-      list.appendChild(div);
-    }
-  });
-}
-
-window.deletePhoto=async function(id){
-  await deleteDoc(doc(db,"gallery",id));
-  loadPhotos();
-}
-
-function openDashboard(){
-  document.getElementById("loginBox").style.display="none";
-  document.getElementById("dashboard").style.display="block";
-  loadNotices();
-  loadPhotos();
-}
-
 </script>
+
 </body>
 </html>
