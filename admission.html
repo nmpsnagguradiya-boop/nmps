@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Student Admission</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
+
+.container{
+padding:20px;
+}
+
+form{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+input,select,textarea{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+button{
+margin-top:15px;
+background:#004aad;
+color:white;
+padding:12px;
+border:none;
+width:100%;
+border-radius:5px;
+font-size:16px;
+cursor:pointer;
+}
+
+.success{
+color:green;
+text-align:center;
+margin-top:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>Student Admission Form</header>
+
+<div class="container">
+
+<form id="form">
+
+<input type="text" id="name" placeholder="Student Name" required>
+
+<input type="text" id="father" placeholder="Father Name" required>
+
+<input type="text" id="mobile" placeholder="Mobile Number" required>
+
+<input type="text" id="village" placeholder="Village" required>
+
+<select id="class">
+<option>Select Class</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+
+<input type="date" id="dob">
+
+<textarea id="message" placeholder="Message"></textarea>
+
+<label>Student Photo</label>
+<input type="file" id="photo" required>
+
+<label>Document Upload</label>
+<input type="file" id="document" required>
+
+<button type="submit">Submit Admission</button>
+
+<div class="success" id="msg"></div>
+
+</form>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f",
+measurementId: "G-V4J8BP2LCN"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+document.getElementById("form").addEventListener("submit",async function(e){
+
+e.preventDefault();
+
+const name=document.getElementById("name").value;
+const father=document.getElementById("father").value;
+const mobile=document.getElementById("mobile").value;
+const village=document.getElementById("village").value;
+const className=document.getElementById("class").value;
+const dob=document.getElementById("dob").value;
+const message=document.getElementById("message").value;
+
+const photo=document.getElementById("photo").files[0];
+const documentFile=document.getElementById("document").files[0];
+
+let photoURL="";
+let docURL="";
+
+async function uploadImgBB(file){
+
+const formData=new FormData();
+formData.append("image",file);
+
+const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+method:"POST",
+body:formData
+});
+
+const data=await res.json();
+
+return data.data.url;
+
+}
+
+photoURL=await uploadImgBB(photo);
+docURL=await uploadImgBB(documentFile);
+
+await addDoc(collection(db,"admissions"),{
+
+name:name,
+father:father,
+mobile:mobile,
+village:village,
+class:className,
+dob:dob,
+message:message,
+photo:photoURL,
+document:docURL,
+date:new Date()
+
+});
+
+document.getElementById("msg").innerText="Admission Submitted Successfully";
+
+document.getElementById("form").reset();
+
+});
+
+</script>
+
+</body>
+</html>
