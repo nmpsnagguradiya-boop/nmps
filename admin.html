@@ -207,7 +207,6 @@ const db = getFirestore(app);
 const storage = getStorage(app);
 
 
-
 function openDashboard(){
 
 document.getElementById("loginBox").style.display="none"
@@ -230,7 +229,6 @@ const password=document.getElementById("password").value
 if(email=="nmpsnagguradiya@gmail.com" && password=="Nmps@123"){
 
 localStorage.setItem("adminLogin","true")
-
 openDashboard()
 
 }
@@ -252,8 +250,6 @@ openDashboard()
 window.uploadNotice=async function(){
 
 const text=document.getElementById("noticeText").value
-
-if(!text) return alert("Enter notice")
 
 await addDoc(collection(db,"notice"),{text:text})
 
@@ -297,7 +293,6 @@ list.appendChild(div)
 window.deleteNotice=async function(id){
 
 await deleteDoc(doc(db,"notice",id))
-
 loadNotices()
 
 }
@@ -308,19 +303,103 @@ window.uploadPhoto=async function(){
 
 const file=document.getElementById("photoFile").files[0]
 
-if(!file) return alert("Select image")
+const formData=new FormData()
+formData.append("image",file)
 
-const storageRef=ref(storage,"images/"+Date.now()+file.name)
+const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+method:"POST",
+body:formData
+})
+
+const data=await res.json()
+
+const url=data.data.url
+
+await addDoc(collection(db,"gallery"),{type:"image",url:url})
+
+loadPhotos()
+
+}
+
+
+
+window.uploadVideo=async function(){
+
+const file=document.getElementById("videoFile").files[0]
+
+const formData=new FormData()
+
+formData.append("file",file)
+formData.append("upload_preset","nmps_upload")
+
+const res=await fetch("https://api.cloudinary.com/v1_1/977479135628571/video/upload",{
+method:"POST",
+body:formData
+})
+
+const data=await res.json()
+
+const url=data.secure_url
+
+await addDoc(collection(db,"gallery"),{type:"video",url:url})
+
+loadVideos()
+
+}
+
+
+
+window.uploadResult=async function(){
+
+const id=document.getElementById("sssm").value
+const file=document.getElementById("resultPdf").files[0]
+
+const storageRef=ref(storage,"results/"+Date.now()+file.name)
 
 await uploadBytes(storageRef,file)
 
 const url=await getDownloadURL(storageRef)
 
-await addDoc(collection(db,"gallery"),{type:"image",url:url})
+await addDoc(collection(db,"results"),{
 
-alert("Photo Uploaded")
+sssm:id,
+url:url
 
-loadPhotos()
+})
+
+loadResults()
+
+}
+
+
+
+window.addTeacher=async function(){
+
+const name=document.getElementById("teacherName").value
+const subject=document.getElementById("teacherSubject").value
+const file=document.getElementById("teacherPhoto").files[0]
+
+const formData=new FormData()
+formData.append("image",file)
+
+const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+method:"POST",
+body:formData
+})
+
+const data=await res.json()
+
+const photo=data.data.url
+
+await addDoc(collection(db,"teachers"),{
+
+name:name,
+subject:subject,
+photo:photo
+
+})
+
+loadTeachers()
 
 }
 
@@ -329,7 +408,6 @@ loadPhotos()
 async function loadPhotos(){
 
 const snapshot=await getDocs(collection(db,"gallery"))
-
 const list=document.getElementById("photoList")
 
 list.innerHTML=""
@@ -347,7 +425,6 @@ div.className="media"
 div.innerHTML=`
 
 <img src="${data.url}">
-
 <button onclick="deleteMedia('${d.id}')">Delete</button>
 
 `
@@ -362,32 +439,9 @@ list.appendChild(div)
 
 
 
-window.uploadVideo=async function(){
-
-const file=document.getElementById("videoFile").files[0]
-
-if(!file) return alert("Select video")
-
-const storageRef=ref(storage,"videos/"+Date.now()+file.name)
-
-await uploadBytes(storageRef,file)
-
-const url=await getDownloadURL(storageRef)
-
-await addDoc(collection(db,"gallery"),{type:"video",url:url})
-
-alert("Video Uploaded")
-
-loadVideos()
-
-}
-
-
-
 async function loadVideos(){
 
 const snapshot=await getDocs(collection(db,"gallery"))
-
 const list=document.getElementById("videoList")
 
 list.innerHTML=""
@@ -405,7 +459,6 @@ div.className="media"
 div.innerHTML=`
 
 <video src="${data.url}" controls></video>
-
 <button onclick="deleteMedia('${d.id}')">Delete</button>
 
 `
@@ -431,34 +484,6 @@ loadVideos()
 
 
 
-window.uploadResult=async function(){
-
-const id=document.getElementById("sssm").value
-const file=document.getElementById("resultPdf").files[0]
-
-if(!id || !file) return alert("Enter SSSM ID and select PDF")
-
-const storageRef=ref(storage,"results/"+Date.now()+file.name)
-
-await uploadBytes(storageRef,file)
-
-const url=await getDownloadURL(storageRef)
-
-await addDoc(collection(db,"results"),{
-
-sssm:id,
-url:url
-
-})
-
-alert("Result Uploaded")
-
-loadResults()
-
-}
-
-
-
 async function loadResults(){
 
 const snapshot=await getDocs(collection(db,"results"))
@@ -476,9 +501,7 @@ const div=document.createElement("div")
 div.innerHTML=`
 
 <p>${data.sssm}</p>
-
 <a href="${data.url}" target="_blank">Download</a>
-
 <button onclick="deleteResult('${d.id}')">Delete</button>
 
 `
@@ -494,36 +517,7 @@ list.appendChild(div)
 window.deleteResult=async function(id){
 
 await deleteDoc(doc(db,"results",id))
-
 loadResults()
-
-}
-
-
-
-window.addTeacher=async function(){
-
-const name=document.getElementById("teacherName").value
-const subject=document.getElementById("teacherSubject").value
-const file=document.getElementById("teacherPhoto").files[0]
-
-if(!name || !subject || !file) return alert("Fill all fields")
-
-const storageRef=ref(storage,"teachers/"+Date.now()+file.name)
-
-await uploadBytes(storageRef,file)
-
-const url=await getDownloadURL(storageRef)
-
-await addDoc(collection(db,"teachers"),{
-
-name:name,
-subject:subject,
-photo:url
-
-})
-
-loadTeachers()
 
 }
 
@@ -531,13 +525,13 @@ loadTeachers()
 
 async function loadTeachers(){
 
-const querySnapshot=await getDocs(collection(db,"teachers"))
+const snapshot=await getDocs(collection(db,"teachers"))
 
 const list=document.getElementById("teacherList")
 
 list.innerHTML=""
 
-querySnapshot.forEach((d)=>{
+snapshot.forEach((d)=>{
 
 const data=d.data()
 
@@ -552,7 +546,6 @@ div.innerHTML=`
 <div>
 
 <b>${data.name}</b>
-
 <p>${data.subject}</p>
 
 <button onclick="deleteTeacher('${d.id}')">Delete</button>
