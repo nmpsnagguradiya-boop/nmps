@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Admin Dashboard</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
+
+.container{
+padding:15px;
+}
+
+.grid{
+
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:15px;
+
+}
+
+.card{
+
+background:white;
+padding:20px;
+border-radius:10px;
+text-align:center;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+
+}
+
+.count{
+
+font-size:28px;
+font-weight:bold;
+color:#004aad;
+
+}
+
+.label{
+
+margin-top:5px;
+
+}
+
+.buttons{
+
+margin-top:30px;
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+
+gap:15px;
+
+}
+
+button{
+
+padding:15px;
+
+border:none;
+
+background:#004aad;
+
+color:white;
+
+font-size:16px;
+
+border-radius:8px;
+
+cursor:pointer;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>Super Admin Dashboard</header>
+
+<div class="container">
+
+<div class="grid">
+
+<div class="card">
+<div class="count" id="students">0</div>
+<div class="label">Total Students</div>
+</div>
+
+<div class="card">
+<div class="count" id="teachers">0</div>
+<div class="label">Total Teachers</div>
+</div>
+
+<div class="card">
+<div class="count" id="complaints">0</div>
+<div class="label">Total Complaints</div>
+</div>
+
+<div class="card">
+<div class="count" id="admissions">0</div>
+<div class="label">Total Admissions</div>
+</div>
+
+<div class="card">
+<div class="count" id="results">0</div>
+<div class="label">Total Results</div>
+</div>
+
+</div>
+
+
+<div class="buttons">
+
+<button onclick="location.href='admin_admissions.html'">
+Admission Management
+</button>
+
+<button onclick="location.href='admin_teachers.html'">
+Teacher Management
+</button>
+
+<button onclick="location.href='admin_results.html'">
+Result Management
+</button>
+
+<button onclick="location.href='admin_complaints.html'">
+Complaint Management
+</button>
+
+<button onclick="location.href='admin_study.html'">
+Study Material
+</button>
+
+<button onclick="location.href='admin.html'">
+Notice & Gallery
+</button>
+
+</div>
+
+</div>
+
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+async function countData(collectionName,id){
+
+const snap = await getDocs(collection(db,collectionName));
+
+document.getElementById(id).innerText = snap.size;
+
+}
+
+countData("students","students");
+
+countData("teachers","teachers");
+
+countData("complaints","complaints");
+
+countData("admissions","admissions");
+
+countData("results","results");
+
+</script>
+
+</body>
+
+</html>
