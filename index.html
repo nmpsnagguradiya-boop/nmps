@@ -1,15 +1,10 @@
 <!DOCTYPE html>
 <html>
 <head>
-
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>New Mahankal Public School</title>
+<meta charset="UTF-8">
+<title>School App</title>
 
 <style>
-
-:root{
---main:#82caff;
-}
 
 body{
 font-family:Arial;
@@ -18,493 +13,213 @@ background:#f2f2f2;
 }
 
 header{
-background:var(--main);
+background:#004aad;
 color:white;
-padding:20px;
 text-align:center;
+padding:15px;
+font-size:22px;
 }
 
-nav{
-background:#333;
-padding:10px;
-text-align:center;
-position:sticky;
-top:0;
+.container{
+padding:15px;
 }
 
-nav a{
-color:white;
-margin:10px;
-text-decoration:none;
-}
-
-section{
-padding:20px;
-max-width:900px;
-margin:auto;
+.grid{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:15px;
 }
 
 .card{
 background:white;
 padding:20px;
-margin:20px 0;
+text-align:center;
 border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.1);
-border-top:5px solid var(--main);
+box-shadow:0 0 5px rgba(0,0,0,0.2);
+cursor:pointer;
+font-size:18px;
 }
 
-button{
-background:var(--main);
-color:white;
-padding:10px 20px;
-border:none;
-border-radius:5px;
-}
-
-input,textarea{
-width:100%;
-padding:10px;
-margin:10px 0;
+.gallery{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+margin-top:20px;
 }
 
 .gallery img{
-width:200px;
-margin:10px;
-border-radius:10px;
-}
-
-.gallery video{
-width:300px;
-margin:10px;
-}
-
-.teacher{
-display:flex;
-gap:10px;
-margin:10px 0;
-}
-
-.teacher img{
-width:100px;
-border-radius:10px;
-}
-
-.slider img{
 width:100%;
+border-radius:8px;
+}
+
+#noticePopup{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.7);
+display:none;
+justify-content:center;
+align-items:center;
+}
+
+.noticeBox{
+background:white;
+padding:20px;
 border-radius:10px;
+width:300px;
+text-align:center;
+}
+
+.close{
+background:red;
+color:white;
+padding:5px 10px;
+border:none;
+margin-top:10px;
+cursor:pointer;
 }
 
 .whatsapp{
-
 position:fixed;
 bottom:20px;
 right:20px;
 background:#25D366;
 color:white;
-font-size:28px;
 padding:15px;
 border-radius:50%;
+font-size:20px;
 text-decoration:none;
-
 }
 
 </style>
-
 </head>
 
 <body>
 
 <header>
-
-<h1>New Mahankal Public School</h1>
-<p>Nagguradiya</p>
-
+New Mahankal Public School
 </header>
 
-<div class="slider">
+<div class="container">
 
-<img id="slideImage" src="https://picsum.photos/900/300?1">
+<div class="grid">
 
+<div class="card" onclick="go('admission.html')">
+Admission
 </div>
 
-<nav>
-
-<a href="#notice">Notice</a>
-<a href="#gallery">Gallery</a>
-<a href="#admission">Admission</a>
-<a href="#result">Result</a>
-<a href="#teachers">Teachers</a>
-<a href="#admin">Admin</a>
-
-</nav>
-
-<section id="notice">
-
-<div class="card">
-
-<h2>Notice Board</h2>
-
-<ul id="noticeList"></ul>
-
+<div class="card" onclick="go('result.html')">
+Result
 </div>
 
-</section>
-
-<section id="gallery">
-
-<div class="card">
-
-<h2>School Gallery</h2>
-
-<div id="galleryContainer" class="gallery"></div>
-
+<div class="card" onclick="go('complain.html')">
+Complain
 </div>
 
-</section>
-
-<section id="admission">
-
-<div class="card">
-
-<h2>Student Admission Form</h2>
-
-<input id="studentName" placeholder="Student Name">
-
-<input id="fatherName" placeholder="Father Name">
-
-<input id="class" placeholder="Class">
-
-<input id="mobile" placeholder="Mobile">
-
-<button onclick="submitAdmission()">Submit</button>
-
+<div class="card" onclick="go('study.html')">
+Online Study
 </div>
 
-</section>
-
-<section id="result">
-
-<div class="card">
-
-<h2>Download Result</h2>
-
-<div id="resultList"></div>
-
-</div>
-
-</section>
-
-<section id="teachers">
-
-<div class="card">
-
-<h2>Teacher List</h2>
-
-<div class="teacher">
-
-<img src="https://picsum.photos/100">
-
-<div>
-
-<h3>Rajesh Sharma</h3>
-
-<p>Math Teacher</p>
-
+<div class="card" onclick="go('event.html')">
+Events
 </div>
 
 </div>
 
-</div>
+<h3>School Gallery</h3>
 
-</section>
-
-<section id="admin">
-
-<div class="card">
-
-<h2>Admin Login</h2>
-
-<input id="email" placeholder="Email">
-
-<input id="password" type="password" placeholder="Password">
-
-<button onclick="login()">Login</button>
-
-<hr>
-
-<h3>Add Notice</h3>
-
-<input id="noticeText">
-
-<button onclick="addNotice()">Post Notice</button>
-
-<hr>
-
-<h3>Upload Image</h3>
-
-<input type="file" id="imageFile">
-
-<button onclick="uploadImage()">Upload</button>
-
-<hr>
-
-<h3>Upload Video</h3>
-
-<input type="file" id="videoFile">
-
-<button onclick="uploadVideo()">Upload</button>
-
-<hr>
-
-<h3>Upload Result PDF</h3>
-
-<input type="file" id="resultFile">
-
-<button onclick="uploadResult()">Upload</button>
+<div class="gallery" id="gallery"></div>
 
 </div>
 
-</section>
+<div id="noticePopup">
+<div class="noticeBox">
+<h3>Notice</h3>
+<p id="noticeText"></p>
+<button class="close" onclick="closeNotice()">Close</button>
+</div>
+</div>
 
-<a href="https://wa.me/9171028163" class="whatsapp">💬</a>
+<a class="whatsapp" href="https://wa.me/91XXXXXXXXXX">W</a>
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-
-import { getFirestore,collection,addDoc,getDocs }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-
-import { getAuth,signInWithEmailAndPassword }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-
-import { getStorage,ref,uploadBytes,getDownloadURL }
-from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-  authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-  projectId: "nmpsnagguradiya-b9b94",
-  storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
-  messagingSenderId: "811957568318",
-  appId: "1:811957568318:web:7058de9ba52df9d6bae26f",
-  measurementId: "G-V4J8BP2LCN"
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f",
+measurementId: "G-V4J8BP2LCN"
 };
 
-const app = initializeApp(firebaseConfig);
-
-const db = getFirestore(app);
-
-const auth = getAuth(app);
-
-const storage = getStorage(app);
-
-
-
-window.login = async function(){
-
-const email=document.getElementById("email").value
-
-const password=document.getElementById("password").value
-
-await signInWithEmailAndPassword(auth,email,password)
-
-alert("Login Success")
-
-}
-
-
-
-window.addNotice = async function(){
-
-const text=document.getElementById("noticeText").value
-
-await addDoc(collection(db,"notice"),{
-
-text:text
-
-})
-
-}
-
-
-
-window.submitAdmission = async function(){
-
-const name=document.getElementById("studentName").value
-
-const mobile=document.getElementById("mobile").value
-
-await addDoc(collection(db,"admissions"),{
-
-name:name,
-
-mobile:mobile
-
-})
-
-alert("Admission Submitted")
-
-}
-
-
-
-window.uploadImage = async function(){
-
-const file=document.getElementById("imageFile").files[0]
-
-const storageRef=ref(storage,"images/"+file.name)
-
-await uploadBytes(storageRef,file)
-
-const url=await getDownloadURL(storageRef)
-
-await addDoc(collection(db,"gallery"),{
-
-type:"image",
-
-url:url
-
-})
-
-}
-
-
-
-window.uploadVideo = async function(){
-
-const file=document.getElementById("videoFile").files[0]
-
-const storageRef=ref(storage,"videos/"+file.name)
-
-await uploadBytes(storageRef,file)
-
-const url=await getDownloadURL(storageRef)
-
-await addDoc(collection(db,"gallery"),{
-
-type:"video",
-
-url:url
-
-})
-
-}
-
-
-
-window.uploadResult = async function(){
-
-const file=document.getElementById("resultFile").files[0]
-
-const storageRef=ref(storage,"results/"+file.name)
-
-await uploadBytes(storageRef,file)
-
-const url=await getDownloadURL(storageRef)
-
-await addDoc(collection(db,"results"),{
-
-name:file.name,
-
-url:url
-
-})
-
-}
-
-
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+loadGallery();
+loadNotice();
 
 async function loadGallery(){
 
-const querySnapshot=await getDocs(collection(db,"gallery"))
+const snapshot=await getDocs(collection(db,"gallery"));
 
-querySnapshot.forEach((doc)=>{
+snapshot.forEach(doc=>{
 
-const data=doc.data()
+const data=doc.data();
 
 if(data.type=="image"){
 
-const img=document.createElement("img")
+const img=document.createElement("img");
+img.src=data.url;
 
-img.src=data.url
-
-document.getElementById("galleryContainer").appendChild(img)
-
-}
-
-else{
-
-const vid=document.createElement("video")
-
-vid.src=data.url
-
-vid.controls=true
-
-document.getElementById("galleryContainer").appendChild(vid)
+document.getElementById("gallery").appendChild(img);
 
 }
 
-})
+});
 
 }
 
-loadGallery()
+async function loadNotice(){
 
+const snapshot=await getDocs(collection(db,"notice"));
 
+snapshot.forEach(doc=>{
 
-async function loadResults(){
+const data=doc.data();
 
-const querySnapshot=await getDocs(collection(db,"results"))
+document.getElementById("noticeText").innerText=data.text;
 
-querySnapshot.forEach((doc)=>{
+document.getElementById("noticePopup").style.display="flex";
 
-const data=doc.data()
-
-const a=document.createElement("a")
-
-a.href=data.url
-
-a.innerText=data.name
-
-a.download=""
-
-a.style.display="block"
-
-document.getElementById("resultList").appendChild(a)
-
-})
+});
 
 }
 
-loadResults()
+</script>
 
+<script>
 
+function go(page){
 
-const slides=[
+window.location.href=page;
 
-"https://picsum.photos/900/300?1",
+}
 
-"https://picsum.photos/900/300?2",
+function closeNotice(){
 
-"https://picsum.photos/900/300?3"
+document.getElementById("noticePopup").style.display="none";
 
-]
-
-let i=0
-
-setInterval(()=>{
-
-i++
-
-if(i>=slides.length){i=0}
-
-document.getElementById("slideImage").src=slides[i]
-
-},3000)
+}
 
 </script>
 
 </body>
-                  </html>
+</html>
