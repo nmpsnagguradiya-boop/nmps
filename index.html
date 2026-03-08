@@ -11,6 +11,8 @@ body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #f2f2f2;
+    padding-top: 70px; /* header height */
+    padding-bottom: 60px; /* bottom buttons height */
 }
 
 header {
@@ -20,7 +22,11 @@ header {
     text-align: center;
     font-size: 24px;
     font-family: 'Cursive', Arial;
-    position: relative;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    z-index: 1001;
 }
 
 .menu-btn {
@@ -41,7 +47,7 @@ header {
     color: white;
     padding: 20px;
     transition: 0.3s;
-    z-index: 1000;
+    z-index: 1002;
 }
 
 .side-menu button {
@@ -56,6 +62,16 @@ header {
     cursor: pointer;
 }
 
+.side-menu .menu-close {
+    background: red;
+    color: white;
+}
+
+.side-menu .logout {
+    background: orange;
+    color: white;
+}
+
 .overlay {
     position: fixed;
     top:0;
@@ -64,10 +80,10 @@ header {
     height:100%;
     background: rgba(0,0,0,0.4);
     display: none;
-    z-index: 900;
+    z-index: 1000;
 }
 
-.top-buttons, .bottom-buttons {
+.top-buttons {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
@@ -75,7 +91,7 @@ header {
     padding: 0 10px;
 }
 
-.top-buttons button, .bottom-buttons button {
+.top-buttons button {
     flex: 1 1 40%;
     margin: 5px;
     padding: 12px;
@@ -125,7 +141,7 @@ header {
 
 .whatsapp {
     position: fixed;
-    bottom: 20px;
+    bottom: 80px;
     right: 20px;
     background: #25D366;
     color: white;
@@ -133,6 +149,7 @@ header {
     border-radius: 50%;
     font-size: 20px;
     text-decoration: none;
+    z-index: 1000;
 }
 
 .popup {
@@ -145,6 +162,7 @@ header {
     display: none;
     align-items: center;
     justify-content: center;
+    z-index: 1003;
 }
 
 .popup-content {
@@ -162,6 +180,31 @@ header {
     border: none;
     padding: 8px;
     border-radius: 5px;
+}
+
+/* Bottom Buttons */
+.bottom-buttons {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    display: flex;
+    justify-content: space-around;
+    background: #004aad;
+    padding: 10px 0;
+    z-index: 1001;
+}
+
+.bottom-buttons button {
+    flex: 1 1 33%;
+    margin: 0 5px;
+    padding: 10px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    background: #82caff;
+    color: #004aad;
+    cursor: pointer;
 }
 </style>
 </head>
@@ -183,6 +226,9 @@ New Mahankal Public School
     <button onclick="location.href='fees.html'">Fees</button>
     <button onclick="location.href='carrier.html'">Career</button>
     <button onclick="location.href='privacy.html'">Privacy</button>
+    <button class="menu-close" onclick="closeMenu()">Close Menu</button>
+    <button class="logout" onclick="location.href='admin_login.html'">Logout</button>
+    <button onclick="location.href='mission.html'">Our Mission</button>
 </div>
 
 <div class="overlay" id="overlay" onclick="closeMenu()"></div>
@@ -222,7 +268,6 @@ New Mahankal Public School
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -294,8 +339,7 @@ setInterval(()=>{
     if(i>=images.length) i=0;
     document.getElementById("slide").src = images[i];
 },3000);
-
 </script>
 
 </body>
-</html>
+    </html>
