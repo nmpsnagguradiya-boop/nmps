@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Admin Study Panel</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
+
+.container{
+padding:20px;
+}
+
+form{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+margin-bottom:20px;
+}
+
+input,select{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+button{
+margin-top:10px;
+padding:10px;
+background:#004aad;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+}
+
+table{
+width:100%;
+background:white;
+border-collapse:collapse;
+}
+
+th,td{
+padding:10px;
+border:1px solid #ddd;
+text-align:center;
+}
+
+video{
+width:120px;
+}
+
+.edit{background:orange;}
+.delete{background:red;}
+
+</style>
+
+</head>
+
+<body>
+
+<header>Online Study Admin</header>
+
+<div class="container">
+
+<form id="videoForm">
+
+<h3>Upload Study Video</h3>
+
+<input type="text" id="title" placeholder="Video Title" required>
+
+<select id="class">
+<option>Select Class</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+
+<input type="file" id="videoFile" required>
+
+<button type="submit">Upload Video</button>
+
+</form>
+
+<table>
+
+<thead>
+<tr>
+<th>Title</th>
+<th>Class</th>
+<th>Video</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="videoList"></tbody>
+
+</table>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,addDoc,getDocs,deleteDoc,doc,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let editId=null;
+
+loadVideos();
+
+document.getElementById("videoForm").addEventListener("submit",async function(e){
+
+e.preventDefault();
+
+const title=document.getElementById("title").value;
+const className=document.getElementById("class").value;
+const file=document.getElementById("videoFile").files[0];
+
+const formData=new FormData();
+
+formData.append("file",file);
+formData.append("upload_preset","ml_default");
+
+const res=await fetch("https://api.cloudinary.com/v1_1/demo/video/upload",{
+
+method:"POST",
+body:formData
+
+});
+
+const data=await res.json();
+
+const videoURL=data.secure_url;
+
+if(editId){
+
+await updateDoc(doc(db,"study",editId),{
+
+title:title,
+class:className,
+video:videoURL
+
+});
+
+editId=null;
+
+}else{
+
+await addDoc(collection(db,"study"),{
+
+title:title,
+class:className,
+video:videoURL
+
+});
+
+}
+
+document.getElementById("videoForm").reset();
+
+location.reload();
+
+});
+
+async function loadVideos(){
+
+const snapshot=await getDocs(collection(db,"study"));
+
+const table=document.getElementById("videoList");
+
+snapshot.forEach(docSnap=>{
+
+const data=docSnap.data();
+const id=docSnap.id;
+
+table.innerHTML+=`
+
+<tr>
+
+<td>${data.title}</td>
+
+<td>${data.class}</td>
+
+<td>
+<video controls>
+<source src="${data.video}">
+</video>
+</td>
+
+<td>
+
+<button class="edit" onclick="editVideo('${id}','${data.title}','${data.class}')">
+Edit
+</button>
+
+<button class="delete" onclick="deleteVideo('${id}')">
+Delete
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+}
+
+window.deleteVideo=async function(id){
+
+if(confirm("Delete Video?")){
+
+await deleteDoc(doc(db,"study",id));
+
+location.reload();
+
+}
+
+}
+
+window.editVideo=function(id,title,className){
+
+editId=id;
+
+document.getElementById("title").value=title;
+document.getElementById("class").value=className;
+
+window.scrollTo(0,0);
+
+}
+
+</script>
+
+</body>
+</html>
