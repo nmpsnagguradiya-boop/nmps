@@ -11,8 +11,8 @@ body {
     margin: 0;
     font-family: Arial, sans-serif;
     background: #f2f2f2;
-    padding-top: 70px; /* header height */
-    padding-bottom: 60px; /* bottom buttons height */
+    padding-top: 70px;
+    padding-bottom: 60px;
     overflow-x: hidden;
 }
 
@@ -20,7 +20,6 @@ header {
     background: #004aad;
     color: white;
     padding: 15px;
-    text-align: center;
     font-size: 24px;
     font-family: 'Cursive', Arial;
     position: fixed;
@@ -39,7 +38,7 @@ header {
     top: 15px;
     font-size: 24px;
     cursor: pointer;
-    z-index: 1006;
+    z-index: 1010; /* fix click issue */
 }
 
 .side-menu {
@@ -52,7 +51,7 @@ header {
     color: white;
     padding: 20px;
     transition: 0.3s;
-    z-index: 1007;
+    z-index: 1011; /* above overlay */
     overflow-y: auto;
 }
 
@@ -68,15 +67,8 @@ header {
     cursor: pointer;
 }
 
-.side-menu .menu-close {
-    background: red;
-    color: white;
-}
-
-.side-menu .logout {
-    background: orange;
-    color: white;
-}
+.side-menu .menu-close { background: red; color: white; }
+.side-menu .logout { background: orange; color: white; }
 
 .overlay {
     position: fixed;
@@ -86,17 +78,17 @@ header {
     height:100%;
     background: rgba(0,0,0,0.4);
     display: none;
-    z-index: 1003;
+    z-index: 1009;
 }
 
 .top-buttons {
     display: flex;
     justify-content: space-around;
     flex-wrap: wrap;
-    margin: 10px 0;
+    margin: 0;
     padding: 0 10px;
     position: fixed;
-    top: 70px; /* header height */
+    top: 70px;
     width: 100%;
     background: #f2f2f2;
     z-index: 1000;
@@ -118,7 +110,7 @@ header {
     width: 100%;
     height: 200px;
     overflow: hidden;
-    margin-top: 120px; /* header + top buttons height */
+    margin-top: 120px;
 }
 
 .slider img {
@@ -127,15 +119,9 @@ header {
     object-fit: cover;
 }
 
-.container {
-    padding: 15px;
-}
+.container { padding: 15px; }
 
-.section-title {
-    font-weight: bold;
-    font-size: 18px;
-    margin-top: 15px;
-}
+.section-title { font-weight: bold; font-size: 18px; margin-top: 15px; }
 
 .gallery {
     display: grid;
@@ -144,11 +130,7 @@ header {
     margin-top: 10px;
 }
 
-.gallery img, .gallery video {
-    width: 100%;
-    border-radius: 8px;
-    cursor: pointer;
-}
+.gallery img, .gallery video { width: 100%; border-radius: 8px; cursor: pointer; }
 
 .whatsapp {
     position: fixed;
@@ -173,7 +155,7 @@ header {
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 1008;
+    z-index: 1012; /* above everything */
 }
 
 .popup-content {
@@ -243,7 +225,6 @@ New Mahankal Public School
 
 <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
-<!-- Top Buttons -->
 <div class="top-buttons">
     <button onclick="location.href='admission.html'">Admission</button>
     <button onclick="location.href='result.html'">Result</button>
@@ -314,11 +295,12 @@ loadGallery();
 
 async function loadNotice(){
     const snap = await getDocs(collection(db,"notices"));
-    snap.forEach(doc=>{
+    if (!snap.empty) { // check if notice exists
+        const doc = snap.docs[0];
         const d = doc.data();
         document.getElementById("noticeText").innerText = d.message;
         document.getElementById("popup").style.display = "flex";
-    });
+    }
 }
 loadNotice();
 
@@ -351,4 +333,4 @@ setInterval(()=>{
 </script>
 
 </body>
-</html>
+    </html>
