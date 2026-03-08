@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Complaint Form</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+text-align:center;
+padding:15px;
+font-size:22px;
+}
+
+.container{
+padding:20px;
+}
+
+form{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+max-width:500px;
+margin:auto;
+}
+
+input,select,textarea{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+button{
+margin-top:15px;
+padding:12px;
+background:#004aad;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+width:100%;
+font-size:16px;
+}
+
+.success{
+color:green;
+text-align:center;
+margin-top:10px;
+}
+
+/* Status Box */
+
+.statusBox{
+background:white;
+padding:20px;
+margin-top:30px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+max-width:500px;
+margin-left:auto;
+margin-right:auto;
+}
+
+.statusBox h3{
+text-align:center;
+}
+
+.result{
+margin-top:15px;
+padding:10px;
+background:#f9f9f9;
+border-radius:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>Complaint / Feedback</header>
+
+<div class="container">
+
+<form id="complaintForm">
+
+<input type="text" id="name" placeholder="Your Name" required>
+
+<input type="text" id="mobile" placeholder="Mobile Number" required>
+
+<select id="class">
+<option>Select Class</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+
+<input type="text" id="subject" placeholder="Complaint Subject">
+
+<textarea id="message" placeholder="Write your complaint"></textarea>
+
+<label>Upload Photo (optional)</label>
+<input type="file" id="photo">
+
+<button type="submit">Submit Complaint</button>
+
+<div class="success" id="msg"></div>
+
+</form>
+
+
+<!-- Complaint Status Section -->
+
+<div class="statusBox">
+
+<h3>Check Complaint Status</h3>
+
+<input type="text" id="searchMobile" placeholder="Enter Mobile Number">
+
+<button onclick="searchComplaint()">Check Status</button>
+
+<div id="result"></div>
+
+</div>
+
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,addDoc,query,where,getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+document.getElementById("complaintForm").addEventListener("submit",async function(e){
+
+e.preventDefault();
+
+const name=document.getElementById("name").value;
+const mobile=document.getElementById("mobile").value;
+const className=document.getElementById("class").value;
+const subject=document.getElementById("subject").value;
+const message=document.getElementById("message").value;
+
+const file=document.getElementById("photo").files[0];
+
+let photoURL="";
+
+if(file){
+
+const formData=new FormData();
+formData.append("image",file);
+
+const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+
+method:"POST",
+body:formData
+
+});
+
+const data=await res.json();
+
+photoURL=data.data.url;
+
+}
+
+await addDoc(collection(db,"complaints"),{
+
+name:name,
+mobile:mobile,
+class:className,
+subject:subject,
+message:message,
+photo:photoURL,
+status:"Pending",
+reply:"",
+date:new Date()
+
+});
+
+document.getElementById("msg").innerText="Complaint Submitted Successfully";
+
+document.getElementById("complaintForm").reset();
+
+});
+
+
+/* Search Complaint */
+
+window.searchComplaint=async function(){
+
+const mobile=document.getElementById("searchMobile").value;
+
+const q=query(collection(db,"complaints"),where("mobile","==",mobile));
+
+const querySnapshot=await getDocs(q);
+
+let html="";
+
+querySnapshot.forEach((doc)=>{
+
+const d=doc.data();
+
+html+=`
+
+<div class="result">
+
+<b>Name:</b> ${d.name}<br>
+
+<b>Subject:</b> ${d.subject}<br>
+
+<b>Message:</b> ${d.message}<br>
+
+<b>Status:</b> ${d.status}<br>
+
+<b>Admin Reply:</b> ${d.reply ? d.reply : "No reply yet"}
+
+</div>
+
+`;
+
+});
+
+if(html==""){
+
+html="No Complaint Found";
+
+}
+
+document.getElementById("result").innerHTML=html;
+
+}
+
+</script>
+
+</body>
+  </html>
