@@ -31,18 +31,6 @@ header {
     cursor: pointer;
 }
 
-.login-btn {
-    position: absolute;
-    right: 15px;
-    top: 15px;
-    font-size: 16px;
-    background: #82caff;
-    border: none;
-    color: white;
-    padding: 5px 12px;
-    border-radius: 5px;
-}
-
 .side-menu {
     position: fixed;
     top: 0;
@@ -77,6 +65,26 @@ header {
     background: rgba(0,0,0,0.4);
     display: none;
     z-index: 900;
+}
+
+.top-buttons, .bottom-buttons {
+    display: flex;
+    justify-content: space-around;
+    flex-wrap: wrap;
+    margin: 10px 0;
+    padding: 0 10px;
+}
+
+.top-buttons button, .bottom-buttons button {
+    flex: 1 1 40%;
+    margin: 5px;
+    padding: 12px;
+    font-size: 16px;
+    border: none;
+    border-radius: 8px;
+    background: #82caff;
+    color: #004aad;
+    cursor: pointer;
 }
 
 .slider {
@@ -163,7 +171,6 @@ header {
 <header>
 <span class="menu-btn" onclick="openMenu()">☰</span>
 New Mahankal Public School
-<button class="login-btn" onclick="location.href='admin_login.html'">Login</button>
 </header>
 
 <div class="side-menu" id="sideMenu">
@@ -180,6 +187,14 @@ New Mahankal Public School
 
 <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
+<!-- Top Buttons -->
+<div class="top-buttons">
+    <button onclick="location.href='admission.html'">Admission</button>
+    <button onclick="location.href='result.html'">Result</button>
+    <button onclick="location.href='complain.html'">Complaint</button>
+    <button onclick="location.href='teacher.html'">Teachers</button>
+</div>
+
 <div class="slider">
 <img id="slide" src="https://picsum.photos/800/200">
 </div>
@@ -187,6 +202,13 @@ New Mahankal Public School
 <div class="container">
 <div class="section-title">Gallery & Videos</div>
 <div class="gallery" id="gallery"></div>
+</div>
+
+<!-- Bottom Buttons -->
+<div class="bottom-buttons">
+    <button onclick="location.href='fees.html'">Fees</button>
+    <button onclick="location.href='admin_login.html'">Login</button>
+    <button onclick="location.href='event.html'">Events</button>
 </div>
 
 <a class="whatsapp" href="https://wa.me/919999999999">W</a>
@@ -276,4 +298,4 @@ setInterval(()=>{
 </script>
 
 </body>
-  </html>
+</html>
