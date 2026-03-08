@@ -181,7 +181,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore,collection,addDoc,getDocs,deleteDoc,doc }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import { getStorage,ref,uploadBytes,getDownloadURL,deleteObject }
+import { getStorage,ref,uploadBytes,getDownloadURL }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 
@@ -208,12 +208,7 @@ const storage = getStorage(app);
 
 
 
-window.login=function(){
-
-const email=document.getElementById("email").value
-const password=document.getElementById("password").value
-
-if(email=="nmpsnagguradiya@gmail.com" && password=="Nmps@123"){
+function openDashboard(){
 
 document.getElementById("loginBox").style.display="none"
 document.getElementById("dashboard").style.display="block"
@@ -225,6 +220,20 @@ loadNotices()
 loadResults()
 
 }
+
+
+window.login=function(){
+
+const email=document.getElementById("email").value
+const password=document.getElementById("password").value
+
+if(email=="nmpsnagguradiya@gmail.com" && password=="Nmps@123"){
+
+localStorage.setItem("adminLogin","true")
+
+openDashboard()
+
+}
 else{
 
 alert("Wrong Login")
@@ -234,10 +243,17 @@ alert("Wrong Login")
 }
 
 
+if(localStorage.getItem("adminLogin")=="true"){
+openDashboard()
+}
+
+
 
 window.uploadNotice=async function(){
 
 const text=document.getElementById("noticeText").value
+
+if(!text) return alert("Enter notice")
 
 await addDoc(collection(db,"notice"),{text:text})
 
@@ -292,7 +308,9 @@ window.uploadPhoto=async function(){
 
 const file=document.getElementById("photoFile").files[0]
 
-const storageRef=ref(storage,"images/"+file.name)
+if(!file) return alert("Select image")
+
+const storageRef=ref(storage,"images/"+Date.now()+file.name)
 
 await uploadBytes(storageRef,file)
 
@@ -348,7 +366,9 @@ window.uploadVideo=async function(){
 
 const file=document.getElementById("videoFile").files[0]
 
-const storageRef=ref(storage,"videos/"+file.name)
+if(!file) return alert("Select video")
+
+const storageRef=ref(storage,"videos/"+Date.now()+file.name)
 
 await uploadBytes(storageRef,file)
 
@@ -416,7 +436,9 @@ window.uploadResult=async function(){
 const id=document.getElementById("sssm").value
 const file=document.getElementById("resultPdf").files[0]
 
-const storageRef=ref(storage,"results/"+file.name)
+if(!id || !file) return alert("Enter SSSM ID and select PDF")
+
+const storageRef=ref(storage,"results/"+Date.now()+file.name)
 
 await uploadBytes(storageRef,file)
 
@@ -482,12 +504,12 @@ loadResults()
 window.addTeacher=async function(){
 
 const name=document.getElementById("teacherName").value
-
 const subject=document.getElementById("teacherSubject").value
-
 const file=document.getElementById("teacherPhoto").files[0]
 
-const storageRef=ref(storage,"teachers/"+file.name)
+if(!name || !subject || !file) return alert("Fill all fields")
+
+const storageRef=ref(storage,"teachers/"+Date.now()+file.name)
 
 await uploadBytes(storageRef,file)
 
@@ -558,4 +580,4 @@ loadTeachers()
 </script>
 
 </body>
-</html>
+  </html>
