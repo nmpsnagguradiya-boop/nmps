@@ -50,7 +50,7 @@ header{
 .side-menu{
     position:fixed;
     top:0;
-    left:-250px;
+    right:-250px;
     width:220px;
     height:100%;
     background:#004aad;
@@ -106,6 +106,7 @@ header{
 .photo-title{
     font-weight:bold;
     margin-top:8px;
+    font-size:16px;
 }
 .actions{
     display:flex;
@@ -155,21 +156,16 @@ header{
     z-index:1002;
 }
 .bottom-buttons{
-    position:fixed;
-    bottom:0;
-    left:0;
-    width:100%;
+    padding:10px 0;
     display:flex;
     justify-content:space-around;
-    padding:10px 0;
-    background:#004aad;
-    z-index:1000;
+    margin-top:20px;
 }
 .bottom-buttons button{
     flex:1;
-    margin:0 5px;
+    margin:5px;
     padding:10px;
-    font-size:16px;
+    font-size:14px;
     border:none;
     border-radius:8px;
     background:#82caff;
@@ -181,13 +177,13 @@ header{
 <body>
 
 <header>
-<span class="menu-btn" onclick="openMenu()">☰</span>
 <div class="top-buttons">
 <button onclick="location.href='result.html'">Result</button>
 <button onclick="location.href='admission.html'">Admission</button>
 <button onclick="location.href='teacher.html'">Teacher</button>
 <button onclick="location.href='fees.html'">Fees</button>
 </div>
+<span class="menu-btn" onclick="openMenu()">☰</span>
 </header>
 
 <div class="school-name">New Mahankal Public School</div>
@@ -198,6 +194,10 @@ header{
 <button onclick="location.href='complain.html'">Complaint</button>
 <button onclick="location.href='teacher.html'">Teachers</button>
 <button onclick="location.href='event.html'">Events</button>
+<button onclick="location.href='social.html'">Social Media</button>
+<button onclick="location.href='career.html'">Career</button>
+<button onclick="location.href='privacy.html'">Privacy</button>
+<button onclick="location.href='mission.html'">Mission</button>
 <button onclick="closeMenu()" style="background:red;color:white;">Close Menu</button>
 </div>
 
@@ -206,6 +206,7 @@ header{
 <div class="notice-popup" id="noticePopup"></div>
 
 <div class="container" id="dashboardContainer">
+<!-- Photo Card -->
 <div class="card" id="photoCard">
 <div class="slider" id="photoSlider">
 <img src="" id="currentSlide">
@@ -222,17 +223,19 @@ header{
 </div>
 <div class="comment-list" id="commentList"></div>
 </div>
-</div>
 
-<div class="bottom-buttons">
+<!-- Bottom buttons for dashboard -->
+<div class="bottom-buttons" id="extraButtons">
 <button onclick="location.href='admin_login.html'">Login</button>
 <button onclick="location.href='event.html'">Event</button>
 <button onclick="location.href='complain.html'">Complain</button>
 </div>
 
+</div>
+
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -288,19 +291,20 @@ loadPhotos();
 
 function showSlide(index){
     currentIndex=index;
-    currentSlide.src = photos[index].url;
-    photoTitle.textContent = photos[index].title;
-    if(photos[index].link){
-        photoLink.href = photos[index].link;
+    const photo = photos[index];
+    currentSlide.src = photo.url;
+    photoTitle.textContent = photo.title || "No Title";
+    if(photo.link){
+        photoLink.href = photo.link;
         photoLink.textContent = "Click Link";
         photoLink.style.display="block";
-    }else{
+    } else {
         photoLink.style.display="none";
     }
-    loadComments(photos[index].id);
+    loadComments(photo.id);
 }
 
-// Auto slider
+// Slider auto
 function startSlider(){
     setInterval(()=>{
         if(photos.length==0) return;
@@ -310,20 +314,20 @@ function startSlider(){
     },3000);
 }
 
-// Menu
+// Menu functions
 function openMenu(){
-    document.getElementById("sideMenu").style.left="0";
+    document.getElementById("sideMenu").style.right="0";
     document.getElementById("overlay").style.display="block";
 }
 function closeMenu(){
-    document.getElementById("sideMenu").style.left="-250px";
+    document.getElementById("sideMenu").style.right="-250px";
     document.getElementById("overlay").style.display="none";
 }
 
 // Like & Comment
-likeBtn.addEventListener("click",async ()=>{
+likeBtn.addEventListener("click", async ()=>{
     const photoId = photos[currentIndex].id;
-    await addDoc(collection(db,"likes"),{photoId:photoId,user:"Anonymous"});
+    await addDoc(collection(db,"likes"),{photoId,user:"Anonymous"});
     updateLikes(photoId);
 });
 
@@ -336,7 +340,7 @@ async function addComment(){
     const val=document.getElementById("commentInput").value;
     if(!val) return;
     const photoId = photos[currentIndex].id;
-    await addDoc(collection(db,"comments"),{photoId:photoId,user:"Anonymous",comment:val});
+    await addDoc(collection(db,"comments"),{photoId,user:"Anonymous",comment:val});
     document.getElementById("commentInput").value="";
     loadComments(photoId);
 }
@@ -356,7 +360,7 @@ async function loadComments(photoId){
 document.getElementById("shareBtn").addEventListener("click",()=>{
     if(photos.length==0) return;
     navigator.clipboard.writeText(photos[currentIndex].url);
-    alert("Photo link copied to clipboard!");
+    alert("Photo link copied!");
 });
 </script>
 
