@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Result Panel</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
+
+.container{
+padding:20px;
+}
+
+form{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+margin-bottom:20px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+button{
+margin-top:10px;
+padding:10px;
+border:none;
+border-radius:5px;
+background:#004aad;
+color:white;
+cursor:pointer;
+}
+
+table{
+width:100%;
+background:white;
+border-collapse:collapse;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:10px;
+text-align:center;
+}
+
+img{
+width:60px;
+border-radius:5px;
+}
+
+.edit{background:orange;}
+.delete{background:red;}
+
+</style>
+
+</head>
+
+<body>
+
+<header>Result Admin Panel</header>
+
+<div class="container">
+
+<form id="resultForm">
+
+<h3>Upload Result</h3>
+
+<input type="text" id="sssmId" placeholder="SSSM ID" required>
+
+<input type="text" id="roll" placeholder="Roll Number" required>
+
+<input type="text" id="name" placeholder="Student Name">
+
+<input type="text" id="class" placeholder="Class">
+
+<input type="file" id="image" required>
+
+<button type="submit">Upload Result</button>
+
+</form>
+
+<table>
+
+<thead>
+<tr>
+<th>SSSM ID</th>
+<th>Roll</th>
+<th>Name</th>
+<th>Class</th>
+<th>Result</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="resultList"></tbody>
+
+</table>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,addDoc,getDocs,deleteDoc,doc,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let editId=null;
+
+loadResults();
+
+document.getElementById("resultForm").addEventListener("submit",async function(e){
+
+e.preventDefault();
+
+const sssmId=document.getElementById("sssmId").value;
+const roll=document.getElementById("roll").value;
+const name=document.getElementById("name").value;
+const className=document.getElementById("class").value;
+const file=document.getElementById("image").files[0];
+
+let imageURL="";
+
+const formData=new FormData();
+formData.append("image",file);
+
+const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+method:"POST",
+body:formData
+});
+
+const data=await res.json();
+
+imageURL=data.data.url;
+
+if(editId){
+
+await updateDoc(doc(db,"results",editId),{
+
+sssmId:sssmId,
+roll:roll,
+name:name,
+class:className,
+image:imageURL
+
+});
+
+editId=null;
+
+}else{
+
+await addDoc(collection(db,"results"),{
+
+sssmId:sssmId,
+roll:roll,
+name:name,
+class:className,
+image:imageURL
+
+});
+
+}
+
+document.getElementById("resultForm").reset();
+
+location.reload();
+
+});
+
+async function loadResults(){
+
+const snapshot=await getDocs(collection(db,"results"));
+
+const table=document.getElementById("resultList");
+
+snapshot.forEach(docSnap=>{
+
+const data=docSnap.data();
+const id=docSnap.id;
+
+table.innerHTML+=`
+
+<tr>
+
+<td>${data.sssmId}</td>
+<td>${data.roll}</td>
+<td>${data.name}</td>
+<td>${data.class}</td>
+
+<td>
+<img src="${data.image}">
+</td>
+
+<td>
+
+<button class="edit" onclick="editResult('${id}','${data.sssmId}','${data.roll}','${data.name}','${data.class}')">
+Edit
+</button>
+
+<button class="delete" onclick="deleteResult('${id}')">
+Delete
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+}
+
+window.deleteResult=async function(id){
+
+if(confirm("Delete Result?")){
+
+await deleteDoc(doc(db,"results",id));
+
+location.reload();
+
+}
+
+}
+
+window.editResult=function(id,sssm,roll,name,className){
+
+editId=id;
+
+document.getElementById("sssmId").value=sssm;
+document.getElementById("roll").value=roll;
+document.getElementById("name").value=name;
+document.getElementById("class").value=className;
+
+window.scrollTo(0,0);
+
+}
+
+</script>
+
+</body>
+</html>
