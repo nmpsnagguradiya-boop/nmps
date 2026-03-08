@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fees Portal - NMPS</title>
+<style>
+body{
+    margin:0;
+    font-family:Arial,sans-serif;
+    background:#f2f2f2;
+}
+.container{
+    max-width:600px;
+    margin:100px auto;
+    padding:20px;
+}
+.card{
+    background:white;
+    padding:20px;
+    margin-bottom:20px;
+    border-radius:10px;
+    box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+input,button{
+    width:100%;
+    padding:10px;
+    margin:10px 0;
+    border-radius:5px;
+    border:1px solid #ccc;
+}
+button{
+    background:#004aad;
+    color:white;
+    border:none;
+    cursor:pointer;
+}
+label{
+    font-weight:bold;
+    display:block;
+    margin-top:10px;
+}
+</style>
+</head>
+<body>
+
+<div class="container" id="loginContainer">
+<h2>Student Login</h2>
+<input type="text" id="sssmId" placeholder="Enter SSSM ID">
+<input type="text" id="mobile" placeholder="Enter Mobile Number">
+<button onclick="studentLogin()">Login</button>
+</div>
+
+<div class="container" id="feesContainer" style="display:none">
+<h2>Fees Dashboard</h2>
+<div class="card">
+<label>Total Fees:</label>
+<div id="totalFees">₹0</div>
+
+<label>Old Fees:</label>
+<div id="oldFees">₹0</div>
+
+<label>Vehicle Fees:</label>
+<div id="vehicleFees">₹0</div>
+
+<label>Paid Fees:</label>
+<div id="paidFees">₹0</div>
+
+<label>Pending Fees:</label>
+<div id="pendingFees">₹0</div>
+</div>
+
+<div class="card">
+<h3>Online Payment</h3>
+<label>Admin Account Number:</label>
+<div id="accountNumber"></div>
+
+<label>QR Code:</label>
+<img id="qrCode" src="" style="width:150px;height:150px;display:block;margin-bottom:10px;">
+
+<label>Upload Payment Screenshot:</label>
+<input type="file" id="paymentScreenshot">
+<button onclick="uploadPayment()">Upload Screenshot</button>
+</div>
+
+<div class="card">
+<h3>Download Receipt</h3>
+<button onclick="downloadReceipt()">Download Receipt</button>
+</div>
+
+<button onclick="logout()">Logout</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+let studentDocId = "";
+
+function studentLogin(){
+    const sssm = document.getElementById("sssmId").value;
+    const mobile = document.getElementById("mobile").value;
+    if(!sssm || !mobile){ alert("Enter both SSSM ID and Mobile"); return; }
+
+    getDoc(doc(db,"students",sssm)).then(docSnap=>{
+        if(docSnap.exists() && docSnap.data().mobile===mobile){
+            studentDocId = sssm;
+            document.getElementById("loginContainer").style.display="none";
+            document.getElementById("feesContainer").style.display="block";
+            loadFees();
+            loadAdminInfo();
+        }else{
+            alert("Invalid SSSM ID or Mobile Number");
+        }
+    });
+}
+
+function loadFees(){
+    getDoc(doc(db,"fees",studentDocId)).then(docSnap=>{
+        if(docSnap.exists()){
+            const data = docSnap.data();
+            document.getElementById("totalFees").innerText="₹"+(data.totalFees || 0);
+            document.getElementById("oldFees").innerText="₹"+(data.oldFees || 0);
+            document.getElementById("vehicleFees").innerText="₹"+(data.vehicleFees || 0);
+            document.getElementById("paidFees").innerText="₹"+(data.paidFees || 0);
+            const pending = (data.totalFees || 0)+(data.oldFees||0)+(data.vehicleFees||0)-(data.paidFees||0);
+            document.getElementById("pendingFees").innerText="₹"+pending;
+        }else{
+            alert("Fees details not found.");
+        }
+    });
+}
+
+function loadAdminInfo(){
+    getDoc(doc(db,"admin","feesInfo")).then(docSnap=>{
+        if(docSnap.exists()){
+            const data = docSnap.data();
+            document.getElementById("accountNumber").innerText=data.accountNumber || "";
+            document.getElementById("qrCode").src=data.qrCode || "";
+        }
+    });
+}
+
+function uploadPayment(){
+    const file = document.getElementById("paymentScreenshot").files[0];
+    if(!file){ alert("Select screenshot"); return; }
+    const storageRef = ref(storage,"payments/"+studentDocId+"_"+Date.now());
+    uploadBytes(storageRef,file).then(snapshot=>{
+        getDownloadURL(snapshot.ref).then(url=>{
+            setDoc(doc(db,"payments",studentDocId),{screenshot:url},{merge:true});
+            alert("Payment uploaded successfully");
+        });
+    });
+}
+
+function downloadReceipt(){
+    getDoc(doc(db,"payments",studentDocId)).then(docSnap=>{
+        if(docSnap.exists() && docSnap.data().screenshot){
+            window.open(docSnap.data().screenshot,"_blank");
+        }else{
+            alert("No receipt found");
+        }
+    });
+}
+
+function logout(){
+    studentDocId="";
+    document.getElementById("loginContainer").style.display="block";
+    document.getElementById("feesContainer").style.display="none";
+}
+</script>
+
+</body>
+</html>
