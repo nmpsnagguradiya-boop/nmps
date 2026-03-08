@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admin Admissions</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
+
+.container{
+padding:20px;
+}
+
+.dashboard{
+display:flex;
+gap:20px;
+margin-bottom:20px;
+}
+
+.box{
+background:white;
+padding:15px;
+border-radius:8px;
+flex:1;
+text-align:center;
+box-shadow:0 0 5px rgba(0,0,0,0.2);
+}
+
+.controls{
+margin-bottom:15px;
+}
+
+input,select{
+padding:8px;
+margin-right:10px;
+}
+
+table{
+width:100%;
+background:white;
+border-collapse:collapse;
+}
+
+th,td{
+padding:8px;
+border:1px solid #ddd;
+text-align:center;
+}
+
+img{
+width:50px;
+border-radius:5px;
+}
+
+button{
+padding:5px 10px;
+border:none;
+border-radius:4px;
+cursor:pointer;
+}
+
+.approve{background:green;color:white;}
+.reject{background:orange;color:white;}
+.delete{background:red;color:white;}
+.print{background:#004aad;color:white;}
+
+</style>
+
+</head>
+
+<body>
+
+<header>Admission Admin Panel</header>
+
+<div class="container">
+
+<div class="dashboard">
+
+<div class="box">
+Total Admissions
+<h2 id="total">0</h2>
+</div>
+
+<div class="box">
+Approved
+<h2 id="approved">0</h2>
+</div>
+
+<div class="box">
+Pending
+<h2 id="pending">0</h2>
+</div>
+
+</div>
+
+<div class="controls">
+
+<input type="text" id="search" placeholder="Search Name / Mobile">
+
+<select id="filter">
+<option value="all">All</option>
+<option value="Pending">Pending</option>
+<option value="Approved">Approved</option>
+<option value="Rejected">Rejected</option>
+</select>
+
+</div>
+
+<table>
+
+<thead>
+<tr>
+<th>ID</th>
+<th>Name</th>
+<th>Father</th>
+<th>Mobile</th>
+<th>Village</th>
+<th>Class</th>
+<th>Photo</th>
+<th>Document</th>
+<th>Status</th>
+<th>Actions</th>
+</tr>
+</thead>
+
+<tbody id="list"></tbody>
+
+</table>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,getDocs,doc,updateDoc,deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let admissions=[];
+
+loadAdmissions();
+
+async function loadAdmissions(){
+
+const snapshot=await getDocs(collection(db,"admissions"));
+
+const table=document.getElementById("list");
+
+snapshot.forEach(docSnap=>{
+
+const data=docSnap.data();
+data.id=docSnap.id;
+
+admissions.push(data);
+
+});
+
+renderTable();
+updateDashboard();
+
+}
+
+function renderTable(){
+
+const search=document.getElementById("search").value.toLowerCase();
+const filter=document.getElementById("filter").value;
+
+const table=document.getElementById("list");
+table.innerHTML="";
+
+admissions.forEach(data=>{
+
+if(search && !data.name.toLowerCase().includes(search) && !data.mobile.includes(search)) return;
+
+if(filter!="all" && (data.status||"Pending")!=filter) return;
+
+table.innerHTML+=`
+
+<tr>
+
+<td>${data.studentId||"-"}</td>
+
+<td>${data.name}</td>
+<td>${data.father}</td>
+<td>${data.mobile}</td>
+<td>${data.village}</td>
+<td>${data.class}</td>
+
+<td><img src="${data.photo}"></td>
+
+<td>
+<a href="${data.document}" target="_blank">Download</a>
+</td>
+
+<td>${data.status||"Pending"}</td>
+
+<td>
+
+<button class="approve" onclick="approve('${data.id}')">Approve</button>
+
+<button class="reject" onclick="reject('${data.id}')">Reject</button>
+
+<button class="delete" onclick="remove('${data.id}')">Delete</button>
+
+<button class="print" onclick='printForm(${JSON.stringify(data)})'>Print</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+}
+
+function updateDashboard(){
+
+document.getElementById("total").innerText=admissions.length;
+
+document.getElementById("approved").innerText=
+admissions.filter(a=>a.status=="Approved").length;
+
+document.getElementById("pending").innerText=
+admissions.filter(a=>!a.status || a.status=="Pending").length;
+
+}
+
+window.approve=async function(id){
+
+const studentId="NMPS"+Date.now();
+
+await updateDoc(doc(db,"admissions",id),{
+status:"Approved",
+studentId:studentId
+});
+
+location.reload();
+
+}
+
+window.reject=async function(id){
+
+await updateDoc(doc(db,"admissions",id),{
+status:"Rejected"
+});
+
+location.reload();
+
+}
+
+window.remove=async function(id){
+
+if(confirm("Delete admission?")){
+
+await deleteDoc(doc(db,"admissions",id));
+
+location.reload();
+
+}
+
+}
+
+window.printForm=function(data){
+
+const w=window.open("");
+
+w.document.write(`
+<h2>Student Admission</h2>
+<p>ID: ${data.studentId||"Pending"}</p>
+<p>Name: ${data.name}</p>
+<p>Father: ${data.father}</p>
+<p>Mobile: ${data.mobile}</p>
+<p>Village: ${data.village}</p>
+<p>Class: ${data.class}</p>
+<img src="${data.photo}" width="120">
+`);
+
+w.print();
+
+}
+
+document.getElementById("search").addEventListener("keyup",renderTable);
+document.getElementById("filter").addEventListener("change",renderTable);
+
+</script>
+
+</body>
+  </html>
