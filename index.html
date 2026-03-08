@@ -5,7 +5,6 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>New Mahankal Public School</title>
-
 <style>
 body {
     margin: 0;
@@ -26,7 +25,7 @@ header {
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 1005;
+    z-index: 2000;
     display: flex;
     justify-content: center;
     align-items: center;
@@ -38,7 +37,7 @@ header {
     top: 15px;
     font-size: 24px;
     cursor: pointer;
-    z-index: 1010; /* fix click issue */
+    z-index: 2100; /* above everything */
 }
 
 .side-menu {
@@ -51,7 +50,7 @@ header {
     color: white;
     padding: 20px;
     transition: 0.3s;
-    z-index: 1011; /* above overlay */
+    z-index: 2050; /* above overlay */
     overflow-y: auto;
 }
 
@@ -78,7 +77,7 @@ header {
     height:100%;
     background: rgba(0,0,0,0.4);
     display: none;
-    z-index: 1009;
+    z-index: 2000;
 }
 
 .top-buttons {
@@ -91,7 +90,7 @@ header {
     top: 70px;
     width: 100%;
     background: #f2f2f2;
-    z-index: 1000;
+    z-index: 1999; /* below menu-btn */
 }
 
 .top-buttons button {
@@ -155,7 +154,7 @@ header {
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 1012; /* above everything */
+    z-index: 2200; /* above everything */
 }
 
 .popup-content {
@@ -259,7 +258,7 @@ New Mahankal Public School
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, query, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -273,6 +272,7 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// Load Gallery
 async function loadGallery(){
     const snap = await getDocs(collection(db,"gallery"));
     const container = document.getElementById("gallery");
@@ -293,9 +293,11 @@ async function loadGallery(){
 }
 loadGallery();
 
+// Load Latest Notice
 async function loadNotice(){
-    const snap = await getDocs(collection(db,"notices"));
-    if (!snap.empty) { // check if notice exists
+    const q = query(collection(db,"notices"), orderBy("created_at","desc"), limit(1));
+    const snap = await getDocs(q);
+    if(!snap.empty){
         const doc = snap.docs[0];
         const d = doc.data();
         document.getElementById("noticeText").innerText = d.message;
@@ -308,6 +310,7 @@ window.closePopup = function(){
     document.getElementById("popup").style.display = "none";
 }
 
+// Menu functions
 function openMenu(){
     document.getElementById("sideMenu").style.left = "0";
     document.getElementById("overlay").style.display = "block";
@@ -318,7 +321,7 @@ function closeMenu(){
     document.getElementById("overlay").style.display = "none";
 }
 
-/* Slider */
+// Slider
 const images = [
     "https://picsum.photos/800/200?1",
     "https://picsum.photos/800/200?2",
@@ -333,4 +336,4 @@ setInterval(()=>{
 </script>
 
 </body>
-    </html>
+</html>
