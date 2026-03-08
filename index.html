@@ -221,7 +221,7 @@ button {
 
 <div class="container">
 
-  <!-- Admin forms: just visible, cannot submit -->
+  <!-- Admin forms (Preview Only) -->
   <div id="loginBox" class="card">
     <h3>Admin Login</h3>
     <input placeholder="Email" disabled>
@@ -230,43 +230,37 @@ button {
   </div>
 
   <div id="dashboard" class="card">
-    <h3>Upload Notice (Preview Only)</h3>
-    <textarea placeholder="Notice Title" disabled></textarea>
-    <button disabled>Post Notice</button>
-    <h4>Notice List</h4>
-    <div>
-      <!-- Placeholder preview cards -->
-      <p>Notice Title 1</p>
-      <p>Notice Title 2</p>
+    <h3>Notices</h3>
+    <div id="noticeList">
+      <!-- Sample notice -->
+      <p onclick="showNotice('Notice Title 1')">Notice Title 1 (Click to view)</p>
+      <p onclick="showNotice('Notice Title 2')">Notice Title 2 (Click to view)</p>
     </div>
   </div>
 
   <div id="dashboardPhotos" class="card">
-    <h3>Upload Photos (Preview Only)</h3>
-    <input type="file" multiple disabled>
-    <input placeholder="Photo Title" disabled>
-    <input placeholder="Optional Link (URL)" disabled>
-    <input placeholder="Price (₹)" disabled>
-    <button disabled>Upload</button>
-    <h4>Photo Gallery</h4>
-    <div class="media-card">
-      <img src="https://via.placeholder.com/220x150" alt="">
-      <div class="card-body">
-        <h4>Photo Title 1</h4>
-        <p>₹100</p>
-        <a href="#">Open Link</a>
-        <button disabled>Like</button>
-        <button disabled>Share</button>
+    <h3>Photo Gallery</h3>
+    <div id="photoList">
+      <!-- Sample photo cards -->
+      <div class="media-card">
+        <img src="https://via.placeholder.com/220x150" alt="">
+        <div class="card-body">
+          <h4>Photo Title 1</h4>
+          <p>₹100</p>
+          <a href="https://example.com" target="_blank">Open Link</a>
+          <button disabled>Like</button>
+          <button disabled>Share</button>
+        </div>
       </div>
-    </div>
-    <div class="media-card">
-      <img src="https://via.placeholder.com/220x150" alt="">
-      <div class="card-body">
-        <h4>Photo Title 2</h4>
-        <p>₹150</p>
-        <a href="#">Open Link</a>
-        <button disabled>Like</button>
-        <button disabled>Share</button>
+      <div class="media-card">
+        <img src="https://via.placeholder.com/220x150" alt="">
+        <div class="card-body">
+          <h4>Photo Title 2</h4>
+          <p>₹150</p>
+          <a href="https://example.com" target="_blank">Open Link</a>
+          <button disabled>Like</button>
+          <button disabled>Share</button>
+        </div>
       </div>
     </div>
   </div>
@@ -292,7 +286,7 @@ menuBtn.onclick = ()=> {
   sideMenu.style.left = sideMenu.style.left === '0px' ? '-250px' : '0px';
 }
 
-// Notice popup (preview)
+// Notice popup
 function showNotice(text){
   document.getElementById('noticeContent').innerText = text;
   document.getElementById('noticePopup').style.display = 'block';
@@ -303,4 +297,4 @@ function closeNotice(){
 </script>
 
 </body>
-</html>
+    </html>
