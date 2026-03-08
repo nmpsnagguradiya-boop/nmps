@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Admin - Student Fees</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;padding:20px;}
+.container{max-width:900px;margin:auto;}
+h2{color:#004aad;text-align:center;}
+.card{background:white;padding:20px;margin-bottom:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.1);}
+input,select,button{width:100%;padding:8px;margin:5px 0;border-radius:5px;border:1px solid #ccc;}
+button{background:#004aad;color:white;border:none;cursor:pointer;}
+label{font-weight:bold;}
+img{max-width:150px;margin-top:5px;}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>Admin Fees Management</h2>
+
+<div class="card">
+<h3>Search Student</h3>
+<input type="text" id="searchSssm" placeholder="SSSM ID">
+<input type="text" id="searchMobile" placeholder="Mobile Number">
+<button onclick="searchStudent()">Search</button>
+</div>
+
+<div class="card" id="studentCard" style="display:none;">
+<h3>Student: <span id="studentName"></span></h3>
+
+<label>Total Fees:</label>
+<input type="number" id="totalFees">
+<label>Old Fees:</label>
+<input type="number" id="oldFees">
+<label>Vehicle Fees:</label>
+<input type="number" id="vehicleFees">
+<label>Fees Paid:</label>
+<input type="number" id="feesPaid">
+<label>Total Pending Fees:</label>
+<input type="number" id="pendingFees" readonly>
+
+<label>Admin Account Number:</label>
+<input type="text" id="adminAccount">
+<label>QR Code Upload:</label>
+<input type="file" id="qrCodeFile" accept="image/*">
+<img id="qrPreview" src="" alt="QR Code" style="display:none;">
+
+<label>Upload Payment Screenshot:</label>
+<input type="file" id="paymentScreenshot" accept="image/*">
+<img id="screenshotPreview" src="" alt="Screenshot" style="display:none;">
+
+<button onclick="updateFees()">Update Fees</button>
+<button onclick="downloadReceipt()">Download Receipt</button>
+</div>
+
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, doc, setDoc, getDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+let currentStudent = null;
+
+// Search student
+async function searchStudent(){
+    const sssmId = document.getElementById("searchSssm").value;
+    const mobile = document.getElementById("searchMobile").value;
+    if(!sssmId && !mobile){ alert("Enter SSSM ID or Mobile"); return; }
+
+    let studentDoc;
+    if(sssmId){
+        studentDoc = await getDoc(doc(db,"students",sssmId));
+    }
+
+    if(!studentDoc || !studentDoc.exists()){
+        alert("Student not found");
+        return;
+    }
+
+    currentStudent = studentDoc.data();
+    document.getElementById("studentCard").style.display="block";
+    document.getElementById("studentName").innerText=currentStudent.name||'';
+    document.getElementById("totalFees").value=currentStudent.totalFees || 0;
+    document.getElementById("oldFees").value=currentStudent.oldFees || 0;
+    document.getElementById("vehicleFees").value=currentStudent.vehicleFees || 0;
+    document.getElementById("feesPaid").value=currentStudent.feesPaid || 0;
+    updatePending();
+}
+
+// Update pending fees dynamically
+function updatePending(){
+    const total = parseFloat(document.getElementById("totalFees").value) || 0;
+    const oldF = parseFloat(document.getElementById("oldFees").value) || 0;
+    const vehicle = parseFloat(document.getElementById("vehicleFees").value) || 0;
+    const paid = parseFloat(document.getElementById("feesPaid").value) || 0;
+    const pending = total + oldF + vehicle - paid;
+    document.getElementById("pendingFees").value=pending;
+}
+
+document.getElementById("totalFees").addEventListener("input",updatePending);
+document.getElementById("oldFees").addEventListener("input",updatePending);
+document.getElementById("vehicleFees").addEventListener("input",updatePending);
+document.getElementById("feesPaid").addEventListener("input",updatePending);
+
+// Update fees in Firestore
+async function updateFees(){
+    if(!currentStudent){ alert("Select student"); return; }
+    const sssmId = currentStudent.sssmId;
+    const feesData = {
+        totalFees: parseFloat(document.getElementById("totalFees").value),
+        oldFees: parseFloat(document.getElementById("oldFees").value),
+        vehicleFees: parseFloat(document.getElementById("vehicleFees").value),
+        feesPaid: parseFloat(document.getElementById("feesPaid").value),
+        pendingFees: parseFloat(document.getElementById("pendingFees").value),
+        adminAccount: document.getElementById("adminAccount").value
+    };
+
+    // Upload QR code
+    const qrFile = document.getElementById("qrCodeFile").files[0];
+    if(qrFile){
+        const qrRef = ref(storage,"fees_qr/"+sssmId+"_"+Date.now());
+        await uploadBytes(qrRef,qrFile).then(async snapshot=>{
+            feesData.qrUrl = await getDownloadURL(snapshot.ref);
+            document.getElementById("qrPreview").src=feesData.qrUrl;
+            document.getElementById("qrPreview").style.display="block";
+        });
+    }
+
+    // Upload Payment Screenshot
+    const screenshotFile = document.getElementById("paymentScreenshot").files[0];
+    if(screenshotFile){
+        const scRef = ref(storage,"fees_screenshot/"+sssmId+"_"+Date.now());
+        await uploadBytes(scRef,screenshotFile).then(async snapshot=>{
+            feesData.screenshotUrl = await getDownloadURL(snapshot.ref);
+            document.getElementById("screenshotPreview").src=feesData.screenshotUrl;
+            document.getElementById("screenshotPreview").style.display="block";
+        });
+    }
+
+    await updateDoc(doc(db,"students",sssmId),feesData);
+    alert("Fees Updated Successfully");
+}
+
+// Download Receipt
+function downloadReceipt(){
+    if(!currentStudent){ alert("Select student"); return; }
+    const receiptContent = `
+        Student Name: ${currentStudent.name}\n
+        SSSM ID: ${currentStudent.sssmId}\n
+        Total Fees: ${currentStudent.totalFees || 0}\n
+        Old Fees: ${currentStudent.oldFees || 0}\n
+        Vehicle Fees: ${currentStudent.vehicleFees || 0}\n
+        Fees Paid: ${currentStudent.feesPaid || 0}\n
+        Pending Fees: ${currentStudent.pendingFees || 0}\n
+    `;
+    const blob = new Blob([receiptContent],{type:"text/plain"});
+    const link = document.createElement("a");
+    link.href=URL.createObjectURL(blob);
+    link.download=`Receipt_${currentStudent.sssmId}.txt`;
+    link.click();
+}
+</script>
+
+</body>
+</html>
