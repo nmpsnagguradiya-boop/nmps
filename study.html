@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Online Study</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+text-align:center;
+padding:15px;
+font-size:22px;
+}
+
+.container{
+padding:20px;
+}
+
+.videoCard{
+background:white;
+padding:15px;
+margin-bottom:15px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+video{
+width:100%;
+border-radius:8px;
+margin-top:10px;
+}
+
+select{
+padding:10px;
+margin-bottom:15px;
+width:100%;
+border-radius:5px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>Online Study</header>
+
+<div class="container">
+
+<select id="classFilter">
+<option value="all">All Classes</option>
+<option value="1">Class 1</option>
+<option value="2">Class 2</option>
+<option value="3">Class 3</option>
+<option value="4">Class 4</option>
+<option value="5">Class 5</option>
+<option value="6">Class 6</option>
+<option value="7">Class 7</option>
+<option value="8">Class 8</option>
+<option value="9">Class 9</option>
+<option value="10">Class 10</option>
+</select>
+
+<div id="videos"></div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let allVideos=[];
+
+loadVideos();
+
+async function loadVideos(){
+
+const snapshot=await getDocs(collection(db,"study"));
+
+snapshot.forEach(doc=>{
+
+allVideos.push(doc.data());
+
+});
+
+renderVideos();
+
+}
+
+function renderVideos(){
+
+const filter=document.getElementById("classFilter").value;
+
+const container=document.getElementById("videos");
+
+container.innerHTML="";
+
+allVideos.forEach(v=>{
+
+if(filter!="all" && v.class!=filter) return;
+
+container.innerHTML+=`
+
+<div class="videoCard">
+
+<h3>${v.title}</h3>
+
+<p>Class : ${v.class}</p>
+
+<video controls>
+
+<source src="${v.video}" type="video/mp4">
+
+</video>
+
+</div>
+
+`;
+
+});
+
+}
+
+document.getElementById("classFilter").addEventListener("change",renderVideos);
+
+</script>
+
+</body>
+</html>
