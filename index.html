@@ -41,6 +41,12 @@ header{
     border-radius:5px;
     cursor:pointer;
 }
+.school-name{
+    text-align:center;
+    font-weight:bold;
+    margin-top:60px;
+    font-size:20px;
+}
 .side-menu{
     position:fixed;
     top:0;
@@ -76,7 +82,7 @@ header{
     z-index:999;
 }
 .container{
-    padding:80px 15px 80px 15px;
+    padding:120px 15px 80px 15px;
 }
 .card{
     background:white;
@@ -96,6 +102,10 @@ header{
     width:100%;
     height:250px;
     object-fit:cover;
+}
+.photo-title{
+    font-weight:bold;
+    margin-top:8px;
 }
 .actions{
     display:flex;
@@ -125,6 +135,24 @@ header{
     border:none;
     border-radius:5px;
     cursor:pointer;
+}
+.comment-list div{
+    background:#f0f0f0;
+    padding:5px;
+    margin-top:5px;
+    border-radius:5px;
+}
+.notice-popup{
+    position:fixed;
+    top:70px;
+    left:50%;
+    transform:translateX(-50%);
+    background:#82caff;
+    color:#004aad;
+    padding:10px 20px;
+    border-radius:8px;
+    display:none;
+    z-index:1002;
 }
 .bottom-buttons{
     position:fixed;
@@ -162,6 +190,8 @@ header{
 </div>
 </header>
 
+<div class="school-name">New Mahankal Public School</div>
+
 <div class="side-menu" id="sideMenu">
 <button onclick="location.href='admission.html'">Admission</button>
 <button onclick="location.href='result.html'">Result</button>
@@ -173,11 +203,14 @@ header{
 
 <div class="overlay" id="overlay" onclick="closeMenu()"></div>
 
+<div class="notice-popup" id="noticePopup"></div>
+
 <div class="container" id="dashboardContainer">
-<!-- Slider Card -->
 <div class="card" id="photoCard">
 <div class="slider" id="photoSlider">
 <img src="" id="currentSlide">
+<div class="photo-title" id="photoTitle"></div>
+<a href="" target="_blank" id="photoLink"></a>
 </div>
 <div class="actions">
 <button id="likeBtn">Like ❤️ <span id="likeCount">0</span></button>
@@ -187,7 +220,7 @@ header{
 <input type="text" id="commentInput" placeholder="Add a comment">
 <button onclick="addComment()">Post</button>
 </div>
-<div id="commentList"></div>
+<div class="comment-list" id="commentList"></div>
 </div>
 </div>
 
@@ -199,7 +232,7 @@ header{
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -213,39 +246,71 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const photoSlider = document.getElementById("photoSlider");
-const currentSlide = document.getElementById("currentSlide");
-
 let photos = [];
 let currentIndex = 0;
-let likeCount = 0;
 
+const currentSlide = document.getElementById("currentSlide");
+const photoTitle = document.getElementById("photoTitle");
+const photoLink = document.getElementById("photoLink");
+const likeBtn = document.getElementById("likeBtn");
+const likeCountSpan = document.getElementById("likeCount");
+const commentList = document.getElementById("commentList");
+const noticePopup = document.getElementById("noticePopup");
+
+// Load notices
+async function loadNotices(){
+    const snap = await getDocs(collection(db,"notice"));
+    snap.forEach(doc=>{
+        const d = doc.data();
+        noticePopup.textContent = d.text;
+        noticePopup.style.display="block";
+        setTimeout(()=>{ noticePopup.style.display="none"; }, 5000);
+    });
+}
+loadNotices();
+
+// Load photos
 async function loadPhotos(){
     const snap = await getDocs(collection(db,"gallery"));
     photos = [];
     snap.forEach(doc=>{
         const d = doc.data();
         if(d.type=="image"){
-            photos.push({url:d.url, title:d.title || '', link:d.link || ''});
+            photos.push({id:doc.id,url:d.url,title:d.title || '',link:d.link || ''});
         }
     });
     if(photos.length>0){
-        currentSlide.src = photos[0].url;
+        showSlide(0);
         startSlider();
     }
 }
 loadPhotos();
 
+function showSlide(index){
+    currentIndex=index;
+    currentSlide.src = photos[index].url;
+    photoTitle.textContent = photos[index].title;
+    if(photos[index].link){
+        photoLink.href = photos[index].link;
+        photoLink.textContent = "Click Link";
+        photoLink.style.display="block";
+    }else{
+        photoLink.style.display="none";
+    }
+    loadComments(photos[index].id);
+}
+
+// Auto slider
 function startSlider(){
     setInterval(()=>{
         if(photos.length==0) return;
         currentIndex++;
         if(currentIndex>=photos.length) currentIndex=0;
-        currentSlide.src = photos[currentIndex].url;
+        showSlide(currentIndex);
     },3000);
 }
 
-// Menu functions
+// Menu
 function openMenu(){
     document.getElementById("sideMenu").style.left="0";
     document.getElementById("overlay").style.display="block";
@@ -255,30 +320,45 @@ function closeMenu(){
     document.getElementById("overlay").style.display="none";
 }
 
-// Like button
-document.getElementById("likeBtn").addEventListener("click",()=>{
-    likeCount++;
-    document.getElementById("likeCount").innerText=likeCount;
+// Like & Comment
+likeBtn.addEventListener("click",async ()=>{
+    const photoId = photos[currentIndex].id;
+    await addDoc(collection(db,"likes"),{photoId:photoId,user:"Anonymous"});
+    updateLikes(photoId);
 });
 
-// Comment system
-function addComment(){
-    const val = document.getElementById("commentInput").value;
-    if(!val) return;
-    const div = document.createElement("div");
-    div.textContent = val;
-    document.getElementById("commentList").appendChild(div);
-    document.getElementById("commentInput").value="";
+async function updateLikes(photoId){
+    const snap = await getDocs(query(collection(db,"likes"), where("photoId","==",photoId)));
+    likeCountSpan.textContent = snap.size;
 }
 
-// Share button
+async function addComment(){
+    const val=document.getElementById("commentInput").value;
+    if(!val) return;
+    const photoId = photos[currentIndex].id;
+    await addDoc(collection(db,"comments"),{photoId:photoId,user:"Anonymous",comment:val});
+    document.getElementById("commentInput").value="";
+    loadComments(photoId);
+}
+
+async function loadComments(photoId){
+    commentList.innerHTML="";
+    const snap = await getDocs(query(collection(db,"comments"),where("photoId","==",photoId)));
+    snap.forEach(doc=>{
+        const data = doc.data();
+        const div = document.createElement("div");
+        div.textContent = `${data.user}: ${data.comment}`;
+        commentList.appendChild(div);
+    });
+}
+
+// Share
 document.getElementById("shareBtn").addEventListener("click",()=>{
     if(photos.length==0) return;
-    const url = photos[currentIndex].url;
-    navigator.clipboard.writeText(url);
+    navigator.clipboard.writeText(photos[currentIndex].url);
     alert("Photo link copied to clipboard!");
 });
 </script>
 
 </body>
-</html>
+    </html>
