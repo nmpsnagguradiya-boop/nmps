@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Student Management - NMPS</title>
+<style>
+body{margin:0;font-family:Arial,sans-serif;background:#f2f2f2;padding:20px;}
+.container{max-width:1000px;margin:auto;}
+h2{color:#004aad;text-align:center;}
+.card{background:white;padding:20px;margin-bottom:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.1);}
+input,select,button{width:100%;padding:8px;margin:5px 0;border-radius:5px;border:1px solid #ccc;}
+button{background:#004aad;color:white;border:none;cursor:pointer;}
+table{width:100%;border-collapse:collapse;margin-top:20px;}
+table,th,td{border:1px solid #ccc;}
+th,td{padding:8px;text-align:left;}
+</style>
+</head>
+<body>
+
+<div class="container">
+<h2>Student Management</h2>
+
+<div class="card">
+<h3>Add Student</h3>
+<input type="file" id="photoInput" accept="image/*">
+<input type="text" id="name" placeholder="Name">
+<input type="text" id="fatherName" placeholder="Father's Name">
+<input type="text" id="motherName" placeholder="Mother's Name">
+<input type="text" id="address" placeholder="Address">
+<input type="text" id="sssmId" placeholder="SSSM ID">
+<input type="text" id="familyId" placeholder="Family ID">
+<input type="text" id="adhar" placeholder="Adhar Card Number">
+<input type="text" id="rollNumber" placeholder="Roll Number">
+<input type="date" id="dob" placeholder="Date of Birth">
+<input type="text" id="aparId" placeholder="APAR ID">
+<input type="text" id="caste" placeholder="Caste">
+<input type="text" id="category" placeholder="Category">
+<input type="text" id="mobile" placeholder="Mobile Number">
+<select id="gender">
+<option value="">Select Gender</option>
+<option value="Male">Male</option>
+<option value="Female">Female</option>
+<option value="Other">Other</option>
+</select>
+<input type="text" id="post" placeholder="Post">
+<input type="text" id="district" placeholder="District">
+<input type="text" id="state" placeholder="State">
+<input type="text" id="postalCode" placeholder="Postal Code">
+<input type="date" id="admissionDate" placeholder="Admission Date">
+<input type="text" id="scholarNumber" placeholder="Scholar Number">
+<input type="email" id="email" placeholder="Email ID">
+<button onclick="addStudent()">Add Student</button>
+</div>
+
+<div class="card">
+<h3>Import Students via Excel</h3>
+<input type="file" id="excelFile" accept=".xlsx,.xls">
+<button onclick="importExcel()">Upload Excel</button>
+<button onclick="exportExcel()">Download Excel</button>
+</div>
+
+<div class="card">
+<h3>Total Students: <span id="totalStudents">0</span></h3>
+<table id="studentTable">
+<thead>
+<tr>
+<th>Photo</th><th>Name</th><th>Father</th><th>Mother</th><th>SSSM ID</th><th>Roll</th><th>DOB</th><th>Mobile</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
+</div>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
+import * as XLSX from "https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
+async function addStudent(){
+    const photoFile = document.getElementById("photoInput").files[0];
+    const studentData = {
+        name: document.getElementById("name").value,
+        fatherName: document.getElementById("fatherName").value,
+        motherName: document.getElementById("motherName").value,
+        address: document.getElementById("address").value,
+        sssmId: document.getElementById("sssmId").value,
+        familyId: document.getElementById("familyId").value,
+        adhar: document.getElementById("adhar").value,
+        rollNumber: document.getElementById("rollNumber").value,
+        dob: document.getElementById("dob").value,
+        aparId: document.getElementById("aparId").value,
+        caste: document.getElementById("caste").value,
+        category: document.getElementById("category").value,
+        mobile: document.getElementById("mobile").value,
+        gender: document.getElementById("gender").value,
+        post: document.getElementById("post").value,
+        district: document.getElementById("district").value,
+        state: document.getElementById("state").value,
+        postalCode: document.getElementById("postalCode").value,
+        admissionDate: document.getElementById("admissionDate").value,
+        scholarNumber: document.getElementById("scholarNumber").value,
+        email: document.getElementById("email").value
+    };
+    if(photoFile){
+        const storageRef = ref(storage,"students/"+studentData.sssmId+"_"+Date.now());
+        await uploadBytes(storageRef,photoFile).then(async snapshot=>{
+            const url = await getDownloadURL(snapshot.ref);
+            studentData.photo = url;
+        });
+    }
+    await setDoc(doc(db,"students",studentData.sssmId),studentData);
+    alert("Student Added");
+    loadStudents();
+}
+
+async function loadStudents(){
+    const snap = await getDocs(collection(db,"students"));
+    const tbody = document.querySelector("#studentTable tbody");
+    tbody.innerHTML="";
+    document.getElementById("totalStudents").innerText = snap.size;
+    snap.forEach(doc=>{
+        const data = doc.data();
+        const tr = document.createElement("tr");
+        tr.innerHTML=`<td>${data.photo?'<img src="'+data.photo+'" width="50" height="50"/>':''}</td>
+        <td>${data.name||''}</td>
+        <td>${data.fatherName||''}</td>
+        <td>${data.motherName||''}</td>
+        <td>${data.sssmId||''}</td>
+        <td>${data.rollNumber||''}</td>
+        <td>${data.dob||''}</td>
+        <td>${data.mobile||''}</td>`;
+        tbody.appendChild(tr);
+    });
+}
+loadStudents();
+
+// Export Excel
+function exportExcel(){
+    getDocs(collection(db,"students")).then(snap=>{
+        const data = [];
+        snap.forEach(doc=>{
+            data.push(doc.data());
+        });
+        const ws = XLSX.utils.json_to_sheet(data);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb,ws,"Students");
+        XLSX.writeFile(wb,"students.xlsx");
+    });
+}
+
+// Import Excel
+function importExcel(){
+    const file = document.getElementById("excelFile").files[0];
+    if(!file){ alert("Select Excel File"); return; }
+    const reader = new FileReader();
+    reader.onload = async (e)=>{
+        const data = new Uint8Array(e.target.result);
+        const workbook = XLSX.read(data,{type:"array"});
+        const sheet = workbook.Sheets[workbook.SheetNames[0]];
+        const jsonData = XLSX.utils.sheet_to_json(sheet);
+        for(const student of jsonData){
+            if(student.sssmId){
+                await setDoc(doc(db,"students",student.sssmId),student);
+            }
+        }
+        alert("Students Imported");
+        loadStudents();
+    };
+    reader.readAsArrayBuffer(file);
+}
+</script>
+
+</body>
+</html>
