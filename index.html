@@ -26,7 +26,10 @@ header {
     top: 0;
     left: 0;
     width: 100%;
-    z-index: 1001;
+    z-index: 1005;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .menu-btn {
@@ -35,6 +38,7 @@ header {
     top: 15px;
     font-size: 24px;
     cursor: pointer;
+    z-index: 1006;
 }
 
 .side-menu {
@@ -47,7 +51,8 @@ header {
     color: white;
     padding: 20px;
     transition: 0.3s;
-    z-index: 1002;
+    z-index: 1007;
+    overflow-y: auto; /* Scroll if content exceeds height */
 }
 
 .side-menu button {
@@ -80,7 +85,7 @@ header {
     height:100%;
     background: rgba(0,0,0,0.4);
     display: none;
-    z-index: 1000;
+    z-index: 1003;
 }
 
 .top-buttons {
@@ -149,7 +154,7 @@ header {
     border-radius: 50%;
     font-size: 20px;
     text-decoration: none;
-    z-index: 1000;
+    z-index: 1004;
 }
 
 .popup {
@@ -162,7 +167,7 @@ header {
     display: none;
     align-items: center;
     justify-content: center;
-    z-index: 1003;
+    z-index: 1008;
 }
 
 .popup-content {
@@ -192,7 +197,7 @@ header {
     justify-content: space-around;
     background: #004aad;
     padding: 10px 0;
-    z-index: 1001;
+    z-index: 1005;
 }
 
 .bottom-buttons button {
@@ -342,4 +347,4 @@ setInterval(()=>{
 </script>
 
 </body>
-    </html>
+</html>
