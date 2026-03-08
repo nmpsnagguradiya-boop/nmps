@@ -3,56 +3,84 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NMPS Student Fees Portal</title>
+<title>NMPS Admin Fees Management</title>
 <style>
 body, html {margin:0; padding:0; font-family: Arial,sans-serif; background:#f2f2f2;}
 header {background:#82caff; color:white; padding:15px; text-align:center;}
-.container {max-width:600px; margin:20px auto; padding:20px;}
+.container {max-width:1200px; margin:20px auto; padding:20px;}
 .card {background:white; padding:20px; margin:20px 0; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
-input, button {width:100%; padding:10px; margin:5px 0;}
-button {background:#82caff; color:white; border:none; cursor:pointer; border-radius:5px;}
-table {width:100%; border-collapse: collapse; margin-top:10px;}
+input, select {width:100%; padding:8px; margin:5px 0;}
+button {background:#82caff; border:none; color:white; padding:10px 15px; margin:5px 0; cursor:pointer; border-radius:5px;}
+table {width:100%; border-collapse: collapse; margin-top:15px;}
 table, th, td {border:1px solid #ddd;}
 th, td {padding:8px; text-align:left;}
 img.qr-preview {width:80px; height:80px; margin-top:5px;}
+.filters {display:flex; gap:10px; margin-bottom:10px;}
+.filters select, .filters button {width:auto; padding:5px;}
 </style>
 </head>
 <body>
 
 <header>
-  <h2>NMPS Student Fees Portal</h2>
+  <h2>NMPS Admin Fees Management</h2>
 </header>
 
 <div class="container">
   <div class="card">
-    <h3>Login to View Fees</h3>
-    <input type="text" id="mobileOrSSSM" placeholder="Enter Mobile Number or SSSM ID">
-    <button id="loginBtn">View Fees</button>
+    <h3>Update Student Fees</h3>
+    <form id="feesForm">
+      <input type="text" id="studentName" placeholder="Student Name" required>
+      <input type="text" id="className" placeholder="Class" required>
+      <input type="text" id="accountNumber" placeholder="Account Number" required>
+      <label>Upload QR Code</label>
+      <input type="file" id="qrCode" accept="image/*">
+      <img id="qrPreview" class="qr-preview" src="" alt="">
+      <input type="number" id="vehicleFees" placeholder="Vehicle Fees">
+      <input type="number" id="oldFees" placeholder="Old Fees">
+      <input type="number" id="totalFees" placeholder="Total Fees">
+      <input type="number" id="installment" placeholder="Installment">
+      <input type="number" id="totalUpdate" placeholder="Total Update">
+      <button type="submit">Add/Update Fees</button>
+    </form>
   </div>
 
-  <div id="feesCard" class="card" style="display:none;">
-    <h3>Fees Details</h3>
-    <p><b>Student Name:</b> <span id="studentName"></span></p>
-    <p><b>Class:</b> <span id="className"></span></p>
-    <p><b>Account Number:</b> <span id="accountNumber"></span></p>
-    <p><b>Vehicle Fees:</b> ₹<span id="vehicleFees"></span></p>
-    <p><b>Old Fees:</b> ₹<span id="oldFees"></span></p>
-    <p><b>Total Fees:</b> ₹<span id="totalFees"></span></p>
-    <p><b>Installment:</b> ₹<span id="installment"></span></p>
-    <p><b>Pending Fees:</b> ₹<span id="totalUpdate"></span></p>
-    <p><b>QR Code for Payment:</b></p>
-    <img id="qrCode" src="" class="qr-preview" alt="">
-  </div>
+  <div class="card">
+    <h3>Filter Students</h3>
+    <div class="filters">
+      <select id="filterClass">
+        <option value="">All Classes</option>
+      </select>
+      <button onclick="sortFeesDesc()">Highest Fees First</button>
+      <button onclick="showPending()">Pending Fees</button>
+      <button onclick="showAll()">Show All</button>
+    </div>
 
-  <div id="errorCard" class="card" style="display:none; color:red;">
-    <p>No record found. Please check your Mobile Number or SSSM ID.</p>
+    <table id="feesTable">
+      <thead>
+        <tr>
+          <th>Student Name</th>
+          <th>Class</th>
+          <th>Account Number</th>
+          <th>QR Code</th>
+          <th>Vehicle Fees</th>
+          <th>Old Fees</th>
+          <th>Total Fees</th>
+          <th>Installment</th>
+          <th>Total Update</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody></tbody>
+    </table>
   </div>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, setDoc, doc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
+// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
   authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
@@ -63,39 +91,157 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const storage = getStorage(app);
 
-document.getElementById('loginBtn').addEventListener('click', async ()=>{
-  const value = document.getElementById('mobileOrSSSM').value.trim();
-  if(!value) return alert('Enter Mobile Number or SSSM ID');
+// Elements
+const feesForm = document.getElementById('feesForm');
+const qrInput = document.getElementById('qrCode');
+const qrPreview = document.getElementById('qrPreview');
+const filterClassSelect = document.getElementById('filterClass');
+let allRecords = [];
+let allStudents = [];
 
-  const feesRef = collection(db,'fees');
-  const snapshot = await getDocs(feesRef);
-  let found = null;
-  snapshot.forEach(docSnap=>{
-    const data = docSnap.data();
-    if(data.mobileNumber == value || data.sssmId == value){
-      found = data;
-    }
+// Load student.html data from Firestore (assume collection "students")
+import { getDocs as getStudentDocs, collection as studentCollection } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+async function loadAllStudents(){
+  const snapshot = await getStudentDocs(studentCollection(db,'students'));
+  allStudents = [];
+  snapshot.forEach(docSnap => allStudents.push(docSnap.data()));
+  populateClassFilter();
+}
+loadAllStudents();
+
+// QR preview
+qrInput.addEventListener('change', ()=>{
+  const file = qrInput.files[0];
+  if(file) qrPreview.src = URL.createObjectURL(file);
+});
+
+// Add/Update fees
+feesForm.addEventListener('submit', async function(e){
+  e.preventDefault();
+  const studentName = document.getElementById('studentName').value;
+  const className = document.getElementById('className').value;
+  const accountNumber = document.getElementById('accountNumber').value;
+  const vehicleFees = +document.getElementById('vehicleFees').value || 0;
+  const oldFees = +document.getElementById('oldFees').value || 0;
+  const totalFees = +document.getElementById('totalFees').value || 0;
+  const installment = +document.getElementById('installment').value || 0;
+  const totalUpdate = +document.getElementById('totalUpdate').value || 0;
+  
+  let qrURL = '';
+  if(qrInput.files[0]){
+    const file = qrInput.files[0];
+    const storageRef = ref(storage, 'qrCodes/'+Date.now()+'_'+file.name);
+    await uploadBytes(storageRef, file);
+    qrURL = await getDownloadURL(storageRef);
+  }
+
+  // Add/Update only if student exists in students collection
+  const exists = allStudents.find(s=>s.name===studentName && s.studentClass===className);
+  if(!exists){ alert('Student not found in student list'); return; }
+
+  const studentDoc = doc(db,'fees',studentName+'_'+className);
+  await setDoc(studentDoc,{
+    studentName,className,accountNumber,qrURL,vehicleFees,oldFees,totalFees,installment,totalUpdate
   });
 
-  if(found){
-    document.getElementById('feesCard').style.display='block';
-    document.getElementById('errorCard').style.display='none';
-    document.getElementById('studentName').innerText = found.studentName;
-    document.getElementById('className').innerText = found.className;
-    document.getElementById('accountNumber').innerText = found.accountNumber;
-    document.getElementById('vehicleFees').innerText = found.vehicleFees || 0;
-    document.getElementById('oldFees').innerText = found.oldFees || 0;
-    document.getElementById('totalFees').innerText = found.totalFees || 0;
-    document.getElementById('installment').innerText = found.installment || 0;
-    document.getElementById('totalUpdate').innerText = found.totalUpdate || 0;
-    document.getElementById('qrCode').src = found.qrURL || '';
-  }else{
-    document.getElementById('feesCard').style.display='none';
-    document.getElementById('errorCard').style.display='block';
-  }
+  feesForm.reset();
+  qrPreview.src='';
 });
+
+// Live snapshot fees
+onSnapshot(collection(db,'fees'), (snapshot)=>{
+  allRecords = [];
+  snapshot.forEach(docSnap=>{
+    // Only show students present in allStudents
+    const data = docSnap.data();
+    const match = allStudents.find(s=>s.name===data.studentName && s.studentClass===data.className);
+    if(match) allRecords.push(data);
+  });
+  populateClassFilter();
+  renderTable(allRecords);
+});
+
+// Populate class filter
+function populateClassFilter(){
+  const classes = [...new Set(allRecords.map(r=>r.className))];
+  filterClassSelect.innerHTML = '<option value="">All Classes</option>';
+  classes.forEach(c=>{
+    const opt = document.createElement('option');
+    opt.value = c; opt.textContent = c;
+    filterClassSelect.appendChild(opt);
+  });
+}
+
+// Render table
+function renderTable(records){
+  const tbody = document.querySelector('#feesTable tbody');
+  tbody.innerHTML='';
+  records.forEach(f=>{
+    const tr = document.createElement('tr');
+    tr.innerHTML=`
+      <td>${f.studentName}</td>
+      <td>${f.className}</td>
+      <td>${f.accountNumber}</td>
+      <td>${f.qrURL ? '<img src="'+f.qrURL+'" width="50"/>' : ''}</td>
+      <td>${f.vehicleFees}</td>
+      <td>${f.oldFees}</td>
+      <td>${f.totalFees}</td>
+      <td>${f.installment}</td>
+      <td>${f.totalUpdate}</td>
+      <td>
+        <button onclick="editRecord('${f.studentName}','${f.className}')">Edit</button>
+        <button onclick="deleteRecord('${f.studentName}','${f.className}')">Delete</button>
+      </td>
+    `;
+    tbody.appendChild(tr);
+  });
+}
+
+// Edit / Delete
+function editRecord(name,className){
+  const record = allRecords.find(r=>r.studentName===name && r.className===className);
+  if(!record) return;
+  document.getElementById('studentName').value = record.studentName;
+  document.getElementById('className').value = record.className;
+  document.getElementById('accountNumber').value = record.accountNumber;
+  document.getElementById('vehicleFees').value = record.vehicleFees;
+  document.getElementById('oldFees').value = record.oldFees;
+  document.getElementById('totalFees').value = record.totalFees;
+  document.getElementById('installment').value = record.installment;
+  document.getElementById('totalUpdate').value = record.totalUpdate;
+  qrPreview.src = record.qrURL;
+}
+
+async function deleteRecord(name,className){
+  if(confirm('Delete this record?')){
+    const studentDoc = doc(db,'fees',name+'_'+className);
+    await deleteDoc(studentDoc);
+  }
+}
+
+// Filters
+filterClassSelect.addEventListener('change', function(){
+  const cls = this.value;
+  if(cls) renderTable(allRecords.filter(r=>r.className===cls));
+  else renderTable(allRecords);
+});
+
+function sortFeesDesc(){
+  const sorted = [...allRecords].sort((a,b)=>b.totalFees - a.totalFees);
+  renderTable(sorted);
+}
+
+function showPending(){
+  renderTable(allRecords.filter(r=>r.totalUpdate>0));
+}
+
+function showAll(){
+  renderTable(allRecords);
+}
 </script>
 
 </body>
-</html>
+  </html>
