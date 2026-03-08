@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Student Result</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
+
+.container{
+padding:20px;
+text-align:center;
+}
+
+.searchBox{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+max-width:400px;
+margin:auto;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+button{
+margin-top:10px;
+padding:10px;
+background:#004aad;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+width:100%;
+}
+
+.resultCard{
+margin-top:20px;
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+display:none;
+max-width:500px;
+margin:auto;
+}
+
+.resultCard img{
+width:100%;
+border-radius:8px;
+margin-top:10px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>Check Student Result</header>
+
+<div class="container">
+
+<div class="searchBox">
+
+<h3>Search Result</h3>
+
+<input type="text" id="sssm" placeholder="Enter SSSM ID">
+
+<input type="text" id="roll" placeholder="Enter Roll Number">
+
+<button onclick="searchResult()">Search Result</button>
+
+</div>
+
+<div class="resultCard" id="resultCard">
+
+<h3 id="name"></h3>
+
+<p id="class"></p>
+
+<img id="resultImage">
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+window.searchResult = async function(){
+
+const sssm=document.getElementById("sssm").value;
+const roll=document.getElementById("roll").value;
+
+const snapshot=await getDocs(collection(db,"results"));
+
+let found=false;
+
+snapshot.forEach(doc=>{
+
+const data=doc.data();
+
+if(data.sssmId==sssm && data.roll==roll){
+
+document.getElementById("name").innerText=data.name;
+document.getElementById("class").innerText="Class : "+data.class;
+
+document.getElementById("resultImage").src=data.image;
+
+document.getElementById("resultCard").style.display="block";
+
+found=true;
+
+}
+
+});
+
+if(!found){
+
+alert("Result Not Found");
+
+}
+
+}
+
+</script>
+
+</body>
+  </html>
