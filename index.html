@@ -3,366 +3,400 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>New Mahankal Public School</title>
+<title>NMPS Portal</title>
 <style>
-body{
-    margin:0;
-    font-family:Arial, sans-serif;
-    background:#f2f2f2;
-    padding-bottom:60px;
+/* Reset + Body */
+body, html {
+  margin:0;
+  padding:0;
+  font-family: Arial, sans-serif;
+  background:#f2f2f2;
 }
-header{
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    background:#004aad;
-    color:white;
-    display:flex;
-    align-items:center;
-    justify-content:space-between;
-    padding:10px 15px;
-    z-index:1000;
+
+/* Header */
+header {
+  position: fixed;
+  top:0;
+  left:0;
+  right:0;
+  height:60px;
+  background:#82caff;
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:0 10px;
+  z-index:1000;
+  color:white;
+  box-shadow:0 2px 5px rgba(0,0,0,0.2);
 }
-.menu-btn{
-    font-size:24px;
-    cursor:pointer;
+
+header .top-buttons button {
+  margin-left:5px;
+  background:white;
+  color:#82caff;
+  border:none;
+  padding:5px 10px;
+  border-radius:5px;
+  cursor:pointer;
 }
-.top-buttons{
-    display:flex;
-    gap:10px;
+
+/* Menu Button */
+#menuBtn {
+  font-size:24px;
+  cursor:pointer;
 }
-.top-buttons button{
-    padding:8px 12px;
-    font-size:14px;
-    background:#82caff;
-    color:#004aad;
-    border:none;
-    border-radius:5px;
-    cursor:pointer;
+
+/* Side Menu */
+#sideMenu {
+  position:fixed;
+  top:60px;
+  left:-250px;
+  width:250px;
+  height:100%;
+  background:#fff;
+  box-shadow:2px 0 5px rgba(0,0,0,0.2);
+  padding:10px;
+  transition:0.3s;
+  z-index:999;
 }
-.school-name{
-    text-align:center;
-    font-weight:bold;
-    margin-top:60px;
-    font-size:20px;
+
+#sideMenu button {
+  display:block;
+  width:100%;
+  margin:10px 0;
+  padding:10px;
+  background:#82caff;
+  color:white;
+  border:none;
+  border-radius:5px;
+  cursor:pointer;
 }
-.side-menu{
-    position:fixed;
-    top:0;
-    right:-250px;
-    width:220px;
-    height:100%;
-    background:#004aad;
-    color:white;
-    padding:20px;
-    transition:0.3s;
-    z-index:1001;
-    overflow-y:auto;
+
+/* Container */
+.container {
+  max-width:1000px;
+  margin:80px auto 80px auto;
+  padding:20px;
 }
-.side-menu button{
-    display:block;
-    width:100%;
-    margin:10px 0;
-    padding:10px;
-    background:white;
-    color:#004aad;
-    border:none;
-    border-radius:5px;
-    cursor:pointer;
+
+/* Cards */
+.card {
+  background:white;
+  padding:15px;
+  margin:15px 0;
+  border-radius:10px;
+  box-shadow:0 0 10px rgba(0,0,0,0.1);
 }
-.overlay{
-    position:fixed;
-    top:0;
-    left:0;
-    width:100%;
-    height:100%;
-    background:rgba(0,0,0,0.4);
-    display:none;
-    z-index:999;
+
+/* Inputs */
+input, textarea {
+  width:100%;
+  padding:10px;
+  margin:10px 0;
 }
-.container{
-    padding:120px 15px 80px 15px;
+
+/* Buttons */
+button {
+  cursor:pointer;
 }
-.card{
-    background:white;
-    padding:15px;
-    margin-bottom:20px;
-    border-radius:10px;
-    box-shadow:0 0 10px rgba(0,0,0,0.1);
+
+/* Media Cards */
+.media-card {
+  display:inline-block;
+  width:220px;
+  margin:10px;
+  vertical-align:top;
+  border:1px solid #ddd;
+  border-radius:10px;
+  overflow:hidden;
+  background:white;
+  box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
-.slider{
-    width:100%;
-    height:250px;
-    overflow:hidden;
-    position:relative;
-    border-radius:10px;
+
+.media-card img {
+  width:100%;
+  display:block;
 }
-.slider img{
-    width:100%;
-    height:250px;
-    object-fit:cover;
+
+.media-card .card-body {
+  padding:10px;
 }
-.photo-title{
-    font-weight:bold;
-    margin-top:8px;
-    font-size:16px;
+
+.media-card .card-body h4 {
+  margin:5px 0;
 }
-.actions{
-    display:flex;
-    justify-content:space-around;
-    margin-top:10px;
+
+.media-card .card-body a {
+  display:block;
+  color:#82caff;
+  text-decoration:none;
+  margin:2px 0;
 }
-.actions button{
-    padding:8px 12px;
-    background:#82caff;
-    color:#004aad;
-    border:none;
-    border-radius:5px;
-    cursor:pointer;
+
+.media-card .card-body button {
+  margin-top:5px;
+  background:#82caff;
+  color:white;
+  border:none;
+  padding:5px 10px;
+  border-radius:5px;
 }
-.comment-box{
-    margin-top:10px;
+
+/* Bottom bar */
+#bottomBar {
+  position:fixed;
+  bottom:0;
+  left:0;
+  right:0;
+  background:#82caff;
+  display:flex;
+  justify-content:space-around;
+  padding:10px 0;
+  color:white;
+  z-index:1000;
 }
-.comment-box input{
-    width:70%;
-    padding:5px;
-    margin-right:5px;
+
+#bottomBar button {
+  background:white;
+  color:#82caff;
+  border:none;
+  padding:5px 10px;
+  border-radius:5px;
 }
-.comment-box button{
-    padding:5px 10px;
-    background:#82caff;
-    color:#004aad;
-    border:none;
-    border-radius:5px;
-    cursor:pointer;
+
+/* Notice Popup */
+#noticePopup {
+  position:fixed;
+  top:50%;
+  left:50%;
+  transform:translate(-50%,-50%);
+  background:white;
+  padding:20px;
+  border-radius:10px;
+  box-shadow:0 2px 10px rgba(0,0,0,0.3);
+  display:none;
+  z-index:2000;
 }
-.comment-list div{
-    background:#f0f0f0;
-    padding:5px;
-    margin-top:5px;
-    border-radius:5px;
+
+#noticePopup button {
+  margin-top:10px;
+  background:#82caff;
+  color:white;
+  border:none;
+  padding:5px 10px;
+  border-radius:5px;
 }
-.notice-popup{
-    position:fixed;
-    top:70px;
-    left:50%;
-    transform:translateX(-50%);
-    background:#82caff;
-    color:#004aad;
-    padding:10px 20px;
-    border-radius:8px;
-    display:none;
-    z-index:1002;
-}
-.bottom-buttons{
-    padding:10px 0;
-    display:flex;
-    justify-content:space-around;
-    margin-top:20px;
-}
-.bottom-buttons button{
-    flex:1;
-    margin:5px;
-    padding:10px;
-    font-size:14px;
-    border:none;
-    border-radius:8px;
-    background:#82caff;
-    color:#004aad;
-    cursor:pointer;
+
+/* Login Modal */
+#loginBox {
+  max-width:400px;
+  margin:50px auto;
 }
 </style>
 </head>
 <body>
 
 <header>
-<div class="top-buttons">
-<button onclick="location.href='result.html'">Result</button>
-<button onclick="location.href='admission.html'">Admission</button>
-<button onclick="location.href='teacher.html'">Teacher</button>
-<button onclick="location.href='fees.html'">Fees</button>
-</div>
-<span class="menu-btn" onclick="openMenu()">☰</span>
+  <span id="menuBtn">&#9776;</span>
+  <div class="top-buttons">
+    <button onclick="alert('Result clicked')">Result</button>
+    <button onclick="alert('Admission clicked')">Admission</button>
+    <button onclick="alert('Event clicked')">Event</button>
+    <button onclick="alert('Fees clicked')">Fees</button>
+  </div>
 </header>
 
-<div class="school-name">New Mahankal Public School</div>
-
-<div class="side-menu" id="sideMenu">
-<button onclick="location.href='admission.html'">Admission</button>
-<button onclick="location.href='result.html'">Result</button>
-<button onclick="location.href='complain.html'">Complaint</button>
-<button onclick="location.href='teacher.html'">Teachers</button>
-<button onclick="location.href='event.html'">Events</button>
-<button onclick="location.href='social.html'">Social Media</button>
-<button onclick="location.href='career.html'">Career</button>
-<button onclick="location.href='privacy.html'">Privacy</button>
-<button onclick="location.href='mission.html'">Mission</button>
-<button onclick="closeMenu()" style="background:red;color:white;">Close Menu</button>
+<div id="sideMenu">
+  <button onclick="showLogin()">Login</button>
+  <button onclick="alert('Fees')">Fees</button>
+  <button onclick="alert('Admission')">Admission</button>
+  <button onclick="alert('Event')">Event</button>
+  <button onclick="alert('Career')">Career</button>
+  <button onclick="alert('Social Media')">Social Media</button>
+  <button onclick="alert('Privacy Teacher')">Privacy Teacher</button>
+  <button onclick="alert('Result')">Result</button>
+  <button onclick="alert('Complain')">Complain</button>
 </div>
 
-<div class="overlay" id="overlay" onclick="closeMenu()"></div>
+<div class="container">
 
-<div class="notice-popup" id="noticePopup"></div>
+  <div id="loginBox" class="card">
+    <h3>Admin Login</h3>
+    <input id="email" placeholder="Email">
+    <input id="password" type="password" placeholder="Password">
+    <button onclick="login()">Login</button>
+  </div>
 
-<div class="container" id="dashboardContainer">
-<!-- Photo Card -->
-<div class="card" id="photoCard">
-<div class="slider" id="photoSlider">
-<img src="" id="currentSlide">
-<div class="photo-title" id="photoTitle"></div>
-<a href="" target="_blank" id="photoLink"></a>
-</div>
-<div class="actions">
-<button id="likeBtn">Like ❤️ <span id="likeCount">0</span></button>
-<button id="shareBtn">Share 🔗</button>
-</div>
-<div class="comment-box">
-<input type="text" id="commentInput" placeholder="Add a comment">
-<button onclick="addComment()">Post</button>
-</div>
-<div class="comment-list" id="commentList"></div>
+  <div id="dashboard" style="display:none">
+
+    <div class="card">
+      <h3>Upload Notice</h3>
+      <textarea id="noticeText" placeholder="Notice Title"></textarea>
+      <button onclick="uploadNotice()">Post Notice</button>
+      <h4>Notice List</h4>
+      <div id="noticeList"></div>
+    </div>
+
+    <div class="card">
+      <h3>Upload Photos (Multiple)</h3>
+      <input type="file" id="photoFiles" multiple>
+      <input id="photoTitle" placeholder="Photo Title">
+      <input id="photoLink" placeholder="Optional Link (URL)">
+      <input id="photoPrice" placeholder="Price (₹)">
+      <button onclick="uploadPhotos()">Upload</button>
+      <h4>Photo Gallery</h4>
+      <div id="photoList"></div>
+    </div>
+
+  </div>
 </div>
 
-<!-- Bottom buttons for dashboard -->
-<div class="bottom-buttons" id="extraButtons">
-<button onclick="location.href='admin_login.html'">Login</button>
-<button onclick="location.href='event.html'">Event</button>
-<button onclick="location.href='complain.html'">Complain</button>
+<div id="bottomBar">
+  <button onclick="whatsappPopup('Login')">Login</button>
+  <button onclick="whatsappPopup('Complain')">Complain</button>
+  <button onclick="whatsappPopup('Teacher')">Teacher</button>
 </div>
 
+<div id="noticePopup">
+  <p id="noticeContent"></p>
+  <button onclick="closeNotice()">Close</button>
 </div>
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, addDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId: "nmpsnagguradiya-b9b94",
-storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
-messagingSenderId: "811957568318",
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+  apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+  authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+  projectId: "nmpsnagguradiya-b9b94",
+  storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
+  messagingSenderId: "811957568318",
+  appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let photos = [];
-let currentIndex = 0;
+// Menu toggle
+const menuBtn=document.getElementById('menuBtn');
+const sideMenu=document.getElementById('sideMenu');
+menuBtn.onclick = ()=> {
+  sideMenu.style.left = sideMenu.style.left === '0px' ? '-250px' : '0px';
+}
 
-const currentSlide = document.getElementById("currentSlide");
-const photoTitle = document.getElementById("photoTitle");
-const photoLink = document.getElementById("photoLink");
-const likeBtn = document.getElementById("likeBtn");
-const likeCountSpan = document.getElementById("likeCount");
-const commentList = document.getElementById("commentList");
-const noticePopup = document.getElementById("noticePopup");
+// WhatsApp popup
+function whatsappPopup(type){
+  window.open(`https://wa.me/917171234567?text=${type}`,'_blank');
+}
 
-// Load notices
+// Notice popup
+function showNotice(text){
+  document.getElementById('noticeContent').innerText = text;
+  document.getElementById('noticePopup').style.display = 'block';
+}
+function closeNotice(){
+  document.getElementById('noticePopup').style.display = 'none';
+}
+
+// Login
+window.login = function(){
+  const email=document.getElementById("email").value;
+  const password=document.getElementById("password").value;
+  if(email=="nmpsnagguradiya@gmail.com" && password=="Nmps@123"){
+    localStorage.setItem("adminLogin","true");
+    openDashboard();
+  } else { alert("Wrong Login"); }
+}
+function showLogin(){ alert('Login clicked') }
+
+if(localStorage.getItem("adminLogin")=="true"){
+  openDashboard();
+}
+
+// Dashboard functions
+async function uploadNotice(){
+  const text=document.getElementById("noticeText").value;
+  if(!text) return alert("Enter notice text");
+  await addDoc(collection(db,"notice"),{text:text});
+  alert("Notice Uploaded");
+  loadNotices();
+}
+
 async function loadNotices(){
-    const snap = await getDocs(collection(db,"notice"));
-    snap.forEach(doc=>{
-        const d = doc.data();
-        noticePopup.textContent = d.text;
-        noticePopup.style.display="block";
-        setTimeout(()=>{ noticePopup.style.display="none"; }, 5000);
-    });
+  const snapshot=await getDocs(collection(db,"notice"));
+  const list=document.getElementById("noticeList");
+  list.innerHTML="";
+  snapshot.forEach((d)=>{
+    const data=d.data();
+    const div=document.createElement("div");
+    div.innerHTML=`<p>${data.text}</p>
+      <button onclick="deleteNotice('${d.id}')">Delete</button>
+      <button onclick="showNotice('${data.text.replace(/'/g,"\\'")}')">View Popup</button>`;
+    list.appendChild(div);
+  });
 }
-loadNotices();
+window.deleteNotice=async function(id){
+  await deleteDoc(doc(db,"notice",id));
+  loadNotices();
+}
 
-// Load photos
+// Photo Upload
+window.uploadPhotos = async function(){
+  const files=document.getElementById("photoFiles").files;
+  const title=document.getElementById("photoTitle").value;
+  const link=document.getElementById("photoLink").value;
+  const price=document.getElementById("photoPrice").value || "0";
+  if(files.length==0) return alert("Select files");
+  for(let i=0;i<files.length;i++){
+    const file=files[i];
+    const formData=new FormData();
+    formData.append("image",file);
+    const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+      method:"POST", body:formData
+    });
+    const data=await res.json();
+    const url=data.data.url;
+    await addDoc(collection(db,"gallery"),{type:"image",url,title,link,price});
+  }
+  alert("Photos Uploaded Successfully");
+  loadPhotos();
+}
+
 async function loadPhotos(){
-    const snap = await getDocs(collection(db,"gallery"));
-    photos = [];
-    snap.forEach(doc=>{
-        const d = doc.data();
-        if(d.type=="image"){
-            photos.push({id:doc.id,url:d.url,title:d.title || '',link:d.link || ''});
-        }
-    });
-    if(photos.length>0){
-        showSlide(0);
-        startSlider();
+  const snapshot=await getDocs(collection(db,"gallery"));
+  const list=document.getElementById("photoList");
+  list.innerHTML="";
+  snapshot.forEach((d)=>{
+    const data=d.data();
+    if(data.type==="image"){
+      const div=document.createElement("div");
+      div.className="media-card";
+      div.innerHTML=`<img src="${data.url}">
+        <div class="card-body">
+          <h4>${data.title}</h4>
+          <p>₹${data.price}</p>
+          ${data.link ? `<a href="${data.link}" target="_blank">Open Link</a>` : ''}
+          <button onclick="alert('Liked')">Like</button>
+          <button onclick="alert('Shared')">Share</button>
+          <button onclick="deletePhoto('${d.id}')">Delete</button>
+        </div>`;
+      list.appendChild(div);
     }
-}
-loadPhotos();
-
-function showSlide(index){
-    currentIndex=index;
-    const photo = photos[index];
-    currentSlide.src = photo.url;
-    photoTitle.textContent = photo.title || "No Title";
-    if(photo.link){
-        photoLink.href = photo.link;
-        photoLink.textContent = "Click Link";
-        photoLink.style.display="block";
-    } else {
-        photoLink.style.display="none";
-    }
-    loadComments(photo.id);
+  });
 }
 
-// Slider auto
-function startSlider(){
-    setInterval(()=>{
-        if(photos.length==0) return;
-        currentIndex++;
-        if(currentIndex>=photos.length) currentIndex=0;
-        showSlide(currentIndex);
-    },3000);
+window.deletePhoto=async function(id){
+  await deleteDoc(doc(db,"gallery",id));
+  loadPhotos();
 }
 
-// Menu functions
-function openMenu(){
-    document.getElementById("sideMenu").style.right="0";
-    document.getElementById("overlay").style.display="block";
-}
-function closeMenu(){
-    document.getElementById("sideMenu").style.right="-250px";
-    document.getElementById("overlay").style.display="none";
+function openDashboard(){
+  document.getElementById("loginBox").style.display="none";
+  document.getElementById("dashboard").style.display="block";
+  loadNotices();
+  loadPhotos();
 }
 
-// Like & Comment
-likeBtn.addEventListener("click", async ()=>{
-    const photoId = photos[currentIndex].id;
-    await addDoc(collection(db,"likes"),{photoId,user:"Anonymous"});
-    updateLikes(photoId);
-});
-
-async function updateLikes(photoId){
-    const snap = await getDocs(query(collection(db,"likes"), where("photoId","==",photoId)));
-    likeCountSpan.textContent = snap.size;
-}
-
-async function addComment(){
-    const val=document.getElementById("commentInput").value;
-    if(!val) return;
-    const photoId = photos[currentIndex].id;
-    await addDoc(collection(db,"comments"),{photoId,user:"Anonymous",comment:val});
-    document.getElementById("commentInput").value="";
-    loadComments(photoId);
-}
-
-async function loadComments(photoId){
-    commentList.innerHTML="";
-    const snap = await getDocs(query(collection(db,"comments"),where("photoId","==",photoId)));
-    snap.forEach(doc=>{
-        const data = doc.data();
-        const div = document.createElement("div");
-        div.textContent = `${data.user}: ${data.comment}`;
-        commentList.appendChild(div);
-    });
-}
-
-// Share
-document.getElementById("shareBtn").addEventListener("click",()=>{
-    if(photos.length==0) return;
-    navigator.clipboard.writeText(photos[currentIndex].url);
-    alert("Photo link copied!");
-});
 </script>
-
 </body>
-    </html>
+</html>
