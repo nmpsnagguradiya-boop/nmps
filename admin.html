@@ -3,7 +3,6 @@
 <head>
 
 <meta name="viewport" content="width=device-width,initial-scale=1">
-
 <title>NMPS Admin Panel</title>
 
 <style>
@@ -47,17 +46,28 @@ border:none;
 padding:10px 20px;
 border-radius:5px;
 color:white;
+cursor:pointer;
 }
 
 .teacher{
 display:flex;
 gap:10px;
 margin:10px 0;
+align-items:center;
 }
 
 .teacher img{
 width:80px;
 border-radius:10px;
+}
+
+.media img{
+width:120px;
+border-radius:10px;
+}
+
+.media video{
+width:150px;
 }
 
 </style>
@@ -67,9 +77,7 @@ border-radius:10px;
 <body>
 
 <header>
-
 <h2>NMPS Admin Panel</h2>
-
 </header>
 
 <div class="container">
@@ -79,63 +87,71 @@ border-radius:10px;
 <h3>Admin Login</h3>
 
 <input id="email" placeholder="Email">
-
 <input id="password" type="password" placeholder="Password">
 
 <button onclick="login()">Login</button>
 
 </div>
 
+
 <div id="dashboard" style="display:none">
 
 <div class="card">
-
 <h3>Upload Notice</h3>
-
 <textarea id="noticeText"></textarea>
-
 <button onclick="uploadNotice()">Post Notice</button>
 
+<h4>Notice List</h4>
+<div id="noticeList"></div>
 </div>
+
 
 <div class="card">
 
 <h3>Upload Photo</h3>
 
 <input type="file" id="photoFile">
-
 <button onclick="uploadPhoto()">Upload</button>
 
+<h4>Photo List</h4>
+<div id="photoList"></div>
+
 </div>
+
 
 <div class="card">
 
 <h3>Upload Video</h3>
 
 <input type="file" id="videoFile">
-
 <button onclick="uploadVideo()">Upload</button>
 
+<h4>Video List</h4>
+<div id="videoList"></div>
+
 </div>
+
 
 <div class="card">
 
 <h3>Upload Result</h3>
 
 <input id="sssm" placeholder="SSSM ID">
-
 <input type="file" id="resultPdf">
 
 <button onclick="uploadResult()">Upload Result</button>
 
+<h4>Result List</h4>
+<div id="resultList"></div>
+
 </div>
+
 
 <div class="card">
 
 <h3>Add Teacher</h3>
 
 <input id="teacherName" placeholder="Teacher Name">
-
 <input id="teacherSubject" placeholder="Subject">
 
 <input type="file" id="teacherPhoto">
@@ -143,6 +159,7 @@ border-radius:10px;
 <button onclick="addTeacher()">Add Teacher</button>
 
 </div>
+
 
 <div class="card">
 
@@ -156,6 +173,7 @@ border-radius:10px;
 
 </div>
 
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
@@ -163,7 +181,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getFirestore,collection,addDoc,getDocs,deleteDoc,doc }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import { getStorage,ref,uploadBytes,getDownloadURL }
+import { getStorage,ref,uploadBytes,getDownloadURL,deleteObject }
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
 
@@ -175,7 +193,7 @@ authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
 
 projectId: "nmpsnagguradiya-b9b94",
 
-storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
 
 messagingSenderId: "811957568318",
 
@@ -183,10 +201,9 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 
 };
 
+
 const app = initializeApp(firebaseConfig);
-
 const db = getFirestore(app);
-
 const storage = getStorage(app);
 
 
@@ -194,17 +211,20 @@ const storage = getStorage(app);
 window.login=function(){
 
 const email=document.getElementById("email").value
-
 const password=document.getElementById("password").value
 
 if(email=="nmpsnagguradiya@gmail.com" && password=="Nmps@123"){
 
 document.getElementById("loginBox").style.display="none"
-
 document.getElementById("dashboard").style.display="block"
 
-}
+loadTeachers()
+loadPhotos()
+loadVideos()
+loadNotices()
+loadResults()
 
+}
 else{
 
 alert("Wrong Login")
@@ -222,6 +242,47 @@ const text=document.getElementById("noticeText").value
 await addDoc(collection(db,"notice"),{text:text})
 
 alert("Notice Uploaded")
+
+loadNotices()
+
+}
+
+
+
+async function loadNotices(){
+
+const snapshot=await getDocs(collection(db,"notice"))
+
+const list=document.getElementById("noticeList")
+
+list.innerHTML=""
+
+snapshot.forEach((d)=>{
+
+const data=d.data()
+
+const div=document.createElement("div")
+
+div.innerHTML=`
+
+<p>${data.text}</p>
+
+<button onclick="deleteNotice('${d.id}')">Delete</button>
+
+`
+
+list.appendChild(div)
+
+})
+
+}
+
+
+window.deleteNotice=async function(id){
+
+await deleteDoc(doc(db,"notice",id))
+
+loadNotices()
 
 }
 
@@ -241,6 +302,44 @@ await addDoc(collection(db,"gallery"),{type:"image",url:url})
 
 alert("Photo Uploaded")
 
+loadPhotos()
+
+}
+
+
+
+async function loadPhotos(){
+
+const snapshot=await getDocs(collection(db,"gallery"))
+
+const list=document.getElementById("photoList")
+
+list.innerHTML=""
+
+snapshot.forEach((d)=>{
+
+const data=d.data()
+
+if(data.type=="image"){
+
+const div=document.createElement("div")
+
+div.className="media"
+
+div.innerHTML=`
+
+<img src="${data.url}">
+
+<button onclick="deleteMedia('${d.id}')">Delete</button>
+
+`
+
+list.appendChild(div)
+
+}
+
+})
+
 }
 
 
@@ -259,6 +358,55 @@ await addDoc(collection(db,"gallery"),{type:"video",url:url})
 
 alert("Video Uploaded")
 
+loadVideos()
+
+}
+
+
+
+async function loadVideos(){
+
+const snapshot=await getDocs(collection(db,"gallery"))
+
+const list=document.getElementById("videoList")
+
+list.innerHTML=""
+
+snapshot.forEach((d)=>{
+
+const data=d.data()
+
+if(data.type=="video"){
+
+const div=document.createElement("div")
+
+div.className="media"
+
+div.innerHTML=`
+
+<video src="${data.url}" controls></video>
+
+<button onclick="deleteMedia('${d.id}')">Delete</button>
+
+`
+
+list.appendChild(div)
+
+}
+
+})
+
+}
+
+
+
+window.deleteMedia=async function(id){
+
+await deleteDoc(doc(db,"gallery",id))
+
+loadPhotos()
+loadVideos()
+
 }
 
 
@@ -266,7 +414,6 @@ alert("Video Uploaded")
 window.uploadResult=async function(){
 
 const id=document.getElementById("sssm").value
-
 const file=document.getElementById("resultPdf").files[0]
 
 const storageRef=ref(storage,"results/"+file.name)
@@ -278,12 +425,55 @@ const url=await getDownloadURL(storageRef)
 await addDoc(collection(db,"results"),{
 
 sssm:id,
-
 url:url
 
 })
 
 alert("Result Uploaded")
+
+loadResults()
+
+}
+
+
+
+async function loadResults(){
+
+const snapshot=await getDocs(collection(db,"results"))
+
+const list=document.getElementById("resultList")
+
+list.innerHTML=""
+
+snapshot.forEach((d)=>{
+
+const data=d.data()
+
+const div=document.createElement("div")
+
+div.innerHTML=`
+
+<p>${data.sssm}</p>
+
+<a href="${data.url}" target="_blank">Download</a>
+
+<button onclick="deleteResult('${d.id}')">Delete</button>
+
+`
+
+list.appendChild(div)
+
+})
+
+}
+
+
+
+window.deleteResult=async function(id){
+
+await deleteDoc(doc(db,"results",id))
+
+loadResults()
 
 }
 
@@ -306,9 +496,7 @@ const url=await getDownloadURL(storageRef)
 await addDoc(collection(db,"teachers"),{
 
 name:name,
-
 subject:subject,
-
 photo:url
 
 })
@@ -366,8 +554,6 @@ await deleteDoc(doc(db,"teachers",id))
 loadTeachers()
 
 }
-
-loadTeachers()
 
 </script>
 
