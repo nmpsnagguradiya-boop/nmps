@@ -1,27 +1,30 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta charset="UTF-8">
-<title>NMPS Student Manager</title>
+
+<title>NMPS Ultra School ERP</title>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
 
 body{
 font-family:Arial;
-background:#f2f2f2;
 margin:0;
+background:#f3f3f3;
 }
 
 header{
-background:#3ea6ff;
+background:#2f8cff;
 color:white;
 padding:15px;
 text-align:center;
 }
 
 .container{
-max-width:1200px;
+max-width:1300px;
 margin:auto;
 padding:20px;
 }
@@ -41,26 +44,35 @@ margin-top:6px;
 }
 
 button{
-background:#3ea6ff;
-border:none;
+background:#2f8cff;
 color:white;
-padding:10px;
+border:none;
+padding:8px 12px;
 margin-top:10px;
 cursor:pointer;
+border-radius:4px;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
+margin-top:10px;
 }
 
 th,td{
 border:1px solid #ddd;
 padding:6px;
+font-size:14px;
 }
 
 img{
-border-radius:5px;
+border-radius:4px;
+}
+
+.flex{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
 }
 
 </style>
@@ -71,7 +83,7 @@ border-radius:5px;
 
 <header>
 
-<h2>NMPS Student Management</h2>
+<h2>NMPS Ultra School ERP</h2>
 
 Total Students : <span id="totalStudents">0</span>
 
@@ -97,15 +109,13 @@ Total Students : <span id="totalStudents">0</span>
 
 <select id="class"></select>
 
-<input id="mobile" placeholder="Mobile Number">
+<input id="mobile" placeholder="Mobile">
 
-<label>Date Of Birth</label>
 <input type="date" id="dob">
 
-<label>Date Of Admission</label>
 <input type="date" id="doa">
 
-<input id="village" placeholder="Village / City">
+<input id="village" placeholder="Village">
 
 <input id="post" placeholder="Post">
 
@@ -121,7 +131,7 @@ Total Students : <span id="totalStudents">0</span>
 
 <input id="apar" placeholder="APAR ID">
 
-<input id="aadhar" placeholder="Aadhar Card">
+<input id="aadhar" placeholder="Aadhar">
 
 <input id="caste" placeholder="Caste">
 
@@ -142,6 +152,8 @@ Total Students : <span id="totalStudents">0</span>
 
 <h3>Class Management</h3>
 
+<div class="flex">
+
 <input id="newClass" placeholder="Class Name">
 
 <button onclick="addClass()">Add Class</button>
@@ -152,16 +164,24 @@ Total Students : <span id="totalStudents">0</span>
 
 </div>
 
+</div>
+
 
 <div class="card">
 
-<h3>Excel</h3>
+<h3>Search</h3>
+
+<div class="flex">
+
+<input id="searchName" placeholder="Student Name">
+
+<select id="filterClass"></select>
+
+<button onclick="applyFilter()">Search</button>
 
 <button onclick="exportExcel()">Download Excel</button>
 
-<input type="file" id="excelFile">
-
-<button onclick="importExcel()">Upload Excel</button>
+</div>
 
 </div>
 
@@ -194,7 +214,31 @@ Total Students : <span id="totalStudents">0</span>
 
 </div>
 
+
+<div class="card">
+
+<h3>Student ID Card</h3>
+
+<div id="idCard" style="border:1px solid #ccc;padding:15px;width:300px">
+
+<h3>NMPS School</h3>
+
+<img id="idPhoto" width="80">
+
+<p id="idName"></p>
+
+<p id="idClass"></p>
+
+<p id="idRoll"></p>
+
 </div>
+
+<button onclick="printID()">Print ID Card</button>
+
+</div>
+
+</div>
+
 
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
@@ -205,37 +249,46 @@ Total Students : <span id="totalStudents">0</span>
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
 import {
+
 getFirestore,
+
 collection,
+
 setDoc,
+
 doc,
+
 deleteDoc,
+
 onSnapshot,
+
 getDocs
+
 }
 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 
-const firebaseConfig = {
+const firebaseConfig={
 
-apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 
-authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
 
-projectId: "nmpsnagguradiya-b9b94",
+projectId:"nmpsnagguradiya-b9b94",
 
-storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
+storageBucket:"nmpsnagguradiya-b9b94.appspot.com",
 
-messagingSenderId: "811957568318",
+messagingSenderId:"811957568318",
 
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
 
 };
 
-const app = initializeApp(firebaseConfig);
 
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+
+const db=getFirestore(app);
 
 
 let students=[];
@@ -247,6 +300,8 @@ let editId=null;
 
 const classSelect=document.getElementById("class");
 
+const filterClass=document.getElementById("filterClass");
+
 const classList=document.getElementById("classList");
 
 
@@ -254,11 +309,15 @@ function refreshClasses(){
 
 classSelect.innerHTML="";
 
+filterClass.innerHTML="<option value=''>All</option>";
+
 classList.innerHTML="";
 
 classes.forEach(c=>{
 
 classSelect.innerHTML+=`<option>${c}</option>`;
+
+filterClass.innerHTML+=`<option>${c}</option>`;
 
 classList.innerHTML+=`<option>${c}</option>`;
 
@@ -269,7 +328,7 @@ classList.innerHTML+=`<option>${c}</option>`;
 
 window.addClass=async function(){
 
-let c=document.getElementById("newClass").value;
+let c=newClass.value;
 
 if(!c)return;
 
@@ -346,41 +405,11 @@ name:name.value,
 
 father:father.value,
 
-mother:mother.value,
-
 class:classSelect.value,
-
-mobile:mobile.value,
-
-dob:dob.value,
-
-doa:doa.value,
-
-village:village.value,
-
-post:post.value,
-
-district:district.value,
-
-state:state.value,
-
-national:national.value,
-
-sssm:sssm.value,
-
-family:family.value,
-
-apar:apar.value,
-
-aadhar:aadhar.value,
-
-caste:caste.value,
-
-category:category.value,
 
 roll:roll.value,
 
-scholar:scholar.value,
+mobile:mobile.value,
 
 photo:photoURL
 
@@ -390,11 +419,9 @@ let id=editId || s.name+"_"+s.class;
 
 await setDoc(doc(db,"students",id),s);
 
-editId=null;
-
 studentForm.reset();
 
-};
+}
 
 
 onSnapshot(collection(db,"students"),snap=>{
@@ -416,6 +443,8 @@ students.sort((a,b)=>a.roll-b.roll);
 
 students.forEach(s=>{
 
+let id=s.name+"_"+s.class;
+
 tableBody.innerHTML+=`
 
 <tr>
@@ -434,9 +463,11 @@ tableBody.innerHTML+=`
 
 <td>
 
-<button onclick="edit('${s.name}','${s.class}')">Edit</button>
+<button onclick="editStudent('${id}')">Edit</button>
 
-<button onclick="del('${s.name}','${s.class}')">Delete</button>
+<button onclick="deleteStudent('${id}')">Delete</button>
+
+<button onclick="showID('${id}')">ID Card</button>
 
 </td>
 
@@ -451,30 +482,108 @@ totalStudents.innerText=students.length;
 }
 
 
-window.edit=function(name,cls){
+window.editStudent=function(id){
 
-let s=students.find(x=>x.name==name && x.class==cls);
+let s=students.find(x=>(x.name+"_"+x.class)==id);
 
-editId=name+"_"+cls;
+editId=id;
 
-Object.keys(s).forEach(k=>{
+name.value=s.name;
 
-if(document.getElementById(k))
+father.value=s.father;
 
-document.getElementById(k).value=s[k];
+classSelect.value=s.class;
 
-});
+roll.value=s.roll;
+
+mobile.value=s.mobile;
 
 preview.src=s.photo;
 
 }
 
 
-window.del=async function(name,cls){
+window.deleteStudent=async function(id){
 
 if(confirm("Delete Student?"))
 
-await deleteDoc(doc(db,"students",name+"_"+cls));
+await deleteDoc(doc(db,"students",id));
+
+}
+
+
+window.showID=function(id){
+
+let s=students.find(x=>(x.name+"_"+x.class)==id);
+
+idPhoto.src=s.photo;
+
+idName.innerText="Name : "+s.name;
+
+idClass.innerText="Class : "+s.class;
+
+idRoll.innerText="Roll : "+s.roll;
+
+}
+
+
+window.printID=function(){
+
+window.print();
+
+}
+
+
+window.applyFilter=function(){
+
+let name=searchName.value.toLowerCase();
+
+let cls=filterClass.value;
+
+let filtered=students.filter(s=>
+
+(!name || s.name.toLowerCase().includes(name)) &&
+(!cls || s.class==cls)
+
+);
+
+tableBody.innerHTML="";
+
+filtered.forEach(s=>{
+
+let id=s.name+"_"+s.class;
+
+tableBody.innerHTML+=`
+
+<tr>
+
+<td>${s.photo?'<img src="'+s.photo+'" width=40>':''}</td>
+
+<td>${s.name}</td>
+
+<td>${s.father}</td>
+
+<td>${s.class}</td>
+
+<td>${s.roll}</td>
+
+<td>${s.mobile}</td>
+
+<td>
+
+<button onclick="editStudent('${id}')">Edit</button>
+
+<button onclick="deleteStudent('${id}')">Delete</button>
+
+<button onclick="showID('${id}')">ID Card</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
 
 }
 
@@ -495,32 +604,8 @@ XLSX.writeFile(wb,"students.xlsx");
 
 }
 
-
-window.importExcel=function(){
-
-let file=excelFile.files[0];
-
-let reader=new FileReader();
-
-reader.onload=e=>{
-
-let wb=XLSX.read(e.target.result,{type:"binary"});
-
-let rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
-
-rows.forEach(async s=>{
-
-await setDoc(doc(db,"students",s.name+"_"+s.class),s);
-
-});
-
-};
-
-reader.readAsBinaryString(file);
-
-}
-
 </script>
 
 </body>
-  </html>
+
+</html>
