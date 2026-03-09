@@ -5,73 +5,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>NMPS Student Management</title>
 <style>
-body, html {
-  margin:0;
-  padding:0;
-  font-family: Arial, sans-serif;
-  background:#f2f2f2;
-}
-header {
-  background:#82caff;
-  color:white;
-  padding:15px;
-  text-align:center;
-}
-.container {
-  max-width:1200px;
-  margin:20px auto;
-  padding:20px;
-}
-.card {
-  background:white;
-  padding:20px;
-  margin:20px 0;
-  border-radius:10px;
-  box-shadow:0 0 10px rgba(0,0,0,0.1);
-}
-input, select {
-  width:100%;
-  padding:8px;
-  margin:5px 0;
-}
-button {
-  background:#82caff;
-  border:none;
-  color:white;
-  padding:10px 15px;
-  margin:5px 0;
-  cursor:pointer;
-  border-radius:5px;
-}
-table {
-  width:100%;
-  border-collapse: collapse;
-  margin-top:15px;
-}
-table, th, td {
-  border:1px solid #ddd;
-}
-th, td {
-  padding:8px;
-  text-align:left;
-}
-.selected-row {
-  background:#ffe0b2;
-}
-#photoPreview{
-  display:block;
-  margin:5px 0;
-  width:100px;
-  height:100px;
-  object-fit:cover;
-  border:1px solid #ddd;
-  border-radius:5px;
-}
-label{
-  font-weight:bold;
-  display:block;
-  margin-top:10px;
-}
+body, html { margin:0; padding:0; font-family: Arial, sans-serif; background:#f2f2f2; }
+header { background:#82caff; color:white; padding:15px; text-align:center; }
+.container { max-width:1200px; margin:20px auto; padding:20px; }
+.card { background:white; padding:20px; margin:20px 0; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
+input, select { width:100%; padding:8px; margin:5px 0; }
+button { background:#82caff; border:none; color:white; padding:10px 15px; margin:5px 0; cursor:pointer; border-radius:5px; }
+table { width:100%; border-collapse: collapse; margin-top:15px; }
+table, th, td { border:1px solid #ddd; }
+th, td { padding:8px; text-align:left; }
+#photoPreview { display:block; margin:5px 0; width:100px; height:100px; object-fit:cover; border:1px solid #ddd; border-radius:5px; }
+label { font-weight:bold; display:block; margin-top:10px; }
 </style>
 </head>
 <body>
@@ -86,48 +30,22 @@ label{
     <h3>Add Student</h3>
     <form id="studentForm">
       <label>Photo</label>
-      <input type="file" id="photo" accept="image/*" required>
+      <input type="file" id="photo" accept="image/*">
       <img id="photoPreview" src="" alt="Photo Preview">
-
       <label>Name</label>
       <input type="text" placeholder="Name" id="name" required>
-      
-      <label>Father's Name</label>
-      <input type="text" placeholder="Father's Name" id="fatherName">
-      
-      <label>Mother's Name</label>
-      <input type="text" placeholder="Mother's Name" id="motherName">
-      
-      <label>Address</label>
-      <input type="text" placeholder="Address" id="address">
-      
-      <label>SSSM ID</label>
-      <input type="text" placeholder="SSSM ID" id="sssmId">
-      
-      <label>Family ID</label>
-      <input type="text" placeholder="Family ID" id="familyId">
-      
-      <label>Aadhaar Card Number</label>
-      <input type="text" placeholder="Aadhaar Card Number" id="aadhaar">
-      
-      <label>Roll Number</label>
-      <input type="text" placeholder="Roll Number" id="rollNo">
-      
-      <label>Date of Birth</label>
-      <input type="date" placeholder="Date of Birth" id="dob">
-      
-      <label>APAR ID</label>
-      <input type="text" placeholder="APAR ID" id="aparId">
-      
-      <label>Caste</label>
-      <input type="text" placeholder="Caste" id="caste">
-      
-      <label>Category</label>
-      <input type="text" placeholder="Category" id="category">
-      
-      <label>Mobile Number</label>
-      <input type="text" placeholder="Mobile Number" id="mobile">
-      
+      <label>Father's Name</label><input type="text" placeholder="Father's Name" id="fatherName">
+      <label>Mother's Name</label><input type="text" placeholder="Mother's Name" id="motherName">
+      <label>Address</label><input type="text" placeholder="Address" id="address">
+      <label>SSSM ID</label><input type="text" placeholder="SSSM ID" id="sssmId">
+      <label>Family ID</label><input type="text" placeholder="Family ID" id="familyId">
+      <label>Aadhaar Card Number</label><input type="text" placeholder="Aadhaar Card Number" id="aadhaar">
+      <label>Roll Number</label><input type="text" placeholder="Roll Number" id="rollNo">
+      <label>Date of Birth</label><input type="date" placeholder="Date of Birth" id="dob">
+      <label>APAR ID</label><input type="text" placeholder="APAR ID" id="aparId">
+      <label>Caste</label><input type="text" placeholder="Caste" id="caste">
+      <label>Category</label><input type="text" placeholder="Category" id="category">
+      <label>Mobile Number</label><input type="text" placeholder="Mobile Number" id="mobile">
       <label>Gender</label>
       <select id="gender">
         <option value="">Select Gender</option>
@@ -135,28 +53,13 @@ label{
         <option value="Female">Female</option>
         <option value="Other">Other</option>
       </select>
-      
-      <label>Post</label>
-      <input type="text" placeholder="Post" id="post">
-      
-      <label>District</label>
-      <input type="text" placeholder="District" id="district">
-      
-      <label>State</label>
-      <input type="text" placeholder="State" id="state">
-      
-      <label>Postal Code</label>
-      <input type="text" placeholder="Postal Code" id="postalCode">
-      
-      <label>Admission Date</label>
-      <input type="date" placeholder="Admission Date" id="admissionDate">
-      
-      <label>Scholar Number</label>
-      <input type="text" placeholder="Scholar Number" id="scholarNo">
-      
-      <label>Email ID</label>
-      <input type="email" placeholder="Email ID" id="email">
-      
+      <label>Post</label><input type="text" placeholder="Post" id="post">
+      <label>District</label><input type="text" placeholder="District" id="district">
+      <label>State</label><input type="text" placeholder="State" id="state">
+      <label>Postal Code</label><input type="text" placeholder="Postal Code" id="postalCode">
+      <label>Admission Date</label><input type="date" placeholder="Admission Date" id="admissionDate">
+      <label>Scholar Number</label><input type="text" placeholder="Scholar Number" id="scholarNo">
+      <label>Email ID</label><input type="email" placeholder="Email ID" id="email">
       <label>Class</label>
       <select id="studentClass">
         <option value="">Select Class</option>
@@ -168,13 +71,6 @@ label{
       </select>
       <button type="submit">Add Student</button>
     </form>
-  </div>
-
-  <div class="card">
-    <h3>Excel Options</h3>
-    <button onclick="downloadExcel()">Download Students Excel</button>
-    <input type="file" id="excelUpload" accept=".xlsx,.xls">
-    <button onclick="uploadExcel()">Upload Students Excel</button>
   </div>
 
   <div class="card">
@@ -203,23 +99,7 @@ label{
           <th>Father's Name</th>
           <th>Mother's Name</th>
           <th>Address</th>
-          <th>SSSM ID</th>
-          <th>Family ID</th>
-          <th>Aadhaar</th>
-          <th>Roll No</th>
-          <th>DOB</th>
-          <th>APAR ID</th>
-          <th>Caste</th>
           <th>Category</th>
-          <th>Mobile</th>
-          <th>Gender</th>
-          <th>Post</th>
-          <th>District</th>
-          <th>State</th>
-          <th>Postal Code</th>
-          <th>Admission Date</th>
-          <th>Scholar No</th>
-          <th>Email</th>
           <th>Class</th>
           <th>Actions</th>
         </tr>
@@ -232,9 +112,7 @@ label{
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, setDoc, doc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-// Firebase config
 const firebaseConfig = {
   apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
   authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
@@ -245,30 +123,30 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const storage = getStorage(app);
 
 let students = [];
 
-// Photo Preview
 document.getElementById('photo').addEventListener('change', function(){
   const file = this.files[0];
-  if(file){
-    document.getElementById('photoPreview').src = URL.createObjectURL(file);
-  } else {
-    document.getElementById('photoPreview').src = '';
-  }
+  document.getElementById('photoPreview').src = file ? URL.createObjectURL(file) : '';
 });
+
+// Upload photo to ImgBB
+async function uploadToImgBB(file){
+  const apiKey = '21000d5a5d14fcef4b6af4d13647da5a8';
+  const formData = new FormData();
+  formData.append('image', file);
+  const res = await fetch('https://api.imgbb.com/1/upload?key='+apiKey,{method:'POST',body:formData});
+  const data = await res.json();
+  return data.success ? data.data.url : '';
+}
 
 // Add student
 document.getElementById('studentForm').addEventListener('submit', async function(e){
   e.preventDefault();
   const photoFile = document.getElementById('photo').files[0];
   let photoURL = '';
-  if(photoFile){
-    const storageRef = ref(storage, 'studentPhotos/'+Date.now()+'_'+photoFile.name);
-    await uploadBytes(storageRef, photoFile);
-    photoURL = await getDownloadURL(storageRef);
-  }
+  if(photoFile){ photoURL = await uploadToImgBB(photoFile); }
 
   const student = {
     photo: photoURL,
@@ -276,23 +154,7 @@ document.getElementById('studentForm').addEventListener('submit', async function
     fatherName: document.getElementById('fatherName').value,
     motherName: document.getElementById('motherName').value,
     address: document.getElementById('address').value,
-    sssmId: document.getElementById('sssmId').value,
-    familyId: document.getElementById('familyId').value,
-    aadhaar: document.getElementById('aadhaar').value,
-    rollNo: document.getElementById('rollNo').value,
-    dob: document.getElementById('dob').value,
-    aparId: document.getElementById('aparId').value,
-    caste: document.getElementById('caste').value,
     category: document.getElementById('category').value,
-    mobile: document.getElementById('mobile').value,
-    gender: document.getElementById('gender').value,
-    post: document.getElementById('post').value,
-    district: document.getElementById('district').value,
-    state: document.getElementById('state').value,
-    postalCode: document.getElementById('postalCode').value,
-    admissionDate: document.getElementById('admissionDate').value,
-    scholarNo: document.getElementById('scholarNo').value,
-    email: document.getElementById('email').value,
     studentClass: document.getElementById('studentClass').value
   };
 
@@ -302,16 +164,12 @@ document.getElementById('studentForm').addEventListener('submit', async function
   document.getElementById('photoPreview').src = '';
 });
 
-// Real-time update
 onSnapshot(collection(db,'students'), snapshot=>{
   students = [];
-  snapshot.forEach(docSnap=>{
-    students.push(docSnap.data());
-  });
+  snapshot.forEach(docSnap => { students.push(docSnap.data()); });
   updateStudentTable();
 });
 
-// Table update
 function updateStudentTable(filterClass='', filterCategory=''){
   const tbody = document.querySelector('#studentTable tbody');
   tbody.innerHTML='';
@@ -321,46 +179,24 @@ function updateStudentTable(filterClass='', filterCategory=''){
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><input type="checkbox" class="selectStudent" data-index="${i}"></td>
-      <td><img src="${s.photo}" width="50"/></td>
+      <td>${s.photo ? '<img src="'+s.photo+'" width="50"/>' : ''}</td>
       <td>${s.name}</td>
       <td>${s.fatherName}</td>
       <td>${s.motherName}</td>
       <td>${s.address}</td>
-      <td>${s.sssmId}</td>
-      <td>${s.familyId}</td>
-      <td>${s.aadhaar}</td>
-      <td>${s.rollNo}</td>
-      <td>${s.dob}</td>
-      <td>${s.aparId}</td>
-      <td>${s.caste}</td>
       <td>${s.category}</td>
-      <td>${s.mobile}</td>
-      <td>${s.gender}</td>
-      <td>${s.post}</td>
-      <td>${s.district}</td>
-      <td>${s.state}</td>
-      <td>${s.postalCode}</td>
-      <td>${s.admissionDate}</td>
-      <td>${s.scholarNo}</td>
-      <td>${s.email}</td>
       <td>${s.studentClass}</td>
-      <td>
-        <button onclick="deleteStudent('${s.name}','${s.studentClass}')">Delete</button>
-      </td>
+      <td><button onclick="deleteStudent('${s.name}','${s.studentClass}')">Delete</button></td>
     `;
     tbody.appendChild(tr);
   });
   document.getElementById('totalStudents').innerText = students.length;
 }
 
-// Delete
 async function deleteStudent(name, cls){
-  if(confirm('Are you sure to delete this student?')){
-    await deleteDoc(doc(db,'students',name+'_'+cls));
-  }
+  if(confirm('Are you sure?')) await deleteDoc(doc(db,'students',name+'_'+cls));
 }
 
-// Promote selected
 function promoteSelected(){
   const checkboxes = document.querySelectorAll('.selectStudent:checked');
   checkboxes.forEach(async cb=>{
@@ -375,49 +211,11 @@ function promoteSelected(){
   });
 }
 
-// Filters
 function applyFilter(){
   const fClass = document.getElementById('filterClass').value;
   const fCat = document.getElementById('filterCategory').value;
   updateStudentTable(fClass,fCat);
 }
-
-// Excel
-function downloadExcel(){
-  const ws_data = [["Photo","Name","Father's Name","Mother's Name","Address","SSSM ID","Family ID","Aadhaar","Roll No","DOB","APAR ID","Caste","Category","Mobile","Gender","Post","District","State","Postal Code","Admission Date","Scholar No","Email","Class"]];
-  students.forEach(s=>{
-    ws_data.push([s.photo,s.name,s.fatherName,s.motherName,s.address,s.sssmId,s.familyId,s.aadhaar,s.rollNo,s.dob,s.aparId,s.caste,s.category,s.mobile,s.gender,s.post,s.district,s.state,s.postalCode,s.admissionDate,s.scholarNo,s.email,s.studentClass]);
-  });
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(ws_data);
-  XLSX.utils.book_append_sheet(wb, ws, "Students");
-  XLSX.writeFile(wb,"students.xlsx");
-}
-
-function uploadExcel(){
-  const file = document.getElementById('excelUpload').files[0];
-  if(!file) return alert("Select Excel file");
-  const reader = new FileReader();
-  reader.onload = async function(e){
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data,{type:'array'});
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(sheet,{header:1});
-    const headers = json[0];
-    for(let i=1;i<json.length;i++){
-      const row = json[i];
-      let student = {};
-      headers.forEach((h,j)=>{ student[h] = row[j] || ''; });
-      student.studentClass = student.Class || '';
-      student.photo = student.Photo || '';
-      const studentId = student.name+'_'+student.studentClass;
-      await setDoc(doc(db,'students',studentId), student);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
 </script>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
-</html>
+  </html>
