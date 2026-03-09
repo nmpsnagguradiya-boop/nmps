@@ -1,119 +1,196 @@
-<!DOCTYPE html><html>
+<!DOCTYPE html>
+<html>
 <head>
 <meta charset="UTF-8">
-<title>Admission Management</title>
-<meta name="viewport" content="width=device-width,initial-scale=1"><style>
+<title>Student Management</title>
 
-body{font-family:Arial;margin:0;background:#f2f2f2}
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 
-header{background:#004aad;color:white;padding:15px;text-align:center;font-size:22px}
+<style>
 
-.container{padding:15px}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
-gap:8px
+body{
+font-family:Arial;
+background:#f2f2f2;
+padding:20px;
 }
 
-input,select,button{
+h2{
+background:#2c7be5;
+color:white;
 padding:10px;
-border-radius:6px;
-border:1px solid #ccc
+}
+
+input,select{
+padding:8px;
+margin:4px;
+width:220px;
 }
 
 button{
-background:#004aad;
+padding:8px 12px;
+background:#2c7be5;
 color:white;
-cursor:pointer
+border:none;
+cursor:pointer;
 }
 
-.student{
+table{
+border-collapse:collapse;
+width:100%;
+margin-top:20px;
 background:white;
-margin-top:10px;
-padding:10px;
-border-radius:8px;
-box-shadow:0 0 6px rgba(0,0,0,0.2)
 }
 
-img{width:60px;border-radius:50%}
+th,td{
+border:1px solid #ccc;
+padding:8px;
+}
 
-</style></head><body><header>Admission Management</header><div class="container"><h3>Add Student</h3><div class="grid"><input type="file" id="photo"><input id="name" placeholder="Student Name">
+.success{
+color:green;
+font-weight:bold;
+}
+
+</style>
+</head>
+
+<body>
+
+<h2>Student Management</h2>
+
+<div id="msg" class="success"></div>
+
+<h3>Add Student</h3>
+
+<input type="file" id="photo">
+
+<br>
+
+<input id="name" placeholder="Student Name">
 <input id="father" placeholder="Father Name">
-<input id="mother" placeholder="Mother Name"><input id="class" placeholder="Class">
-<input id="mobile" placeholder="Mobile Number"><input type="date" id="dob">
-<input type="date" id="admissionDate"><input id="village" placeholder="Village / City">
+<input id="mother" placeholder="Mother Name">
+
+<br>
+
+<input id="class" placeholder="Class">
+<input id="mobile" placeholder="Mobile">
+
+<br>
+
+<label>DOB</label>
+<input type="date" id="dob">
+
+<label>Admission</label>
+<input type="date" id="admission">
+
+<br>
+
+<input id="village" placeholder="Village/City">
 <input id="post" placeholder="Post">
+
+<br>
+
 <input id="district" placeholder="District">
 <input id="state" placeholder="State">
-<input id="national" placeholder="Nationality"><input id="sssm" placeholder="SSSM ID">
+<input id="national" placeholder="National">
+
+<br>
+
+<input id="sssm" placeholder="SSSM ID">
 <input id="family" placeholder="Family ID">
 <input id="apar" placeholder="APAR ID">
-<input id="adhar" placeholder="Aadhar Card"><input id="caste" placeholder="Caste">
-<input id="category" placeholder="Category"><input id="roll" placeholder="Roll Number">
-<input id="scholar" placeholder="Scholar Number"></div><button onclick="saveStudent()">Save Student</button>
 
-<hr><h3>Filter</h3><input id="search" placeholder="Search Student" onkeyup="searchStudent()"><select id="classFilter" onchange="filterClass()">
-<option value="">All Classes</option>
-</select><hr><h3>Import / Export</h3><button onclick="exportCSV()">Export Excel</button>
+<br>
 
-<input type="file" id="importFile">
-<button onclick="importCSV()">Import Excel</button><hr><div id="studentList"></div></div><script type="module">
+<input id="adhar" placeholder="Adhar Card">
+<input id="caste" placeholder="Caste">
+<input id="category" placeholder="Category">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+<br>
 
-import { getFirestore,collection,addDoc,getDocs,deleteDoc,doc,updateDoc }
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+<input id="scholar" placeholder="Scholar Number">
 
-const firebaseConfig={
-apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId:"nmpsnagguradiya-b9b94",
-storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId:"811957568318",
-appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
+<br><br>
+
+<button onclick="addStudent()">Add Student</button>
+
+<hr>
+
+<h3>Filter Class</h3>
+
+<input id="filterClass">
+<button onclick="filterClass()">Filter</button>
+
+<h3>Total Students: <span id="total">0</span></h3>
+
+<table id="table">
+<thead>
+
+<tr>
+<th>Photo</th>
+<th>Name</th>
+<th>Class</th>
+<th>Roll</th>
+<th>Mobile</th>
+<th>Action</th>
+</tr>
+
+</thead>
+<tbody></tbody>
+</table>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc, getDocs, deleteDoc, doc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f",
+measurementId: "G-V4J8BP2LCN"
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
-const imgbbKey="21000d5a5d14fcef4b6af4d13647da5a8";
+let roll = 1;
 
-let students=[];
+async function uploadImage(){
 
-async function uploadImage(file){
+let file=document.getElementById("photo").files[0];
 
-let form=new FormData();
-form.append("image",file);
+if(!file) return "";
 
-let res=await fetch("https://api.imgbb.com/1/upload?key="+imgbbKey,{
+let formData=new FormData();
+formData.append("image",file);
+
+let res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a8",{
 method:"POST",
-body:form
+body:formData
 });
 
 let data=await res.json();
-
 return data.data.url;
 
 }
 
-window.saveStudent=async function(){
+window.addStudent=async function(){
 
-let file=document.getElementById("photo").files[0];
-let photoUrl="";
+let img=await uploadImage();
 
-if(file) photoUrl=await uploadImage(file);
-
-let data={
-
-photo:photoUrl,
+let student={
 name:name.value,
 father:father.value,
 mother:mother.value,
 class:class.value,
 mobile:mobile.value,
 dob:dob.value,
-admissionDate:admissionDate.value,
+admission:admission.value,
 village:village.value,
 post:post.value,
 district:district.value,
@@ -125,12 +202,14 @@ apar:apar.value,
 adhar:adhar.value,
 caste:caste.value,
 category:category.value,
-roll:roll.value,
-scholar:scholar.value
-
+scholar:scholar.value,
+roll:roll++,
+photo:img
 };
 
-await addDoc(collection(db,"students"),data);
+await addDoc(collection(db,"students"),student);
+
+msg.innerHTML="Successful";
 
 loadStudents();
 
@@ -138,57 +217,40 @@ loadStudents();
 
 async function loadStudents(){
 
-const snap=await getDocs(collection(db,"students"));
+let snap=await getDocs(collection(db,"students"));
 
-students=[];
+let tbody=document.querySelector("#table tbody");
+
+tbody.innerHTML="";
+
+let count=0;
 
 snap.forEach(d=>{
-students.push({id:d.id,...d.data()})
-});
 
-render(students);
+let s=d.data();
+count++;
 
-}
-
-function render(list){
-
-let html="";
-
-list.forEach(s=>{
-
-html+=`
-
-<div class="student">
-
-<img src="${s.photo||''}">
-
-<b>${s.name}</b><br>
-
-Class: ${s.class}<br>
-
-Father: ${s.father}<br>
-
-Mobile: ${s.mobile}
-
-<br><br>
-
-<button onclick="editStudent('${s.id}')">Edit</button>
-
-<button onclick="deleteStudent('${s.id}')">Delete</button>
-
-</div>
-
+tbody.innerHTML+=`
+<tr>
+<td><img src="${s.photo}" width="40"></td>
+<td>${s.name}</td>
+<td>${s.class}</td>
+<td>${s.roll}</td>
+<td>${s.mobile}</td>
+<td>
+<button onclick="view('${d.id}')">View</button>
+<button onclick="del('${d.id}')">Delete</button>
+</td>
+</tr>
 `;
 
 });
 
-studentList.innerHTML=html;
+total.innerText=count;
 
 }
 
-window.deleteStudent=async function(id){
-
-if(confirm("Delete Student?")){
+window.del=async function(id){
 
 await deleteDoc(doc(db,"students",id));
 
@@ -196,101 +258,75 @@ loadStudents();
 
 }
 
-}
+window.filterClass=async function(){
 
-window.editStudent=async function(id){
+let c=filterClass.value;
 
-let newName=prompt("Enter new name");
+let snap=await getDocs(collection(db,"students"));
 
-await updateDoc(doc(db,"students",id),{
+let tbody=document.querySelector("#table tbody");
 
-name:newName
+tbody.innerHTML="";
 
-});
+snap.forEach(d=>{
 
-loadStudents();
+let s=d.data();
 
-}
+if(s.class==c){
 
-window.searchStudent=function(){
-
-let text=search.value.toLowerCase();
-
-let filtered=students.filter(s=>s.name.toLowerCase().includes(text));
-
-render(filtered);
-
-}
-
-window.filterClass=function(){
-
-let c=classFilter.value;
-
-if(c===""){render(students);return}
-
-let filtered=students.filter(s=>s.class===c);
-
-render(filtered);
-
-}
-
-window.exportCSV=function(){
-
-let csv="Name,Father,Class,Mobile\n";
-
-students.forEach(s=>{
-csv+=`${s.name},${s.father},${s.class},${s.mobile}\n`;
-});
-
-let blob=new Blob([csv]);
-
-let a=document.createElement("a");
-
-a.href=URL.createObjectURL(blob);
-a.download="students.csv";
-
-a.click();
-
-}
-
-window.importCSV=function(){
-
-let file=importFile.files[0];
-
-let reader=new FileReader();
-
-reader.onload=function(e){
-
-let rows=e.target.result.split("\n");
-
-rows.slice(1).forEach(async r=>{
-
-let col=r.split(",");
-
-if(col.length>3){
-
-await addDoc(collection(db,"students"),{
-
-name:col[0],
-father:col[1],
-class:col[2],
-mobile:col[3]
-
-});
+tbody.innerHTML+=`
+<tr>
+<td><img src="${s.photo}" width="40"></td>
+<td>${s.name}</td>
+<td>${s.class}</td>
+<td>${s.roll}</td>
+<td>${s.mobile}</td>
+<td>
+<button onclick="view('${d.id}')">View</button>
+<button onclick="del('${d.id}')">Delete</button>
+</td>
+</tr>
+`;
 
 }
 
 });
 
-loadStudents();
+}
+
+window.view=async function(id){
+
+let snap=await getDocs(collection(db,"students"));
+
+snap.forEach(d=>{
+
+if(d.id==id){
+
+let s=d.data();
+
+alert(
+"Name: "+s.name+
+"\nFather: "+s.father+
+"\nMother: "+s.mother+
+"\nClass: "+s.class+
+"\nRoll: "+s.roll+
+"\nMobile: "+s.mobile+
+"\nDOB: "+s.dob+
+"\nVillage: "+s.village+
+"\nDistrict: "+s.district+
+"\nState: "+s.state+
+"\nAadhar: "+s.adhar
+);
 
 }
 
-reader.readAsText(file);
+});
 
 }
 
 loadStudents();
 
-</script></body>
+</script>
+
+</body>
 </html>
