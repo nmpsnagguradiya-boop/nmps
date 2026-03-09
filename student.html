@@ -1,324 +1,466 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NMPS Student Management</title>
+<title>NMPS Student Manager</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
 <style>
-body, html { margin:0; padding:0; font-family: Arial, sans-serif; background:#f2f2f2; }
-header { background:#82caff; color:white; padding:15px; text-align:center; }
-.container { max-width:1200px; margin:20px auto; padding:20px; }
-.card { background:white; padding:20px; margin:20px 0; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1); }
-input, select { width:100%; padding:8px; margin:5px 0; }
-button { background:#82caff; border:none; color:white; padding:10px 15px; margin:5px 0; cursor:pointer; border-radius:5px; }
-table { width:100%; border-collapse: collapse; margin-top:15px; }
-table, th, td { border:1px solid #ddd; }
-th, td { padding:8px; text-align:left; }
-#photoPreview { display:block; margin:5px 0; width:100px; height:100px; object-fit:cover; border:1px solid #ddd; border-radius:5px; }
-label { font-weight:bold; display:block; margin-top:10px; }
+
+body{
+font-family:Arial;
+background:#f2f2f2;
+margin:0;
+}
+
+header{
+background:#4aa3ff;
+color:white;
+padding:15px;
+text-align:center;
+}
+
+.container{
+max-width:1200px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+margin-bottom:20px;
+border-radius:8px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+input,select{
+width:100%;
+padding:8px;
+margin-top:5px;
+}
+
+button{
+background:#4aa3ff;
+border:none;
+color:white;
+padding:10px;
+margin-top:10px;
+cursor:pointer;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+}
+
+img{
+border-radius:4px;
+}
+
 </style>
 </head>
+
 <body>
 
 <header>
-  <h2>NMPS Student Management</h2>
-  <p>Total Students: <span id="totalStudents">0</span></p>
+
+<h2>NMPS Student Management</h2>
+
+Total Students : <span id="totalStudents">0</span>
+
 </header>
 
 <div class="container">
 
-  <!-- Add/Edit Student Form -->
-  <div class="card">
-    <h3 id="formTitle">Add Student</h3>
-    <form id="studentForm">
-      <label>Photo</label>
-      <input type="file" id="photo" accept="image/*">
-      <img id="photoPreview" src="" alt="Photo Preview">
-      <label>Name</label><input type="text" placeholder="Name" id="name" required>
-      <label>Father's Name</label><input type="text" placeholder="Father's Name" id="fatherName">
-      <label>Mother's Name</label><input type="text" placeholder="Mother's Name" id="motherName">
-      <label>Address</label><input type="text" placeholder="Address" id="address">
-      <label>Category</label><input type="text" placeholder="Category" id="category">
-      <label>Roll Number</label><input type="text" placeholder="Roll Number" id="rollNo">
-      <label>Class</label>
-      <select id="studentClass"></select>
-      <button type="submit" id="submitBtn">Add Student</button>
-      <button type="button" id="cancelEditBtn" style="display:none; background:#ff7b7b;">Cancel Edit</button>
-    </form>
-  </div>
+<div class="card">
 
-  <!-- Class Management -->
-  <div class="card">
-    <h3>Manage Classes</h3>
-    <input type="text" id="newClass" placeholder="New Class Name">
-    <button onclick="addClass()">Add Class</button>
-    <select id="classList"></select>
-    <button onclick="deleteClass()" style="background:#ff7b7b;">Delete Selected Class</button>
-  </div>
+<h3>Add / Edit Student</h3>
 
-  <!-- Filter & Promote -->
-  <div class="card">
-    <h3>Filter & Promote</h3>
-    <select id="filterClass">
-      <option value="">All Classes</option>
-    </select>
-    <input type="text" id="filterCategory" placeholder="Category Filter">
-    <button onclick="applyFilter()">Apply Filter</button>
-    <button onclick="promoteSelected()">Promote Selected to Next Class</button>
-  </div>
+<form id="studentForm">
 
-  <!-- Excel Options -->
-  <div class="card">
-    <h3>Excel Options</h3>
-    <button onclick="downloadExcel()">Download Students Excel</button>
-    <input type="file" id="excelUpload" accept=".xlsx,.xls">
-    <button onclick="uploadExcel()">Upload Students Excel</button>
-  </div>
+<input type="file" id="photo">
 
-  <!-- Students List -->
-  <div class="card">
-    <h3>Students List</h3>
-    <table id="studentTable">
-      <thead>
-        <tr>
-          <th>Select</th>
-          <th>Photo</th>
-          <th>Name</th>
-          <th>Father</th>
-          <th>Mother</th>
-          <th>Address</th>
-          <th>Category</th>
-          <th>Roll No</th>
-          <th>Class</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<img id="preview" width="80">
+
+<input id="name" placeholder="Student Name">
+
+<input id="father" placeholder="Father Name">
+
+<input id="mother" placeholder="Mother Name">
+
+<input id="mobile" placeholder="Mobile">
+
+<input id="address" placeholder="Address">
+
+<input id="category" placeholder="Category">
+
+<input id="roll" placeholder="Roll No">
+
+<select id="class"></select>
+
+<button>Add Student</button>
+
+</form>
 
 </div>
 
+<div class="card">
+
+<h3>Class Management</h3>
+
+<input id="newClass" placeholder="Class name">
+
+<button onclick="addClass()">Add Class</button>
+
+<select id="classList"></select>
+
+<button onclick="deleteClass()">Delete Class</button>
+
+</div>
+
+<div class="card">
+
+<h3>Excel</h3>
+
+<button onclick="exportExcel()">Download Excel</button>
+
+<input type="file" id="excelFile">
+
+<button onclick="importExcel()">Upload Excel</button>
+
+</div>
+
+<div class="card">
+
+<h3>Students</h3>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Photo</th>
+<th>Name</th>
+<th>Father</th>
+<th>Roll</th>
+<th>Class</th>
+<th>Action</th>
+
+</tr>
+
+</thead>
+
+<tbody id="tableBody"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, setDoc, doc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+import {
+getFirestore,
+collection,
+setDoc,
+doc,
+deleteDoc,
+onSnapshot,
+getDocs
+}
+
+from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-  authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-  projectId: "nmpsnagguradiya-b9b94",
-  storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
-  messagingSenderId: "811957568318",
-  appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+
+projectId: "nmpsnagguradiya-b9b94",
+
+storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
+
+messagingSenderId: "811957568318",
+
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+
 };
+
 const app = initializeApp(firebaseConfig);
+
 const db = getFirestore(app);
 
-let students = [];
-let classes = ["Class 1","Class 2","Class 3","Class 4","Class 5"];
-let editId = '';
+let students=[];
 
-const studentForm = document.getElementById('studentForm');
-const studentClassSelect = document.getElementById('studentClass');
-const filterClassSelect = document.getElementById('filterClass');
-const classListSelect = document.getElementById('classList');
+let classes=[];
 
-// Populate classes
-function refreshClassOptions(){
-  studentClassSelect.innerHTML = '';
-  filterClassSelect.innerHTML = '<option value="">All Classes</option>';
-  classListSelect.innerHTML = '';
-  classes.forEach(c=>{
-    studentClassSelect.innerHTML += `<option value="${c}">${c}</option>`;
-    filterClassSelect.innerHTML += `<option value="${c}">${c}</option>`;
-    classListSelect.innerHTML += `<option value="${c}">${c}</option>`;
-  });
-}
-refreshClassOptions();
+let editId=null;
 
-// Photo Preview
-document.getElementById('photo').addEventListener('change', function(){
-  const file = this.files[0];
-  document.getElementById('photoPreview').src = file ? URL.createObjectURL(file) : '';
+const classSelect=document.getElementById("class");
+
+const classList=document.getElementById("classList");
+
+function refreshClasses(){
+
+classSelect.innerHTML="";
+
+classList.innerHTML="";
+
+classes.forEach(c=>{
+
+classSelect.innerHTML+=`<option>${c}</option>`;
+
+classList.innerHTML+=`<option>${c}</option>`;
+
 });
 
-// ImgBB Upload
-async function uploadToImgBB(file){
-  if(!file) return '';
-  const apiKey = '21000d5a5d14fcef4b6af4d13647da5a8';
-  const formData = new FormData();
-  formData.append('image', file);
-  const res = await fetch('https://api.imgbb.com/1/upload?key='+apiKey, {method:'POST', body:formData});
-  const data = await res.json();
-  return data.success ? data.data.url : '';
 }
 
-// Add/Edit student
-studentForm.addEventListener('submit', async e=>{
-  e.preventDefault();
-  const photoFile = document.getElementById('photo').files[0];
-  let photoURL = '';
-  if(photoFile){ photoURL = await uploadToImgBB(photoFile); }
+window.addClass=async function(){
 
-  const student = {
-    photo: photoURL,
-    name: document.getElementById('name').value,
-    fatherName: document.getElementById('fatherName').value,
-    motherName: document.getElementById('motherName').value,
-    address: document.getElementById('address').value,
-    category: document.getElementById('category').value,
-    rollNo: document.getElementById('rollNo').value,
-    studentClass: document.getElementById('studentClass').value
-  };
+let c=document.getElementById("newClass").value;
 
-  const studentId = editId || student.name+'_'+student.studentClass;
-  await setDoc(doc(db,'students',studentId), student);
-  resetForm();
+if(!c)return;
+
+classes.push(c);
+
+await setDoc(doc(db,"classes",c),{name:c});
+
+refreshClasses();
+
+}
+
+window.deleteClass=async function(){
+
+let c=classList.value;
+
+await deleteDoc(doc(db,"classes",c));
+
+classes=classes.filter(x=>x!=c);
+
+refreshClasses();
+
+}
+
+async function loadClasses(){
+
+const snap=await getDocs(collection(db,"classes"));
+
+snap.forEach(d=>classes.push(d.id));
+
+refreshClasses();
+
+}
+
+loadClasses();
+
+async function uploadImg(file){
+
+if(!file)return "";
+
+let form=new FormData();
+
+form.append("image",file);
+
+let res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a8",{method:"POST",body:form});
+
+let data=await res.json();
+
+return data.data.url;
+
+}
+
+document.getElementById("photo").onchange=e=>{
+
+preview.src=URL.createObjectURL(e.target.files[0]);
+
+}
+
+document.getElementById("studentForm").onsubmit=async e=>{
+
+e.preventDefault();
+
+let file=document.getElementById("photo").files[0];
+
+let photo=await uploadImg(file);
+
+let s={
+
+name:name.value,
+
+father:father.value,
+
+mother:mother.value,
+
+mobile:mobile.value,
+
+address:address.value,
+
+category:category.value,
+
+roll:roll.value,
+
+class:classSelect.value,
+
+photo:photo
+
+};
+
+let id=editId || s.name+"_"+s.class;
+
+await setDoc(doc(db,"students",id),s);
+
+editId=null;
+
+studentForm.reset();
+
+}
+
+onSnapshot(collection(db,"students"),snap=>{
+
+students=[];
+
+snap.forEach(d=>students.push(d.data()));
+
+render();
+
 });
 
-// Reset form
-function resetForm(){
-  studentForm.reset();
-  document.getElementById('photoPreview').src='';
-  document.getElementById('formTitle').innerText='Add Student';
-  document.getElementById('submitBtn').innerText='Add Student';
-  document.getElementById('cancelEditBtn').style.display='none';
-  editId = '';
-}
+function render(){
 
-// Cancel Edit
-document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+tableBody.innerHTML="";
 
-// Real-time snapshot
-onSnapshot(collection(db,'students'), snap=>{
-  students = [];
-  snap.forEach(docSnap => students.push(docSnap.data()));
-  updateStudentTable();
+students.sort((a,b)=>a.roll-b.roll);
+
+students.forEach(s=>{
+
+tableBody.innerHTML+=`
+
+<tr>
+
+<td>${s.photo?'<img src="'+s.photo+'" width=40>':''}</td>
+
+<td>${s.name}</td>
+
+<td>${s.father}</td>
+
+<td>${s.roll}</td>
+
+<td>${s.class}</td>
+
+<td>
+
+<button onclick="edit('${s.name}','${s.class}')">Edit</button>
+
+<button onclick="del('${s.name}','${s.class}')">Delete</button>
+
+</td>
+
+</tr>
+
+`;
+
 });
 
-// Update table
-function updateStudentTable(filterClass='', filterCategory=''){
-  const tbody = document.querySelector('#studentTable tbody');
-  tbody.innerHTML='';
-  students.sort((a,b)=> (a.rollNo || 0) - (b.rollNo || 0)); // roll number sort
-  students.forEach((s,i)=>{
-    if(filterClass && s.studentClass !== filterClass) return;
-    if(filterCategory && s.category.toLowerCase() !== filterCategory.toLowerCase()) return;
-    const tr = document.createElement('tr');
-    tr.innerHTML = `
-      <td><input type="checkbox" class="selectStudent" data-index="${i}"></td>
-      <td>${s.photo ? '<img src="'+s.photo+'" width="50"/>' : ''}</td>
-      <td>${s.name}</td>
-      <td>${s.fatherName}</td>
-      <td>${s.motherName}</td>
-      <td>${s.address}</td>
-      <td>${s.category}</td>
-      <td>${s.rollNo}</td>
-      <td>${s.studentClass}</td>
-      <td>
-        <button onclick="editStudent(${i})">Edit</button>
-        <button onclick="deleteStudent('${s.name}','${s.studentClass}')">Delete</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-  document.getElementById('totalStudents').innerText = students.length;
+totalStudents.innerText=students.length;
+
 }
 
-// Edit Student
-function editStudent(index){
-  const s = students[index];
-  editId = s.name+'_'+s.studentClass;
-  document.getElementById('name').value = s.name;
-  document.getElementById('fatherName').value = s.fatherName;
-  document.getElementById('motherName').value = s.motherName;
-  document.getElementById('address').value = s.address;
-  document.getElementById('category').value = s.category;
-  document.getElementById('rollNo').value = s.rollNo;
-  document.getElementById('studentClass').value = s.studentClass;
-  if(s.photo) document.getElementById('photoPreview').src = s.photo;
-  document.getElementById('formTitle').innerText='Edit Student';
-  document.getElementById('submitBtn').innerText='Update Student';
-  document.getElementById('cancelEditBtn').style.display='inline-block';
+window.edit=function(name,cls){
+
+let s=students.find(x=>x.name==name && x.class==cls);
+
+editId=name+"_"+cls;
+
+name.value=s.name;
+
+father.value=s.father;
+
+mother.value=s.mother;
+
+roll.value=s.roll;
+
+classSelect.value=s.class;
+
+preview.src=s.photo;
+
 }
 
-// Delete Student
-async function deleteStudent(name,cls){
-  if(confirm('Are you sure?')) await deleteDoc(doc(db,'students',name+'_'+cls));
+window.del=async function(name,cls){
+
+if(confirm("Delete student?"))
+
+await deleteDoc(doc(db,"students",name+"_"+cls));
+
 }
 
-// Promote
-function promoteSelected(){
-  const checkboxes = document.querySelectorAll('.selectStudent:checked');
-  checkboxes.forEach(async cb=>{
-    const index = cb.getAttribute('data-index');
-    const s = students[index];
-    if(s.studentClass){
-      const num = parseInt(s.studentClass.split(' ')[1]);
-      s.studentClass = 'Class ' + (num+1);
-      await setDoc(doc(db,'students',s.name+'_'+s.studentClass), s);
-      await deleteDoc(doc(db,'students',s.name+'_'+num));
-    }
-  });
+window.exportExcel=function(){
+
+let data=[["Name","Father","Roll","Class"]];
+
+students.forEach(s=>data.push([s.name,s.father,s.roll,s.class]));
+
+let wb=XLSX.utils.book_new();
+
+let ws=XLSX.utils.aoa_to_sheet(data);
+
+XLSX.utils.book_append_sheet(wb,ws,"Students");
+
+XLSX.writeFile(wb,"students.xlsx");
+
 }
 
-// Filter
-function applyFilter(){
-  const fClass = document.getElementById('filterClass').value;
-  const fCat = document.getElementById('filterCategory').value;
-  updateStudentTable(fClass,fCat);
+window.importExcel=function(){
+
+let file=document.getElementById("excelFile").files[0];
+
+let reader=new FileReader();
+
+reader.onload=e=>{
+
+let wb=XLSX.read(e.target.result,{type:"binary"});
+
+let rows=XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]],{header:1});
+
+rows.slice(1).forEach(async r=>{
+
+let s={
+
+name:r[0],
+
+father:r[1],
+
+roll:r[2],
+
+class:r[3]
+
+};
+
+await setDoc(doc(db,"students",s.name+"_"+s.class),s);
+
+});
+
+};
+
+reader.readAsBinaryString(file);
+
 }
 
-// Class Management
-function addClass(){
-  const c = document.getElementById('newClass').value.trim();
-  if(c && !classes.includes(c)){
-    classes.push(c);
-    refreshClassOptions();
-    document.getElementById('newClass').value='';
-  }
-}
-function deleteClass(){
-  const c = classListSelect.value;
-  if(c && confirm('Delete class '+c+'?')){
-    classes = classes.filter(cl => cl!==c);
-    refreshClassOptions();
-  }
-}
-
-// Excel (import/export)
-function downloadExcel(){
-  const ws_data = [["Name","Father","Mother","Address","Category","RollNo","Class","Photo"]];
-  students.forEach(s=> ws_data.push([s.name,s.fatherName,s.motherName,s.address,s.category,s.rollNo,s.studentClass,s.photo]));
-  const wb = XLSX.utils.book_new();
-  const ws = XLSX.utils.aoa_to_sheet(ws_data);
-  XLSX.utils.book_append_sheet(wb,ws,"Students");
-  XLSX.writeFile(wb,"students.xlsx");
-}
-
-function uploadExcel(){
-  const file = document.getElementById('excelUpload').files[0];
-  if(!file) return alert('Select Excel file');
-  const reader = new FileReader();
-  reader.onload = async e=>{
-    const data = new Uint8Array(e.target.result);
-    const workbook = XLSX.read(data,{type:'array'});
-    const sheet = workbook.Sheets[workbook.SheetNames[0]];
-    const json = XLSX.utils.sheet_to_json(sheet,{header:1});
-    const headers = json[0];
-    for(let i=1;i<json.length;i++){
-      const row = json[i];
-      let s = {};
-      headers.forEach((h,j)=> s[h]=row[j]||'');
-      s.studentClass = s.Class || '';
-      s.photo = s.Photo || '';
-      const studentId = s.name+'_'+s.studentClass;
-      await setDoc(doc(db,'students',studentId), s);
-    }
-  };
-  reader.readAsArrayBuffer(file);
-}
 </script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 </body>
-      </html>
+</html>
