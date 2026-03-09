@@ -3,9 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-
-<title>NMPS Ultra School ERP</title>
-
+<title>NMPS School ERP</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
@@ -13,18 +11,18 @@
 body{
 font-family:Arial;
 margin:0;
-background:#f3f3f3;
+background:#f4f6f9;
 }
 
 header{
-background:#2f8cff;
+background:#0d6efd;
 color:white;
 padding:15px;
 text-align:center;
 }
 
 .container{
-max-width:1300px;
+max-width:1200px;
 margin:auto;
 padding:20px;
 }
@@ -37,14 +35,25 @@ border-radius:8px;
 box-shadow:0 0 10px rgba(0,0,0,0.1);
 }
 
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(220px,1fr));
+gap:10px;
+}
+
+label{
+font-weight:bold;
+font-size:14px;
+}
+
 input,select{
 width:100%;
-padding:8px;
-margin-top:6px;
+padding:7px;
+margin-top:4px;
 }
 
 button{
-background:#2f8cff;
+background:#0d6efd;
 color:white;
 border:none;
 padding:8px 12px;
@@ -53,10 +62,19 @@ cursor:pointer;
 border-radius:4px;
 }
 
+button.delete{
+background:#dc3545;
+}
+
+button.promote{
+background:#ffc107;
+color:black;
+}
+
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:10px;
+margin-top:15px;
 }
 
 th,td{
@@ -69,10 +87,19 @@ img{
 border-radius:4px;
 }
 
-.flex{
-display:flex;
-gap:10px;
-flex-wrap:wrap;
+.idCard{
+width:300px;
+background:#0d6efd;
+color:white;
+padding:15px;
+border-radius:10px;
+}
+
+.idCard h3{
+background:#ffc107;
+color:black;
+padding:5px;
+text-align:center;
 }
 
 </style>
@@ -83,7 +110,7 @@ flex-wrap:wrap;
 
 <header>
 
-<h2>NMPS Ultra School ERP</h2>
+<h2>NMPS School ERP</h2>
 
 Total Students : <span id="totalStudents">0</span>
 
@@ -93,102 +120,128 @@ Total Students : <span id="totalStudents">0</span>
 
 <div class="card">
 
-<h3>Add / Edit Student</h3>
+<h3>Add Student</h3>
 
 <form id="studentForm">
 
+<div class="grid">
+
+<div>
+<label>Photo</label>
 <input type="file" id="photo">
+</div>
 
-<img id="preview" width="80">
+<div>
+<label>Student Name</label>
+<input id="name">
+</div>
 
-<input id="name" placeholder="Student Name">
+<div>
+<label>Father Name</label>
+<input id="father">
+</div>
 
-<input id="father" placeholder="Father Name">
+<div>
+<label>Mother Name</label>
+<input id="mother">
+</div>
 
-<input id="mother" placeholder="Mother Name">
-
+<div>
+<label>Class</label>
 <select id="class"></select>
+</div>
 
-<input id="mobile" placeholder="Mobile">
+<div>
+<label>Mobile</label>
+<input id="mobile">
+</div>
 
+<div>
+<label>Date Of Birth</label>
 <input type="date" id="dob">
+</div>
 
+<div>
+<label>Date Of Admission</label>
 <input type="date" id="doa">
+</div>
 
-<input id="village" placeholder="Village">
+<div>
+<label>Village</label>
+<input id="village">
+</div>
 
-<input id="post" placeholder="Post">
+<div>
+<label>Post</label>
+<input id="post">
+</div>
 
-<input id="district" placeholder="District">
+<div>
+<label>District</label>
+<input id="district">
+</div>
 
-<input id="state" placeholder="State">
+<div>
+<label>State</label>
+<input id="state">
+</div>
 
-<input id="national" placeholder="National">
+<div>
+<label>National</label>
+<input id="national">
+</div>
 
-<input id="sssm" placeholder="SSSM ID">
+<div>
+<label>SSSM ID</label>
+<input id="sssm">
+</div>
 
-<input id="family" placeholder="Family ID">
+<div>
+<label>Family ID</label>
+<input id="family">
+</div>
 
-<input id="apar" placeholder="APAR ID">
+<div>
+<label>APAR ID</label>
+<input id="apar">
+</div>
 
-<input id="aadhar" placeholder="Aadhar">
+<div>
+<label>Aadhar</label>
+<input id="aadhar">
+</div>
 
-<input id="caste" placeholder="Caste">
+<div>
+<label>Caste</label>
+<input id="caste">
+</div>
 
-<input id="category" placeholder="Category">
+<div>
+<label>Category</label>
+<input id="category">
+</div>
 
-<input id="roll" placeholder="Roll Number">
+<div>
+<label>Roll Number</label>
+<input id="roll">
+</div>
 
-<input id="scholar" placeholder="Scholar Number">
+<div>
+<label>Scholar Number</label>
+<input id="scholar">
+</div>
 
-<button>Add Student</button>
+</div>
+
+<button type="submit">Add Student</button>
 
 </form>
 
 </div>
 
-
 <div class="card">
 
-<h3>Class Management</h3>
-
-<div class="flex">
-
-<input id="newClass" placeholder="Class Name">
-
-<button onclick="addClass()">Add Class</button>
-
-<select id="classList"></select>
-
-<button onclick="deleteClass()">Delete Class</button>
-
-</div>
-
-</div>
-
-
-<div class="card">
-
-<h3>Search</h3>
-
-<div class="flex">
-
-<input id="searchName" placeholder="Student Name">
-
-<select id="filterClass"></select>
-
-<button onclick="applyFilter()">Search</button>
-
-<button onclick="exportExcel()">Download Excel</button>
-
-</div>
-
-</div>
-
-
-<div class="card">
-
-<h3>Students List</h3>
+<h3>Students</h3>
 
 <table>
 
@@ -198,30 +251,27 @@ Total Students : <span id="totalStudents">0</span>
 
 <th>Photo</th>
 <th>Name</th>
-<th>Father</th>
 <th>Class</th>
 <th>Roll</th>
-<th>Mobile</th>
 <th>Action</th>
 
 </tr>
 
 </thead>
 
-<tbody id="tableBody"></tbody>
+<tbody id="studentTable"></tbody>
 
 </table>
 
 </div>
 
-
 <div class="card">
 
-<h3>Student ID Card</h3>
+<h3>ID Card</h3>
 
-<div id="idCard" style="border:1px solid #ccc;padding:15px;width:300px">
+<div class="idCard">
 
-<h3>NMPS School</h3>
+<h3>NMPS SCHOOL</h3>
 
 <img id="idPhoto" width="80">
 
@@ -233,146 +283,45 @@ Total Students : <span id="totalStudents">0</span>
 
 </div>
 
-<button onclick="printID()">Print ID Card</button>
+<button onclick="window.print()">Print ID</button>
 
 </div>
 
 </div>
-
-
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 
 import {
-
 getFirestore,
-
 collection,
-
 setDoc,
-
 doc,
-
 deleteDoc,
-
-onSnapshot,
-
-getDocs
-
+onSnapshot
 }
 
 from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-
 const firebaseConfig={
-
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-
-projectId:"nmpsnagguradiya-b9b94",
-
-storageBucket:"nmpsnagguradiya-b9b94.appspot.com",
-
-messagingSenderId:"811957568318",
-
-appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
-
+projectId:"nmpsnagguradiya-b9b94"
 };
-
 
 const app=initializeApp(firebaseConfig);
 
 const db=getFirestore(app);
 
-
 let students=[];
-
-let classes=[];
-
 let editId=null;
-
-
-const classSelect=document.getElementById("class");
-
-const filterClass=document.getElementById("filterClass");
-
-const classList=document.getElementById("classList");
-
-
-function refreshClasses(){
-
-classSelect.innerHTML="";
-
-filterClass.innerHTML="<option value=''>All</option>";
-
-classList.innerHTML="";
-
-classes.forEach(c=>{
-
-classSelect.innerHTML+=`<option>${c}</option>`;
-
-filterClass.innerHTML+=`<option>${c}</option>`;
-
-classList.innerHTML+=`<option>${c}</option>`;
-
-});
-
-}
-
-
-window.addClass=async function(){
-
-let c=newClass.value;
-
-if(!c)return;
-
-classes.push(c);
-
-await setDoc(doc(db,"classes",c),{name:c});
-
-refreshClasses();
-
-}
-
-
-window.deleteClass=async function(){
-
-let c=classList.value;
-
-await deleteDoc(doc(db,"classes",c));
-
-classes=classes.filter(x=>x!=c);
-
-refreshClasses();
-
-}
-
-
-async function loadClasses(){
-
-const snap=await getDocs(collection(db,"classes"));
-
-snap.forEach(d=>classes.push(d.id));
-
-refreshClasses();
-
-}
-
-loadClasses();
-
 
 async function uploadImg(file){
 
 if(!file)return "";
 
 let form=new FormData();
-
 form.append("image",file);
 
 let res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a8",{method:"POST",body:form});
@@ -383,61 +332,43 @@ return data.data.url;
 
 }
 
-
-photo.onchange=e=>{
-
-preview.src=URL.createObjectURL(e.target.files[0]);
-
-}
-
-
 studentForm.onsubmit=async e=>{
 
 e.preventDefault();
 
 let file=photo.files[0];
-
 let photoURL=await uploadImg(file);
 
-let s={
-
+let student={
 name:name.value,
-
 father:father.value,
-
-class:classSelect.value,
-
+mother:mother.value,
+class:document.getElementById("class").value,
 roll:roll.value,
-
-mobile:mobile.value,
-
 photo:photoURL
-
 };
 
-let id=editId || s.name+"_"+s.class;
+let id=editId || student.name+"_"+student.class;
 
-await setDoc(doc(db,"students",id),s);
+await setDoc(doc(db,"students",id),student);
 
 studentForm.reset();
+editId=null;
 
-}
-
+};
 
 onSnapshot(collection(db,"students"),snap=>{
 
 students=[];
-
 snap.forEach(d=>students.push(d.data()));
 
 render();
 
 });
 
-
 function render(){
 
-tableBody.innerHTML="";
+studentTable.innerHTML="";
 
 students.sort((a,b)=>a.roll-b.roll);
 
@@ -445,7 +376,7 @@ students.forEach(s=>{
 
 let id=s.name+"_"+s.class;
 
-tableBody.innerHTML+=`
+studentTable.innerHTML+=`
 
 <tr>
 
@@ -453,21 +384,19 @@ tableBody.innerHTML+=`
 
 <td>${s.name}</td>
 
-<td>${s.father}</td>
-
 <td>${s.class}</td>
 
 <td>${s.roll}</td>
-
-<td>${s.mobile}</td>
 
 <td>
 
 <button onclick="editStudent('${id}')">Edit</button>
 
-<button onclick="deleteStudent('${id}')">Delete</button>
+<button class="delete" onclick="deleteStudent('${id}')">Delete</button>
 
-<button onclick="showID('${id}')">ID Card</button>
+<button class="promote" onclick="promote('${id}')">Promote</button>
+
+<button onclick="showID('${id}')">ID</button>
 
 </td>
 
@@ -481,7 +410,6 @@ totalStudents.innerText=students.length;
 
 }
 
-
 window.editStudent=function(id){
 
 let s=students.find(x=>(x.name+"_"+x.class)==id);
@@ -489,123 +417,47 @@ let s=students.find(x=>(x.name+"_"+x.class)==id);
 editId=id;
 
 name.value=s.name;
-
 father.value=s.father;
-
-classSelect.value=s.class;
-
 roll.value=s.roll;
-
-mobile.value=s.mobile;
-
-preview.src=s.photo;
 
 }
 
-
 window.deleteStudent=async function(id){
 
-if(confirm("Delete Student?"))
+if(confirm("Delete student?"))
 
 await deleteDoc(doc(db,"students",id));
 
 }
 
+window.promote=async function(id){
+
+let s=students.find(x=>(x.name+"_"+x.class)==id);
+
+let num=parseInt(s.class.replace("Class ",""));
+
+let newClass="Class "+(num+1);
+
+s.class=newClass;
+
+await setDoc(doc(db,"students",s.name+"_"+newClass),s);
+
+await deleteDoc(doc(db,"students",id));
+
+}
 
 window.showID=function(id){
 
 let s=students.find(x=>(x.name+"_"+x.class)==id);
 
 idPhoto.src=s.photo;
-
 idName.innerText="Name : "+s.name;
-
 idClass.innerText="Class : "+s.class;
-
 idRoll.innerText="Roll : "+s.roll;
-
-}
-
-
-window.printID=function(){
-
-window.print();
-
-}
-
-
-window.applyFilter=function(){
-
-let name=searchName.value.toLowerCase();
-
-let cls=filterClass.value;
-
-let filtered=students.filter(s=>
-
-(!name || s.name.toLowerCase().includes(name)) &&
-(!cls || s.class==cls)
-
-);
-
-tableBody.innerHTML="";
-
-filtered.forEach(s=>{
-
-let id=s.name+"_"+s.class;
-
-tableBody.innerHTML+=`
-
-<tr>
-
-<td>${s.photo?'<img src="'+s.photo+'" width=40>':''}</td>
-
-<td>${s.name}</td>
-
-<td>${s.father}</td>
-
-<td>${s.class}</td>
-
-<td>${s.roll}</td>
-
-<td>${s.mobile}</td>
-
-<td>
-
-<button onclick="editStudent('${id}')">Edit</button>
-
-<button onclick="deleteStudent('${id}')">Delete</button>
-
-<button onclick="showID('${id}')">ID Card</button>
-
-</td>
-
-</tr>
-
-`;
-
-});
-
-}
-
-
-window.exportExcel=function(){
-
-let data=[Object.keys(students[0]||{})];
-
-students.forEach(s=>data.push(Object.values(s)));
-
-let wb=XLSX.utils.book_new();
-
-let ws=XLSX.utils.aoa_to_sheet(data);
-
-XLSX.utils.book_append_sheet(wb,ws,"Students");
-
-XLSX.writeFile(wb,"students.xlsx");
 
 }
 
 </script>
 
 </body>
-
-</html>
+  </html>
