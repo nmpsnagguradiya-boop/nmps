@@ -58,6 +58,20 @@ th, td {
 .selected-row {
   background:#ffe0b2;
 }
+#photoPreview{
+  display:block;
+  margin:5px 0;
+  width:100px;
+  height:100px;
+  object-fit:cover;
+  border:1px solid #ddd;
+  border-radius:5px;
+}
+label{
+  font-weight:bold;
+  display:block;
+  margin-top:10px;
+}
 </style>
 </head>
 <body>
@@ -71,33 +85,79 @@ th, td {
   <div class="card">
     <h3>Add Student</h3>
     <form id="studentForm">
+      <label>Photo</label>
       <input type="file" id="photo" accept="image/*" required>
+      <img id="photoPreview" src="" alt="Photo Preview">
+
+      <label>Name</label>
       <input type="text" placeholder="Name" id="name" required>
+      
+      <label>Father's Name</label>
       <input type="text" placeholder="Father's Name" id="fatherName">
+      
+      <label>Mother's Name</label>
       <input type="text" placeholder="Mother's Name" id="motherName">
+      
+      <label>Address</label>
       <input type="text" placeholder="Address" id="address">
+      
+      <label>SSSM ID</label>
       <input type="text" placeholder="SSSM ID" id="sssmId">
+      
+      <label>Family ID</label>
       <input type="text" placeholder="Family ID" id="familyId">
+      
+      <label>Aadhaar Card Number</label>
       <input type="text" placeholder="Aadhaar Card Number" id="aadhaar">
+      
+      <label>Roll Number</label>
       <input type="text" placeholder="Roll Number" id="rollNo">
+      
+      <label>Date of Birth</label>
       <input type="date" placeholder="Date of Birth" id="dob">
+      
+      <label>APAR ID</label>
       <input type="text" placeholder="APAR ID" id="aparId">
+      
+      <label>Caste</label>
       <input type="text" placeholder="Caste" id="caste">
+      
+      <label>Category</label>
       <input type="text" placeholder="Category" id="category">
+      
+      <label>Mobile Number</label>
       <input type="text" placeholder="Mobile Number" id="mobile">
+      
+      <label>Gender</label>
       <select id="gender">
         <option value="">Select Gender</option>
         <option value="Male">Male</option>
         <option value="Female">Female</option>
         <option value="Other">Other</option>
       </select>
+      
+      <label>Post</label>
       <input type="text" placeholder="Post" id="post">
+      
+      <label>District</label>
       <input type="text" placeholder="District" id="district">
+      
+      <label>State</label>
       <input type="text" placeholder="State" id="state">
+      
+      <label>Postal Code</label>
       <input type="text" placeholder="Postal Code" id="postalCode">
+      
+      <label>Admission Date</label>
       <input type="date" placeholder="Admission Date" id="admissionDate">
+      
+      <label>Scholar Number</label>
       <input type="text" placeholder="Scholar Number" id="scholarNo">
+      
+      <label>Email ID</label>
       <input type="email" placeholder="Email ID" id="email">
+      
+      <label>Class</label>
       <select id="studentClass">
         <option value="">Select Class</option>
         <option value="Class 1">Class 1</option>
@@ -169,16 +229,49 @@ th, td {
   </div>
 </div>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, setDoc, doc, deleteDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
+
+// Firebase config
+const firebaseConfig = {
+  apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+  authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+  projectId: "nmpsnagguradiya-b9b94",
+  storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
+  messagingSenderId: "811957568318",
+  appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const storage = getStorage(app);
+
 let students = [];
 
-// Add / Edit student
-document.getElementById('studentForm').addEventListener('submit', function(e){
+// Photo Preview
+document.getElementById('photo').addEventListener('change', function(){
+  const file = this.files[0];
+  if(file){
+    document.getElementById('photoPreview').src = URL.createObjectURL(file);
+  } else {
+    document.getElementById('photoPreview').src = '';
+  }
+});
+
+// Add student
+document.getElementById('studentForm').addEventListener('submit', async function(e){
   e.preventDefault();
-  const editIndex = this.getAttribute('data-edit-index');
+  const photoFile = document.getElementById('photo').files[0];
+  let photoURL = '';
+  if(photoFile){
+    const storageRef = ref(storage, 'studentPhotos/'+Date.now()+'_'+photoFile.name);
+    await uploadBytes(storageRef, photoFile);
+    photoURL = await getDownloadURL(storageRef);
+  }
+
   const student = {
-    photo: URL.createObjectURL(document.getElementById('photo').files[0]),
+    photo: photoURL,
     name: document.getElementById('name').value,
     fatherName: document.getElementById('fatherName').value,
     motherName: document.getElementById('motherName').value,
@@ -202,22 +295,29 @@ document.getElementById('studentForm').addEventListener('submit', function(e){
     email: document.getElementById('email').value,
     studentClass: document.getElementById('studentClass').value
   };
-  if(editIndex != null){
-    students[editIndex] = student;
-    this.removeAttribute('data-edit-index');
-  } else {
-    students.push(student);
-  }
-  updateStudentTable();
+
+  const studentId = student.name+'_'+student.studentClass;
+  await setDoc(doc(db,'students',studentId), student);
   this.reset();
+  document.getElementById('photoPreview').src = '';
 });
 
-// Update table
+// Real-time update
+onSnapshot(collection(db,'students'), snapshot=>{
+  students = [];
+  snapshot.forEach(docSnap=>{
+    students.push(docSnap.data());
+  });
+  updateStudentTable();
+});
+
+// Table update
 function updateStudentTable(filterClass='', filterCategory=''){
   const tbody = document.querySelector('#studentTable tbody');
-  tbody.innerHTML = '';
-  students.forEach((s,i) => {
-    if((filterClass && s.studentClass !== filterClass) || (filterCategory && s.category.toLowerCase() !== filterCategory.toLowerCase())) return;
+  tbody.innerHTML='';
+  students.forEach((s,i)=>{
+    if(filterClass && s.studentClass !== filterClass) return;
+    if(filterCategory && s.category.toLowerCase() !== filterCategory.toLowerCase()) return;
     const tr = document.createElement('tr');
     tr.innerHTML = `
       <td><input type="checkbox" class="selectStudent" data-index="${i}"></td>
@@ -245,8 +345,7 @@ function updateStudentTable(filterClass='', filterCategory=''){
       <td>${s.email}</td>
       <td>${s.studentClass}</td>
       <td>
-        <button onclick="editStudent(${i})">Edit</button>
-        <button onclick="deleteStudent(${i})">Delete</button>
+        <button onclick="deleteStudent('${s.name}','${s.studentClass}')">Delete</button>
       </td>
     `;
     tbody.appendChild(tr);
@@ -254,98 +353,66 @@ function updateStudentTable(filterClass='', filterCategory=''){
   document.getElementById('totalStudents').innerText = students.length;
 }
 
-// Edit/Delete
-function editStudent(i){
-  const s = students[i];
-  document.getElementById('name').value = s.name;
-  document.getElementById('fatherName').value = s.fatherName;
-  document.getElementById('motherName').value = s.motherName;
-  document.getElementById('address').value = s.address;
-  document.getElementById('sssmId').value = s.sssmId;
-  document.getElementById('familyId').value = s.familyId;
-  document.getElementById('aadhaar').value = s.aadhaar;
-  document.getElementById('rollNo').value = s.rollNo;
-  document.getElementById('dob').value = s.dob;
-  document.getElementById('aparId').value = s.aparId;
-  document.getElementById('caste').value = s.caste;
-  document.getElementById('category').value = s.category;
-  document.getElementById('mobile').value = s.mobile;
-  document.getElementById('gender').value = s.gender;
-  document.getElementById('post').value = s.post;
-  document.getElementById('district').value = s.district;
-  document.getElementById('state').value = s.state;
-  document.getElementById('postalCode').value = s.postalCode;
-  document.getElementById('admissionDate').value = s.admissionDate;
-  document.getElementById('scholarNo').value = s.scholarNo;
-  document.getElementById('email').value = s.email;
-  document.getElementById('studentClass').value = s.studentClass;
-  document.getElementById('studentForm').setAttribute('data-edit-index', i);
-}
-
-function deleteStudent(i){
+// Delete
+async function deleteStudent(name, cls){
   if(confirm('Are you sure to delete this student?')){
-    students.splice(i,1);
-    updateStudentTable();
+    await deleteDoc(doc(db,'students',name+'_'+cls));
   }
 }
 
 // Promote selected
 function promoteSelected(){
   const checkboxes = document.querySelectorAll('.selectStudent:checked');
-  checkboxes.forEach(cb=>{
+  checkboxes.forEach(async cb=>{
     const index = cb.getAttribute('data-index');
-    let cls = students[index].studentClass;
-    if(cls){
-      const num = parseInt(cls.split(' ')[1]);
-      students[index].studentClass = 'Class ' + (num+1);
+    const s = students[index];
+    if(s.studentClass){
+      const num = parseInt(s.studentClass.split(' ')[1]);
+      s.studentClass = 'Class ' + (num+1);
+      await setDoc(doc(db,'students',s.name+'_'+s.studentClass), s);
+      await deleteDoc(doc(db,'students',s.name+'_'+num));
     }
   });
-  updateStudentTable();
 }
 
 // Filters
 function applyFilter(){
   const fClass = document.getElementById('filterClass').value;
   const fCat = document.getElementById('filterCategory').value;
-  updateStudentTable(fClass, fCat);
+  updateStudentTable(fClass,fCat);
 }
 
-// Download Excel
+// Excel
 function downloadExcel(){
-  const ws_data = [
-    ["Photo","Name","Father's Name","Mother's Name","Address","SSSM ID","Family ID","Aadhaar","Roll No","DOB","APAR ID","Caste","Category","Mobile","Gender","Post","District","State","Postal Code","Admission Date","Scholar No","Email","Class"]
-  ];
+  const ws_data = [["Photo","Name","Father's Name","Mother's Name","Address","SSSM ID","Family ID","Aadhaar","Roll No","DOB","APAR ID","Caste","Category","Mobile","Gender","Post","District","State","Postal Code","Admission Date","Scholar No","Email","Class"]];
   students.forEach(s=>{
-    ws_data.push([
-      s.photo,s.name,s.fatherName,s.motherName,s.address,s.sssmId,s.familyId,s.aadhaar,s.rollNo,s.dob,s.aparId,s.caste,s.category,s.mobile,s.gender,s.post,s.district,s.state,s.postalCode,s.admissionDate,s.scholarNo,s.email,s.studentClass
-    ]);
+    ws_data.push([s.photo,s.name,s.fatherName,s.motherName,s.address,s.sssmId,s.familyId,s.aadhaar,s.rollNo,s.dob,s.aparId,s.caste,s.category,s.mobile,s.gender,s.post,s.district,s.state,s.postalCode,s.admissionDate,s.scholarNo,s.email,s.studentClass]);
   });
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(ws_data);
   XLSX.utils.book_append_sheet(wb, ws, "Students");
-  XLSX.writeFile(wb, "students.xlsx");
+  XLSX.writeFile(wb,"students.xlsx");
 }
 
-// Upload Excel
 function uploadExcel(){
   const file = document.getElementById('excelUpload').files[0];
-  if(!file){ alert("Select Excel file"); return; }
+  if(!file) return alert("Select Excel file");
   const reader = new FileReader();
-  reader.onload = function(e){
+  reader.onload = async function(e){
     const data = new Uint8Array(e.target.result);
     const workbook = XLSX.read(data,{type:'array'});
-    const sheetName = workbook.SheetNames[0];
-    const sheet = workbook.Sheets[sheetName];
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
     const json = XLSX.utils.sheet_to_json(sheet,{header:1});
     const headers = json[0];
-    json.slice(1).forEach(row=>{
-      const student = {};
-      headers.forEach((h,i)=>{ student[h] = row[i] || ''; });
-      if(student.Photo){ student.photo = student.Photo; }
-      if(student.Class){ student.studentClass = student.Class; }
-      students.push(student);
-    });
-    updateStudentTable();
+    for(let i=1;i<json.length;i++){
+      const row = json[i];
+      let student = {};
+      headers.forEach((h,j)=>{ student[h] = row[j] || ''; });
+      student.studentClass = student.Class || '';
+      student.photo = student.Photo || '';
+      const studentId = student.name+'_'+student.studentClass;
+      await setDoc(doc(db,'students',studentId), student);
+    }
   };
   reader.readAsArrayBuffer(file);
 }
@@ -353,4 +420,4 @@ function uploadExcel(){
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
-  </html>
+</html>
