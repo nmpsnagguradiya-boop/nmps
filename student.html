@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Student Admission</title>
+<title>School Admission System</title>
 
 <style>
 
@@ -18,7 +18,7 @@ background:#004aad;
 color:white;
 padding:15px;
 text-align:center;
-font-size:22px;
+font-size:24px;
 }
 
 .container{
@@ -41,31 +41,23 @@ border:1px solid #ccc;
 }
 
 button{
-margin-top:15px;
+margin-top:10px;
 background:#004aad;
 color:white;
 padding:12px;
 border:none;
-width:100%;
 border-radius:5px;
-font-size:16px;
 cursor:pointer;
-}
-
-.success{
-color:green;
-text-align:center;
-margin-top:10px;
 }
 
 table{
 width:100%;
 margin-top:20px;
-background:white;
 border-collapse:collapse;
+background:white;
 }
 
-table th,table td{
+th,td{
 border:1px solid #ccc;
 padding:8px;
 text-align:center;
@@ -75,12 +67,6 @@ text-align:center;
 margin-top:20px;
 padding:10px;
 width:100%;
-border-radius:5px;
-border:1px solid #ccc;
-}
-
-.printbtn{
-background:green;
 }
 
 </style>
@@ -89,33 +75,20 @@ background:green;
 
 <body>
 
-<header>Student Admission Form</header>
+<header>School Admission System</header>
 
 <div class="container">
 
 <form id="form">
 
-<input type="text" id="name" placeholder="Student Name" required>
-<input type="text" id="father" placeholder="Father Name" required>
-<input type="text" id="mobile" placeholder="Mobile Number" required>
-<input type="text" id="village" placeholder="Village" required>
-<input type="text" id="city" placeholder="Village / City">
-<input type="text" id="post" placeholder="Post">
-<input type="text" id="district" placeholder="District">
-<input type="text" id="state" placeholder="State">
-<input type="text" id="national" placeholder="Nationality">
-<input type="text" id="sssm" placeholder="SSSM ID">
-<input type="text" id="family" placeholder="Family ID">
-<input type="text" id="apar" placeholder="APAR ID">
-<input type="text" id="adhar" placeholder="Aadhar Card">
-<input type="text" id="caste" placeholder="Caste">
-<input type="text" id="category" placeholder="Category">
-<input type="text" id="roll" placeholder="Roll Number">
-<input type="text" id="scholer" placeholder="Scholar Number">
-<input type="date" id="admissionDate">
+<h3>Student Details</h3>
+
+<input id="name" placeholder="Student Name" required>
+<input id="father" placeholder="Father Name" required>
+<input id="mother" placeholder="Mother Name">
+<input id="mobile" placeholder="Mobile Number">
 
 <select id="class">
-<option>Select Class</option>
 <option>Nursery</option>
 <option>LKG</option>
 <option>UKG</option>
@@ -131,51 +104,46 @@ background:green;
 <option>10</option>
 </select>
 
+<label>Date Of Birth</label>
 <input type="date" id="dob">
 
-<textarea id="message" placeholder="Message"></textarea>
+<label>Admission Date</label>
+<input type="date" id="admissionDate">
+
+<h3>Address</h3>
+
+<input id="village" placeholder="Village / City">
+<input id="post" placeholder="Post">
+<input id="district" placeholder="District">
+<input id="state" placeholder="State">
+<input id="national" placeholder="Nationality">
+
+<h3>Documents</h3>
+
+<input id="sssm" placeholder="SSSM ID">
+<input id="family" placeholder="Family ID">
+<input id="apar" placeholder="APAR ID">
+<input id="adhar" placeholder="Aadhar Card">
+
+<input id="caste" placeholder="Caste">
+<input id="category" placeholder="Category">
+
+<input id="roll" placeholder="Roll Number">
+<input id="scholer" placeholder="Scholar Number">
 
 <label>Student Photo</label>
 <input type="file" id="photo" required>
 
-<img id="preview" width="80" style="margin-top:10px;">
-
 <label>Document Upload</label>
-<input type="file" id="document" required>
+<input type="file" id="document">
 
 <button type="submit">Submit Admission</button>
 
-<div class="success" id="msg"></div>
+<div id="msg"></div>
 
 </form>
 
-<input type="text" id="searchStudent" class="search" placeholder="Search Student">
-
-<select id="classFilter">
-<option value="">All Classes</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-<option>6</option>
-<option>7</option>
-<option>8</option>
-<option>9</option>
-<option>10</option>
-</select>
-
-<button onclick="printStudents()" class="printbtn">Print Student List</button>
-<button onclick="exportExcel()">Export Excel</button>
-<input type="file" id="importExcel">
-
-<button onclick="promoteStudents()">Promote Class</button>
-
-<h3>Class Wise Total Students</h3>
-<div id="classStats"></div>
+<input class="search" id="searchStudent" placeholder="Search Student">
 
 <h3>Total Students : <span id="total">0</span></h3>
 
@@ -203,13 +171,12 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore,collection,addDoc,getDocs,deleteDoc,doc,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId: "nmpsnagguradiya-b9b94",
-storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId: "811957568318",
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f",
-measurementId: "G-V4J8BP2LCN"
+apiKey: "YOUR_API_KEY",
+authDomain: "YOUR_DOMAIN",
+projectId: "YOUR_PROJECT_ID",
+storageBucket: "YOUR_BUCKET",
+messagingSenderId: "YOUR_ID",
+appId: "YOUR_APP_ID"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -230,56 +197,47 @@ return data.data.url;
 
 }
 
-document.getElementById("photo").addEventListener("change",function(){
-
-const file=this.files[0];
-
-if(file){
-
-const reader=new FileReader();
-
-reader.onload=function(e){
-document.getElementById("preview").src=e.target.result;
-}
-
-reader.readAsDataURL(file);
-
-}
-
-});
-
 document.getElementById("form").addEventListener("submit",async function(e){
 
 e.preventDefault();
 
-const name=document.getElementById("name").value;
-const father=document.getElementById("father").value;
-const mobile=document.getElementById("mobile").value;
-const village=document.getElementById("village").value;
-const className=document.getElementById("class").value;
+const data={
+name:name.value,
+father:father.value,
+mother:mother.value,
+mobile:mobile.value,
+class:document.getElementById("class").value,
+dob:dob.value,
+admissionDate:admissionDate.value,
+village:village.value,
+post:post.value,
+district:district.value,
+state:state.value,
+national:national.value,
+sssm:sssm.value,
+family:family.value,
+apar:apar.value,
+adhar:adhar.value,
+caste:caste.value,
+category:category.value,
+roll:roll.value,
+scholer:scholer.value
+};
 
 const photo=document.getElementById("photo").files[0];
 const documentFile=document.getElementById("document").files[0];
 
-let photoURL="";
-let docURL="";
+data.photo=await uploadImgBB(photo);
 
-photoURL=await uploadImgBB(photo);
-docURL=await uploadImgBB(documentFile);
+if(documentFile){
+data.document=await uploadImgBB(documentFile);
+}
 
-await addDoc(collection(db,"admissions"),{
-name,
-father,
-mobile,
-village,
-class:className,
-photo:photoURL,
-document:docURL,
-date:new Date()
-});
+await addDoc(collection(db,"admissions"),data);
 
-document.getElementById("msg").innerText="Admission Submitted Successfully";
-document.getElementById("form").reset();
+msg.innerText="Admission Submitted";
+
+form.reset();
 
 loadStudents();
 
@@ -287,48 +245,37 @@ loadStudents();
 
 async function loadStudents(){
 
-const querySnapshot=await getDocs(collection(db,"admissions"));
+const snap=await getDocs(collection(db,"admissions"));
 
 let html="";
 let count=0;
-let classCount={};
 
-querySnapshot.forEach((docSnap)=>{
+snap.forEach((d)=>{
 
-const data=docSnap.data();
+let data=d.data();
+
 count++;
 
-if(!classCount[data.class]){
-classCount[data.class]=0;
-}
-
-classCount[data.class]++;
-
 html+=`
-<tr onclick="viewStudent('${docSnap.id}')">
+<tr>
 <td>${data.name}</td>
 <td>${data.class}</td>
 <td>${data.mobile}</td>
-<td><img src="${data.photo}" width="50"></td>
+<td><img src="${data.photo}" width="40"></td>
+
 <td>
-<button onclick="event.stopPropagation();editStudent('${docSnap.id}')">Edit</button>
-<button onclick="event.stopPropagation();deleteStudent('${docSnap.id}')">Delete</button>
+<button onclick="viewStudent('${d.id}')">View</button>
+<button onclick="editStudent('${d.id}')">Edit</button>
+<button onclick="deleteStudent('${d.id}')">Delete</button>
 </td>
 </tr>
 `;
 
 });
 
-document.getElementById("studentList").innerHTML=html;
-document.getElementById("total").innerText=count;
+studentList.innerHTML=html;
 
-let statsHTML="";
-
-for(let c in classCount){
-statsHTML+=`Class ${c} : ${classCount[c]} Students <br>`;
-}
-
-document.getElementById("classStats").innerHTML=statsHTML;
+total.innerText=count;
 
 }
 
@@ -340,20 +287,40 @@ snap.forEach((d)=>{
 
 if(d.id==id){
 
-const data=d.data();
+let data=d.data();
 
 let win=window.open("");
 
 win.document.write(`
+
 <h2>Admission Receipt</h2>
-<p>Name : ${data.name}</p>
-<p>Father : ${data.father}</p>
-<p>Mobile : ${data.mobile}</p>
-<p>Village : ${data.village}</p>
-<p>Class : ${data.class}</p>
-<img src="${data.photo}" width="120">
-<br><br>
-<button onclick="window.print()">Print Receipt</button>
+
+<img src="${data.photo}" width="120"><br>
+
+Student Name : ${data.name}<br>
+Father Name : ${data.father}<br>
+Mother Name : ${data.mother}<br>
+Class : ${data.class}<br>
+Mobile : ${data.mobile}<br>
+
+DOB : ${data.dob}<br>
+Admission Date : ${data.admissionDate}<br>
+
+Village : ${data.village}<br>
+Post : ${data.post}<br>
+District : ${data.district}<br>
+State : ${data.state}<br>
+
+SSSM : ${data.sssm}<br>
+Family ID : ${data.family}<br>
+APAR ID : ${data.apar}<br>
+Aadhar : ${data.adhar}<br>
+
+Roll : ${data.roll}<br>
+Scholar : ${data.scholer}<br>
+
+<br><button onclick="window.print()">Print</button>
+
 `);
 
 }
@@ -365,8 +332,11 @@ win.document.write(`
 window.deleteStudent=async function(id){
 
 if(confirm("Delete Student?")){
+
 await deleteDoc(doc(db,"admissions",id));
+
 loadStudents();
+
 }
 
 }
@@ -379,19 +349,17 @@ snap.forEach(async(d)=>{
 
 if(d.id==id){
 
-const data=d.data();
+let data=d.data();
 
-let name=prompt("Student Name",data.name);
-let father=prompt("Father Name",data.father);
+let name=prompt("Name",data.name);
+let father=prompt("Father",data.father);
 let mobile=prompt("Mobile",data.mobile);
-let village=prompt("Village",data.village);
 let cls=prompt("Class",data.class);
 
 await updateDoc(doc(db,"admissions",id),{
 name,
 father,
 mobile,
-village,
 class:cls
 });
 
@@ -403,72 +371,10 @@ loadStudents();
 
 }
 
-document.getElementById("classFilter").addEventListener("change",function(){
-
-let filter=this.value;
-
-let rows=document.querySelectorAll("#studentList tr");
-
-rows.forEach(row=>{
-
-let cls=row.children[1].innerText;
-
-row.style.display=(filter=="" || cls==filter)?"":"none";
-
-});
-
-});
-
-function exportExcel(){
-
-let table=document.querySelector("table").outerHTML;
-
-let url='data:application/vnd.ms-excel,'+escape(table);
-
-let link=document.createElement("a");
-
-link.href=url;
-link.download="students.xls";
-
-link.click();
-
-}
-
-document.getElementById("importExcel").addEventListener("change",function(){
-
-alert("Excel Import Basic Enabled");
-
-});
-
-async function promoteStudents(){
-
-const snap=await getDocs(collection(db,"admissions"));
-
-snap.forEach(async(d)=>{
-
-let data=d.data();
-
-let cls=parseInt(data.class);
-
-if(!isNaN(cls) && cls<10){
-
-await updateDoc(doc(db,"admissions",d.id),{
-class:String(cls+1)
-});
-
-}
-
-});
-
-alert("Students Promoted");
-
-loadStudents();
-
-}
-
-document.getElementById("searchStudent").addEventListener("keyup",function(){
+searchStudent.addEventListener("keyup",function(){
 
 let filter=this.value.toLowerCase();
+
 let rows=document.querySelectorAll("#studentList tr");
 
 rows.forEach(row=>{
@@ -480,21 +386,6 @@ row.style.display=name.includes(filter)?"":"none";
 });
 
 });
-
-function printStudents(){
-
-let table=document.querySelector("table").outerHTML;
-
-let win=window.open("");
-
-win.document.write(`
-<h2>Student List</h2>
-${table}
-`);
-
-win.print();
-
-}
 
 loadStudents();
 
