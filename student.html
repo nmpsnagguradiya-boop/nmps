@@ -2,43 +2,73 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>NMPS Admission</title>
+<title>NMPS Admin Admission Panel</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
 
 body{
 font-family:Arial;
-background:#f2f2f2;
+background:#f4f6f9;
+margin:0;
+}
+
+.header{
+background:#1565c0;
+color:white;
+padding:15px;
+font-size:22px;
+text-align:center;
+}
+
+.container{
 padding:20px;
 }
 
+.form{
+background:white;
+padding:15px;
+border-radius:8px;
+margin-bottom:20px;
+}
+
 input,select{
-padding:6px;
-margin:4px;
+padding:7px;
+margin:5px;
+width:170px;
 }
 
 button{
-padding:6px 12px;
-background:#1976d2;
+padding:7px 12px;
+background:#1565c0;
 color:white;
 border:none;
 cursor:pointer;
+border-radius:4px;
 }
 
 table{
 width:100%;
-background:white;
-margin-top:20px;
 border-collapse:collapse;
+background:white;
 }
 
 th,td{
-border:1px solid #ccc;
-padding:6px;
+border:1px solid #ddd;
+padding:7px;
 text-align:center;
+font-size:13px;
+}
+
+th{
+background:#1565c0;
+color:white;
 }
 
 img{
@@ -48,11 +78,18 @@ border-radius:50%;
 }
 
 </style>
+
 </head>
 
 <body>
 
-<h2>NMPS Admission Panel</h2>
+<div class="header">
+NMPS School Admission Admin
+</div>
+
+<div class="container">
+
+<div class="form">
 
 <input type="file" id="photo">
 
@@ -64,26 +101,36 @@ border-radius:50%;
 
 <input id="mobile" placeholder="Mobile">
 
-<input id="roll" placeholder="Roll No">
-<input id="scholar" placeholder="Scholar No">
+<input id="roll" placeholder="Roll Number">
+<input id="scholar" placeholder="Scholar Number">
 
-<br>
+<button onclick="saveStudent()">Save Student</button>
 
-<button onclick="saveStudent()">Add Student</button>
+</div>
 
-<hr>
+<div>
 
-<input id="className" placeholder="Class Name">
+<input id="className" placeholder="Add Class">
 <button onclick="addClass()">Add Class</button>
 <button onclick="deleteClass()">Delete Class</button>
+
+<input id="search" placeholder="Search Student" onkeyup="searchStudent()">
 
 <select id="filterClass" onchange="loadStudents()">
 <option value="">All Class</option>
 </select>
 
+<button onclick="exportExcel()">Export Excel</button>
+
+<input type="file" id="excelFile">
+<button onclick="importExcel()">Import Excel</button>
+
+</div>
+
 <table>
 
 <thead>
+
 <tr>
 
 <th>Photo</th>
@@ -91,14 +138,19 @@ border-radius:50%;
 <th>Father</th>
 <th>Class</th>
 <th>Mobile</th>
+<th>Roll</th>
+<th>Scholar</th>
 <th>Action</th>
 
 </tr>
+
 </thead>
 
 <tbody id="studentsTable"></tbody>
 
 </table>
+
+</div>
 
 <script>
 
@@ -112,7 +164,8 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 };
 
 firebase.initializeApp(firebaseConfig);
-const db=firebase.firestore();
+
+const db = firebase.firestore();
 
 const imgbbAPI="21000d5a5d14fcef4b6af4d13647da5a8";
 
@@ -123,6 +176,7 @@ let file=document.getElementById("photo").files[0];
 if(!file) return "";
 
 let formData=new FormData();
+
 formData.append("image",file);
 
 let res=await fetch("https://api.imgbb.com/1/upload?key="+imgbbAPI,{
@@ -140,7 +194,7 @@ async function saveStudent(){
 
 let photo=await uploadImage();
 
-await db.collection("students").add({
+let student={
 
 photo:photo,
 name:name.value,
@@ -151,7 +205,9 @@ mobile:mobile.value,
 roll:roll.value,
 scholar:scholar.value
 
-});
+};
+
+await db.collection("students").add(student);
 
 alert("Student Added");
 
@@ -184,9 +240,13 @@ html+=`
 <td>${s.father}</td>
 <td>${s.class}</td>
 <td>${s.mobile}</td>
+<td>${s.roll}</td>
+<td>${s.scholar}</td>
 
 <td>
+
 <button onclick="deleteStudent('${doc.id}')">Delete</button>
+
 </td>
 
 </tr>
@@ -211,9 +271,7 @@ async function addClass(){
 
 let c=document.getElementById("className").value;
 
-await db.collection("classes").add({
-name:c
-});
+await db.collection("classes").add({name:c});
 
 loadClasses();
 
@@ -225,9 +283,7 @@ let c=document.getElementById("class").value;
 
 let q=await db.collection("classes").where("name","==",c).get();
 
-q.forEach(doc=>{
-doc.ref.delete();
-});
+q.forEach(doc=>doc.ref.delete());
 
 loadClasses();
 
@@ -249,7 +305,67 @@ html+=`<option>${c}</option>`;
 
 document.getElementById("class").innerHTML=html;
 
-document.getElementById("filterClass").innerHTML='<option value="">All</option>'+html;
+document.getElementById("filterClass").innerHTML='<option value="">All Class</option>'+html;
+
+}
+
+function searchStudent(){
+
+let input=document.getElementById("search").value.toLowerCase();
+
+let rows=document.querySelectorAll("#studentsTable tr");
+
+rows.forEach(row=>{
+
+row.style.display=row.innerText.toLowerCase().includes(input)?"":"none";
+
+});
+
+}
+
+async function exportExcel(){
+
+let snapshot=await db.collection("students").get();
+
+let arr=[];
+
+snapshot.forEach(doc=>arr.push(doc.data()));
+
+let ws=XLSX.utils.json_to_sheet(arr);
+
+let wb=XLSX.utils.book_new();
+
+XLSX.utils.book_append_sheet(wb,ws,"Students");
+
+XLSX.writeFile(wb,"students.xlsx");
+
+}
+
+function importExcel(){
+
+let file=document.getElementById("excelFile").files[0];
+
+let reader=new FileReader();
+
+reader.onload=function(e){
+
+let data=new Uint8Array(e.target.result);
+
+let workbook=XLSX.read(data,{type:"array"});
+
+let sheet=workbook.Sheets[workbook.SheetNames[0]];
+
+let json=XLSX.utils.sheet_to_json(sheet);
+
+json.forEach(s=>db.collection("students").add(s));
+
+alert("Excel Imported");
+
+loadStudents();
+
+};
+
+reader.readAsArrayBuffer(file);
 
 }
 
