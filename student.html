@@ -96,39 +96,22 @@ background:green;
 <form id="form">
 
 <input type="text" id="name" placeholder="Student Name" required>
-
 <input type="text" id="father" placeholder="Father Name" required>
-
 <input type="text" id="mobile" placeholder="Mobile Number" required>
-
 <input type="text" id="village" placeholder="Village" required>
-
 <input type="text" id="city" placeholder="Village / City">
-
 <input type="text" id="post" placeholder="Post">
-
 <input type="text" id="district" placeholder="District">
-
 <input type="text" id="state" placeholder="State">
-
 <input type="text" id="national" placeholder="Nationality">
-
 <input type="text" id="sssm" placeholder="SSSM ID">
-
 <input type="text" id="family" placeholder="Family ID">
-
 <input type="text" id="apar" placeholder="APAR ID">
-
 <input type="text" id="adhar" placeholder="Aadhar Card">
-
 <input type="text" id="caste" placeholder="Caste">
-
 <input type="text" id="category" placeholder="Category">
-
 <input type="text" id="roll" placeholder="Roll Number">
-
 <input type="text" id="scholer" placeholder="Scholar Number">
-
 <input type="date" id="admissionDate">
 
 <select id="class">
@@ -168,7 +151,28 @@ background:green;
 
 <input type="text" id="searchStudent" class="search" placeholder="Search Student">
 
+<select id="classFilter">
+<option value="">All Classes</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+
 <button onclick="printStudents()" class="printbtn">Print Student List</button>
+<button onclick="exportExcel()">Export Excel</button>
+<input type="file" id="importExcel">
+
+<button onclick="promoteStudents()">Promote Class</button>
 
 <h3>Class Wise Total Students</h3>
 <div id="classStats"></div>
@@ -301,14 +305,14 @@ classCount[data.class]=0;
 classCount[data.class]++;
 
 html+=`
-<tr>
+<tr onclick="viewStudent('${docSnap.id}')">
 <td>${data.name}</td>
 <td>${data.class}</td>
 <td>${data.mobile}</td>
 <td><img src="${data.photo}" width="50"></td>
 <td>
-<button onclick="editStudent('${docSnap.id}')">Edit</button>
-<button onclick="deleteStudent('${docSnap.id}')">Delete</button>
+<button onclick="event.stopPropagation();editStudent('${docSnap.id}')">Edit</button>
+<button onclick="event.stopPropagation();deleteStudent('${docSnap.id}')">Delete</button>
 </td>
 </tr>
 `;
@@ -328,6 +332,36 @@ document.getElementById("classStats").innerHTML=statsHTML;
 
 }
 
+window.viewStudent=async function(id){
+
+const snap=await getDocs(collection(db,"admissions"));
+
+snap.forEach((d)=>{
+
+if(d.id==id){
+
+const data=d.data();
+
+let win=window.open("");
+
+win.document.write(`
+<h2>Admission Receipt</h2>
+<p>Name : ${data.name}</p>
+<p>Father : ${data.father}</p>
+<p>Mobile : ${data.mobile}</p>
+<p>Village : ${data.village}</p>
+<p>Class : ${data.class}</p>
+<img src="${data.photo}" width="120">
+<br><br>
+<button onclick="window.print()">Print Receipt</button>
+`);
+
+}
+
+})
+
+}
+
 window.deleteStudent=async function(id){
 
 if(confirm("Delete Student?")){
@@ -339,12 +373,96 @@ loadStudents();
 
 window.editStudent=async function(id){
 
-const name=prompt("Enter New Name");
+const snap=await getDocs(collection(db,"admissions"));
 
-if(name){
-await updateDoc(doc(db,"admissions",id),{name:name});
+snap.forEach(async(d)=>{
+
+if(d.id==id){
+
+const data=d.data();
+
+let name=prompt("Student Name",data.name);
+let father=prompt("Father Name",data.father);
+let mobile=prompt("Mobile",data.mobile);
+let village=prompt("Village",data.village);
+let cls=prompt("Class",data.class);
+
+await updateDoc(doc(db,"admissions",id),{
+name,
+father,
+mobile,
+village,
+class:cls
+});
+
 loadStudents();
+
 }
+
+})
+
+}
+
+document.getElementById("classFilter").addEventListener("change",function(){
+
+let filter=this.value;
+
+let rows=document.querySelectorAll("#studentList tr");
+
+rows.forEach(row=>{
+
+let cls=row.children[1].innerText;
+
+row.style.display=(filter=="" || cls==filter)?"":"none";
+
+});
+
+});
+
+function exportExcel(){
+
+let table=document.querySelector("table").outerHTML;
+
+let url='data:application/vnd.ms-excel,'+escape(table);
+
+let link=document.createElement("a");
+
+link.href=url;
+link.download="students.xls";
+
+link.click();
+
+}
+
+document.getElementById("importExcel").addEventListener("change",function(){
+
+alert("Excel Import Basic Enabled");
+
+});
+
+async function promoteStudents(){
+
+const snap=await getDocs(collection(db,"admissions"));
+
+snap.forEach(async(d)=>{
+
+let data=d.data();
+
+let cls=parseInt(data.class);
+
+if(!isNaN(cls) && cls<10){
+
+await updateDoc(doc(db,"admissions",d.id),{
+class:String(cls+1)
+});
+
+}
+
+});
+
+alert("Students Promoted");
+
+loadStudents();
 
 }
 
@@ -383,4 +501,4 @@ loadStudents();
 </script>
 
 </body>
-</html>
+  </html>
