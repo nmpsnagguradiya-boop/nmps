@@ -32,7 +32,7 @@ border-radius:10px;
 box-shadow:0 0 10px rgba(0,0,0,0.2);
 }
 
-input,select,textarea{
+input,select{
 width:100%;
 padding:10px;
 margin-top:10px;
@@ -67,6 +67,10 @@ text-align:center;
 margin-top:20px;
 padding:10px;
 width:100%;
+}
+
+.printbtn{
+background:green;
 }
 
 </style>
@@ -145,6 +149,8 @@ width:100%;
 
 <input class="search" id="searchStudent" placeholder="Search Student">
 
+<button onclick="exportExcel()">Export Excel</button>
+
 <h3>Total Students : <span id="total">0</span></h3>
 
 <table>
@@ -203,32 +209,41 @@ document.getElementById("form").addEventListener("submit",async function(e){
 e.preventDefault();
 
 const data={
-name:name.value,
-father:father.value,
-mother:mother.value,
-mobile:mobile.value,
+name:document.getElementById("name").value,
+father:document.getElementById("father").value,
+mother:document.getElementById("mother").value,
+mobile:document.getElementById("mobile").value,
 class:document.getElementById("class").value,
-dob:dob.value,
-admissionDate:admissionDate.value,
-village:village.value,
-post:post.value,
-district:district.value,
-state:state.value,
-national:national.value,
-sssm:sssm.value,
-family:family.value,
-apar:apar.value,
-adhar:adhar.value,
-caste:caste.value,
-category:category.value,
-roll:roll.value,
-scholer:scholer.value
+
+dob:document.getElementById("dob").value,
+admissionDate:document.getElementById("admissionDate").value,
+
+village:document.getElementById("village").value,
+post:document.getElementById("post").value,
+district:document.getElementById("district").value,
+state:document.getElementById("state").value,
+national:document.getElementById("national").value,
+
+sssm:document.getElementById("sssm").value,
+family:document.getElementById("family").value,
+apar:document.getElementById("apar").value,
+adhar:document.getElementById("adhar").value,
+
+caste:document.getElementById("caste").value,
+category:document.getElementById("category").value,
+
+roll:document.getElementById("roll").value,
+scholer:document.getElementById("scholer").value
 };
+
+try{
 
 const photo=document.getElementById("photo").files[0];
 const documentFile=document.getElementById("document").files[0];
 
+if(photo){
 data.photo=await uploadImgBB(photo);
+}
 
 if(documentFile){
 data.document=await uploadImgBB(documentFile);
@@ -241,6 +256,12 @@ msg.innerText="Admission Submitted Successfully";
 form.reset();
 
 loadStudents();
+
+}catch(err){
+
+alert(err.message);
+
+}
 
 });
 
@@ -372,6 +393,21 @@ loadStudents();
 
 }
 
+function exportExcel(){
+
+let table=document.querySelector("table").outerHTML;
+
+let url='data:application/vnd.ms-excel,'+escape(table);
+
+let link=document.createElement("a");
+
+link.href=url;
+link.download="students.xls";
+
+link.click();
+
+}
+
 searchStudent.addEventListener("keyup",function(){
 
 let filter=this.value.toLowerCase();
@@ -393,4 +429,4 @@ loadStudents();
 </script>
 
 </body>
-  </html>
+</html>
