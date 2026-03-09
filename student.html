@@ -41,18 +41,16 @@ img{width:40px;height:40px;object-fit:cover}
 <h3>Create Class</h3>
 
 <input id="newClass" placeholder="Enter Class Name">
-
 <button onclick="createClass()">Create Class</button>
 
-<select id="deleteClass"></select>
-
+<select id="deleteClassSelect"></select>
 <button onclick="deleteClass()">Delete Class</button>
 
 <hr>
 
 <h3>Class Filter</h3>
 
-<select id="filterClass" onchange="filterStudents()">
+<select id="filterClass">
 <option value="">All Classes</option>
 </select>
 
@@ -132,22 +130,23 @@ firebase.initializeApp(firebaseConfig);
 const db=firebase.firestore();
 
 let editId=null;
+let studentsCache=[];
 
 function createClass(){
 
-let cname=newClass.value;
+let cname=document.getElementById("newClass").value;
 
 if(!cname) return alert("Enter Class");
 
 db.collection("classes").add({name:cname});
 
-newClass.value="";
+document.getElementById("newClass").value="";
 
 }
 
 function deleteClass(){
 
-let cname=deleteClassSelect.value;
+let cname=document.getElementById("deleteClassSelect").value;
 
 db.collection("classes").where("name","==",cname).get().then(s=>{
 
@@ -161,7 +160,7 @@ function loadClasses(){
 
 db.collection("classes").onSnapshot(s=>{
 
-let opt='<option value="">Select Class</option>';
+let classOpt="";
 let filter='<option value="">All Classes</option>';
 let del="";
 
@@ -169,22 +168,23 @@ s.forEach(doc=>{
 
 let c=doc.data().name;
 
-opt+=`<option>${c}</option>`;
+classOpt+=`<option>${c}</option>`;
 filter+=`<option>${c}</option>`;
 del+=`<option>${c}</option>`;
 
 });
 
-document.getElementById("class").innerHTML=opt;
+document.getElementById("class").innerHTML=classOpt;
 document.getElementById("filterClass").innerHTML=filter;
-
-document.getElementById("deleteClass").innerHTML=del;
+document.getElementById("deleteClassSelect").innerHTML=del;
 
 });
 
 }
 
 loadClasses();
+
+document.getElementById("filterClass").addEventListener("change",renderStudents);
 
 async function uploadPhoto(){
 
@@ -248,18 +248,31 @@ alert("Saved");
 
 }
 
-function filterStudents(){
-
-let fc=filterClass.value;
-
 db.collection("students").onSnapshot(snapshot=>{
+
+studentsCache=[];
+
+snapshot.forEach(doc=>{
+
+let data=doc.data();
+data.id=doc.id;
+
+studentsCache.push(data);
+
+});
+
+renderStudents();
+
+});
+
+function renderStudents(){
+
+let fc=document.getElementById("filterClass").value;
 
 let html="";
 let count=0;
 
-snapshot.forEach(doc=>{
-
-let s=doc.data();
+studentsCache.forEach(s=>{
 
 if(fc && s.class!=fc) return;
 
@@ -267,7 +280,7 @@ count++;
 
 html+=`
 
-<tr>
+<tr onclick="showDetails('${s.id}')">
 
 <td>${s.photo?`<img src="${s.photo}">`:""}</td>
 <td>${s.name}</td>
@@ -276,8 +289,8 @@ html+=`
 <td>${s.roll}</td>
 
 <td>
-<button onclick="editStudent('${doc.id}')">Edit</button>
-<button onclick="deleteStudent('${doc.id}')">Delete</button>
+<button onclick="event.stopPropagation();editStudent('${s.id}')">Edit</button>
+<button onclick="event.stopPropagation();deleteStudent('${s.id}')">Delete</button>
 </td>
 
 </tr>
@@ -289,11 +302,7 @@ html+=`
 tableBody.innerHTML=html;
 total.innerText=count;
 
-});
-
 }
-
-filterStudents();
 
 function deleteStudent(id){
 
@@ -305,11 +314,9 @@ db.collection("students").doc(id).delete();
 
 function editStudent(id){
 
+let s=studentsCache.find(x=>x.id==id);
+
 editId=id;
-
-db.collection("students").doc(id).get().then(doc=>{
-
-let s=doc.data();
 
 name.value=s.name;
 father.value=s.father;
@@ -332,26 +339,35 @@ category.value=s.category;
 roll.value=s.roll;
 scholar.value=s.scholar;
 
-});
+}
+
+function showDetails(id){
+
+let s=studentsCache.find(x=>x.id==id);
+
+alert(
+
+`Name: ${s.name}
+Father: ${s.father}
+Mother: ${s.mother}
+Class: ${s.class}
+Mobile: ${s.mobile}
+DOB: ${s.dob}
+Village: ${s.village}
+Roll: ${s.roll}`
+
+);
 
 }
 
 function exportExcel(){
 
-db.collection("students").get().then(snapshot=>{
-
-let data=[];
-
-snapshot.forEach(doc=>data.push(doc.data()));
-
-let ws=XLSX.utils.json_to_sheet(data);
+let ws=XLSX.utils.json_to_sheet(studentsCache);
 let wb=XLSX.utils.book_new();
 
 XLSX.utils.book_append_sheet(wb,ws,"Students");
 
 XLSX.writeFile(wb,"students.xlsx");
-
-});
 
 }
 
