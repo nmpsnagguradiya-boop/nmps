@@ -2,65 +2,82 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>NMPS Student Management</title>
+<title>NMPS Admission Panel</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css" rel="stylesheet">
 
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
 
 body{
 font-family:Arial;
-margin:0;
 background:#f2f2f2;
+margin:0;
 }
 
-header{
-background:#004aad;
+.header{
+background:#1e88e5;
 color:white;
 padding:15px;
-text-align:center;
 font-size:22px;
+text-align:center;
 }
 
 .container{
-padding:15px;
+padding:20px;
+}
+
+button{
+padding:8px 14px;
+border:none;
+background:#1e88e5;
+color:white;
+border-radius:5px;
+cursor:pointer;
+margin:3px;
 }
 
 input,select{
 padding:8px;
-margin:5px;
-width:200px;
-}
-
-button{
-padding:8px 12px;
-margin:5px;
-cursor:pointer;
+margin:4px;
+width:180px;
 }
 
 table{
 width:100%;
-border-collapse:collapse;
 background:white;
-margin-top:20px;
+border-collapse:collapse;
+margin-top:15px;
 }
 
-table th,table td{
-border:1px solid #ddd;
+th,td{
 padding:8px;
+border:1px solid #ddd;
 font-size:13px;
+text-align:center;
 }
 
-table th{
-background:#004aad;
+th{
+background:#1e88e5;
 color:white;
 }
 
 img{
 width:40px;
+height:40px;
+border-radius:50%;
+}
+
+.form{
+background:white;
+padding:15px;
+border-radius:8px;
+margin-bottom:15px;
 }
 
 </style>
@@ -68,78 +85,84 @@ width:40px;
 
 <body>
 
-<header>
-NMPS Student Management
-</header>
+<div class="header">
+NMPS Admission Management
+</div>
 
 <div class="container">
 
-<h3>Add Student</h3>
+<div class="form">
 
 <input type="file" id="photo">
 
-<input type="text" id="name" placeholder="Student Name">
-<input type="text" id="father" placeholder="Father Name">
-<input type="text" id="mother" placeholder="Mother Name">
+<input id="name" placeholder="Student Name">
+<input id="father" placeholder="Father Name">
+<input id="mother" placeholder="Mother Name">
 
 <select id="class"></select>
 
-<input type="text" id="mobile" placeholder="Mobile">
+<input id="mobile" placeholder="Mobile Number">
 
 <input type="date" id="dob">
 <input type="date" id="admission">
 
-<input type="text" id="village" placeholder="Village/City">
-<input type="text" id="post" placeholder="Post">
-<input type="text" id="district" placeholder="District">
-<input type="text" id="state" placeholder="State">
-<input type="text" id="national" placeholder="Nationality">
+<input id="village" placeholder="Village/City">
+<input id="post" placeholder="Post">
+<input id="district" placeholder="District">
+<input id="state" placeholder="State">
+<input id="national" placeholder="National">
 
-<input type="text" id="sssm" placeholder="SSSM ID">
-<input type="text" id="family" placeholder="Family ID">
-<input type="text" id="apar" placeholder="APAR ID">
-<input type="text" id="adhar" placeholder="Aadhar Card">
+<input id="sssm" placeholder="SSSM ID">
+<input id="family" placeholder="Family ID">
+<input id="apar" placeholder="APAR ID">
+<input id="aadhar" placeholder="Aadhar Card">
 
-<input type="text" id="caste" placeholder="Caste">
-<input type="text" id="category" placeholder="Category">
+<input id="caste" placeholder="Caste">
+<input id="category" placeholder="Category">
 
-<input type="text" id="roll" placeholder="Roll Number">
-<input type="text" id="scholer" placeholder="Scholar Number">
+<input id="roll" placeholder="Roll Number">
+<input id="scholar" placeholder="Scholar Number">
 
 <br>
 
-<button onclick="addStudent()">Add Student</button>
+<button onclick="saveStudent()">Save Student</button>
 
-<hr>
+</div>
 
-<h3>Class Management</h3>
 
-<input type="text" id="newClass" placeholder="Add Class">
+<div>
+
+<input id="className" placeholder="Add Class">
 <button onclick="addClass()">Add Class</button>
 
-<hr>
+<button onclick="deleteClass()">Delete Class</button>
 
-<h3>Filter</h3>
-
-<select id="filterClass" onchange="loadStudents()"></select>
-
-<input type="text" id="filterRoll" placeholder="Roll Number">
-<button onclick="loadStudents()">Search</button>
-
-<hr>
+<select id="filterClass" onchange="loadStudents()">
+<option value="">All Class</option>
+</select>
 
 <button onclick="exportExcel()">Export Excel</button>
-<input type="file" id="importExcel">
+
+<input type="file" id="excelFile">
+<button onclick="importExcel()">Import Excel</button>
+
+</div>
+
 
 <table id="table">
+
 <thead>
 <tr>
+
 <th>Photo</th>
 <th>Name</th>
+<th>Father</th>
 <th>Class</th>
-<th>Roll</th>
 <th>Mobile</th>
+<th>Roll</th>
+<th>Scholar</th>
 <th>Action</th>
+
 </tr>
 </thead>
 
@@ -165,31 +188,34 @@ firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 
-const imgbbKey = "21000d5a5d14fcef4b6af4d13647da5a8";
+const imgbbAPI = "21000d5a5d14fcef4b6af4d13647da5a8";
+
 
 async function uploadImage(){
 
-const file = document.getElementById("photo").files[0];
+let file=document.getElementById("photo").files[0];
 
-const formData = new FormData();
+let formData=new FormData();
 formData.append("image",file);
 
-let res = await fetch(`https://api.imgbb.com/1/upload?key=${imgbbKey}`,{
+let res=await fetch("https://api.imgbb.com/1/upload?key="+imgbbAPI,{
 method:"POST",
 body:formData
 });
 
-let data = await res.json();
+let data=await res.json();
 
 return data.data.url;
 
 }
 
-async function addStudent(){
 
-let photo = await uploadImage();
 
-let student = {
+async function saveStudent(){
+
+let photo=await uploadImage();
+
+let student={
 
 photo:photo,
 name:name.value,
@@ -207,58 +233,71 @@ national:national.value,
 sssm:sssm.value,
 family:family.value,
 apar:apar.value,
-adhar:adhar.value,
+aadhar:aadhar.value,
 caste:caste.value,
 category:category.value,
 roll:roll.value,
-scholer:scholer.value
+scholar:scholar.value
 
 };
 
-db.collection("students").add(student);
+await db.collection("students").add(student);
+
+alert("Student Saved");
 
 loadStudents();
 
 }
 
+
+
 async function loadStudents(){
 
-let tbody=document.querySelector("#table tbody");
-tbody.innerHTML="";
+let filter=document.getElementById("filterClass").value;
 
-let cls=filterClass.value;
-let roll=filterRoll.value;
+let query=db.collection("students");
 
-let snap=await db.collection("students").get();
+if(filter!="") query=query.where("class","==",filter);
 
-snap.forEach(doc=>{
+let data=await query.get();
+
+let html="";
+
+data.forEach(doc=>{
 
 let s=doc.data();
 
-if(cls && s.class!=cls)return;
-if(roll && s.roll!=roll)return;
+html+=`
 
-let tr=document.createElement("tr");
-
-tr.innerHTML=`
+<tr>
 
 <td><img src="${s.photo}"></td>
 <td>${s.name}</td>
+<td>${s.father}</td>
 <td>${s.class}</td>
-<td>${s.roll}</td>
 <td>${s.mobile}</td>
+<td>${s.roll}</td>
+<td>${s.scholar}</td>
 
 <td>
-<button onclick="deleteStudent('${doc.id}')">Delete</button>
+
+<button onclick="deleteStudent('${doc.id}')">
+Delete
+</button>
+
 </td>
+
+</tr>
 
 `;
 
-tbody.appendChild(tr);
-
 });
 
+document.querySelector("#table tbody").innerHTML=html;
+
 }
+
+
 
 function deleteStudent(id){
 
@@ -268,9 +307,11 @@ loadStudents();
 
 }
 
+
+
 function addClass(){
 
-let c=newClass.value;
+let c=document.getElementById("className").value;
 
 db.collection("classes").add({name:c});
 
@@ -278,41 +319,66 @@ loadClasses();
 
 }
 
-async function loadClasses(){
 
-let cls=document.getElementById("class");
-let filter=document.getElementById("filterClass");
 
-cls.innerHTML="";
-filter.innerHTML="<option value=''>All</option>";
+async function deleteClass(){
 
-let snap=await db.collection("classes").get();
+let c=document.getElementById("class").value;
 
-snap.forEach(doc=>{
+let q=await db.collection("classes").where("name","==",c).get();
 
-let c=doc.data().name;
+q.forEach(d=>d.ref.delete());
 
-cls.innerHTML+=`<option>${c}</option>`;
-
-filter.innerHTML+=`<option>${c}</option>`;
-
-});
+loadClasses();
 
 }
 
-function exportExcel(){
 
-let table=document.getElementById("table");
 
-let wb=XLSX.utils.table_to_book(table);
+async function loadClasses(){
+
+let data=await db.collection("classes").get();
+
+let html="";
+
+data.forEach(doc=>{
+
+let c=doc.data().name;
+
+html+=`<option>${c}</option>`;
+
+});
+
+document.getElementById("class").innerHTML=html;
+document.getElementById("filterClass").innerHTML='<option value="">All</option>'+html;
+
+}
+
+
+
+async function exportExcel(){
+
+let data=await db.collection("students").get();
+
+let arr=[];
+
+data.forEach(doc=>arr.push(doc.data()));
+
+let ws=XLSX.utils.json_to_sheet(arr);
+
+let wb=XLSX.utils.book_new();
+
+XLSX.utils.book_append_sheet(wb,ws,"Students");
 
 XLSX.writeFile(wb,"students.xlsx");
 
 }
 
-document.getElementById("importExcel").addEventListener("change",function(e){
 
-let file=e.target.files[0];
+
+function importExcel(){
+
+let file=document.getElementById("excelFile").files[0];
 
 let reader=new FileReader();
 
@@ -320,7 +386,7 @@ reader.onload=function(e){
 
 let data=new Uint8Array(e.target.result);
 
-let workbook=XLSX.read(data,{type:'array'});
+let workbook=XLSX.read(data,{type:"array"});
 
 let sheet=workbook.Sheets[workbook.SheetNames[0]];
 
@@ -332,13 +398,16 @@ db.collection("students").add(s);
 
 });
 
+alert("Import Complete");
+
 loadStudents();
 
 };
 
 reader.readAsArrayBuffer(file);
 
-});
+}
+
 
 loadStudents();
 loadClasses();
