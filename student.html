@@ -1,187 +1,94 @@
-<!DOCTYPE html>
-<html>
+<!DOCTYPE html><html>
 <head>
 <meta charset="UTF-8">
-<title>NMPS Admin Admission Panel</title>
+<title>Admission Management</title>
+<meta name="viewport" content="width=device-width,initial-scale=1"><style>
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
+body{font-family:Arial;margin:0;background:#f2f2f2}
 
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
+header{background:#004aad;color:white;padding:15px;text-align:center;font-size:22px}
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+.container{padding:15px}
 
-<style>
-
-body{
-font-family:Arial;
-background:#f4f6f9;
-margin:0;
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+gap:8px
 }
 
-.header{
-background:#1565c0;
-color:white;
-padding:15px;
-font-size:22px;
-text-align:center;
-}
-
-.container{
-padding:20px;
-}
-
-.form{
-background:white;
-padding:15px;
-border-radius:8px;
-margin-bottom:20px;
-}
-
-input,select{
-padding:7px;
-margin:5px;
-width:170px;
+input,select,button{
+padding:10px;
+border-radius:6px;
+border:1px solid #ccc
 }
 
 button{
-padding:7px 12px;
-background:#1565c0;
+background:#004aad;
 color:white;
-border:none;
-cursor:pointer;
-border-radius:4px;
+cursor:pointer
 }
 
-table{
-width:100%;
-border-collapse:collapse;
+.student{
 background:white;
+margin-top:10px;
+padding:10px;
+border-radius:8px;
+box-shadow:0 0 6px rgba(0,0,0,0.2)
 }
 
-th,td{
-border:1px solid #ddd;
-padding:7px;
-text-align:center;
-font-size:13px;
-}
+img{width:60px;border-radius:50%}
 
-th{
-background:#1565c0;
-color:white;
-}
-
-img{
-width:40px;
-height:40px;
-border-radius:50%;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="header">
-NMPS School Admission Admin
-</div>
-
-<div class="container">
-
-<div class="form">
-
-<input type="file" id="photo">
-
-<input id="name" placeholder="Student Name">
+</style></head><body><header>Admission Management</header><div class="container"><h3>Add Student</h3><div class="grid"><input type="file" id="photo"><input id="name" placeholder="Student Name">
 <input id="father" placeholder="Father Name">
-<input id="mother" placeholder="Mother Name">
+<input id="mother" placeholder="Mother Name"><input id="class" placeholder="Class">
+<input id="mobile" placeholder="Mobile Number"><input type="date" id="dob">
+<input type="date" id="admissionDate"><input id="village" placeholder="Village / City">
+<input id="post" placeholder="Post">
+<input id="district" placeholder="District">
+<input id="state" placeholder="State">
+<input id="national" placeholder="Nationality"><input id="sssm" placeholder="SSSM ID">
+<input id="family" placeholder="Family ID">
+<input id="apar" placeholder="APAR ID">
+<input id="adhar" placeholder="Aadhar Card"><input id="caste" placeholder="Caste">
+<input id="category" placeholder="Category"><input id="roll" placeholder="Roll Number">
+<input id="scholar" placeholder="Scholar Number"></div><button onclick="saveStudent()">Save Student</button>
 
-<select id="class"></select>
+<hr><h3>Filter</h3><input id="search" placeholder="Search Student" onkeyup="searchStudent()"><select id="classFilter" onchange="filterClass()">
+<option value="">All Classes</option>
+</select><hr><h3>Import / Export</h3><button onclick="exportCSV()">Export Excel</button>
 
-<input id="mobile" placeholder="Mobile">
+<input type="file" id="importFile">
+<button onclick="importCSV()">Import Excel</button><hr><div id="studentList"></div></div><script type="module">
 
-<input id="roll" placeholder="Roll Number">
-<input id="scholar" placeholder="Scholar Number">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-<button onclick="saveStudent()">Save Student</button>
+import { getFirestore,collection,addDoc,getDocs,deleteDoc,doc,updateDoc }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-</div>
-
-<div>
-
-<input id="className" placeholder="Add Class">
-<button onclick="addClass()">Add Class</button>
-<button onclick="deleteClass()">Delete Class</button>
-
-<input id="search" placeholder="Search Student" onkeyup="searchStudent()">
-
-<select id="filterClass" onchange="loadStudents()">
-<option value="">All Class</option>
-</select>
-
-<button onclick="exportExcel()">Export Excel</button>
-
-<input type="file" id="excelFile">
-<button onclick="importExcel()">Import Excel</button>
-
-</div>
-
-<table>
-
-<thead>
-
-<tr>
-
-<th>Photo</th>
-<th>Name</th>
-<th>Father</th>
-<th>Class</th>
-<th>Mobile</th>
-<th>Roll</th>
-<th>Scholar</th>
-<th>Action</th>
-
-</tr>
-
-</thead>
-
-<tbody id="studentsTable"></tbody>
-
-</table>
-
-</div>
-
-<script>
-
-const firebaseConfig = {
-apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId: "nmpsnagguradiya-b9b94",
-storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId: "811957568318",
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94",
+storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId:"811957568318",
+appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
 };
 
-firebase.initializeApp(firebaseConfig);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-const db = firebase.firestore();
+const imgbbKey="21000d5a5d14fcef4b6af4d13647da5a8";
 
-const imgbbAPI="21000d5a5d14fcef4b6af4d13647da5a8";
+let students=[];
 
-async function uploadImage(){
+async function uploadImage(file){
 
-let file=document.getElementById("photo").files[0];
+let form=new FormData();
+form.append("image",file);
 
-if(!file) return "";
-
-let formData=new FormData();
-
-formData.append("image",file);
-
-let res=await fetch("https://api.imgbb.com/1/upload?key="+imgbbAPI,{
+let res=await fetch("https://api.imgbb.com/1/upload?key="+imgbbKey,{
 method:"POST",
-body:formData
+body:form
 });
 
 let data=await res.json();
@@ -190,26 +97,40 @@ return data.data.url;
 
 }
 
-async function saveStudent(){
+window.saveStudent=async function(){
 
-let photo=await uploadImage();
+let file=document.getElementById("photo").files[0];
+let photoUrl="";
 
-let student={
+if(file) photoUrl=await uploadImage(file);
 
-photo:photo,
+let data={
+
+photo:photoUrl,
 name:name.value,
 father:father.value,
 mother:mother.value,
-class:document.getElementById("class").value,
+class:class.value,
 mobile:mobile.value,
+dob:dob.value,
+admissionDate:admissionDate.value,
+village:village.value,
+post:post.value,
+district:district.value,
+state:state.value,
+national:national.value,
+sssm:sssm.value,
+family:family.value,
+apar:apar.value,
+adhar:adhar.value,
+caste:caste.value,
+category:category.value,
 roll:roll.value,
 scholar:scholar.value
 
 };
 
-await db.collection("students").add(student);
-
-alert("Student Added");
+await addDoc(collection(db,"students"),data);
 
 loadStudents();
 
@@ -217,162 +138,159 @@ loadStudents();
 
 async function loadStudents(){
 
-let filter=document.getElementById("filterClass").value;
+const snap=await getDocs(collection(db,"students"));
 
-let q=db.collection("students");
+students=[];
 
-if(filter!="") q=q.where("class","==",filter);
+snap.forEach(d=>{
+students.push({id:d.id,...d.data()})
+});
 
-let snapshot=await q.get();
+render(students);
+
+}
+
+function render(list){
 
 let html="";
 
-snapshot.forEach(doc=>{
-
-let s=doc.data();
+list.forEach(s=>{
 
 html+=`
 
-<tr>
+<div class="student">
 
-<td><img src="${s.photo}"></td>
-<td>${s.name}</td>
-<td>${s.father}</td>
-<td>${s.class}</td>
-<td>${s.mobile}</td>
-<td>${s.roll}</td>
-<td>${s.scholar}</td>
+<img src="${s.photo||''}">
 
-<td>
+<b>${s.name}</b><br>
 
-<button onclick="deleteStudent('${doc.id}')">Delete</button>
+Class: ${s.class}<br>
 
-</td>
+Father: ${s.father}<br>
 
-</tr>
+Mobile: ${s.mobile}
+
+<br><br>
+
+<button onclick="editStudent('${s.id}')">Edit</button>
+
+<button onclick="deleteStudent('${s.id}')">Delete</button>
+
+</div>
 
 `;
 
 });
 
-document.getElementById("studentsTable").innerHTML=html;
+studentList.innerHTML=html;
 
 }
 
-async function deleteStudent(id){
+window.deleteStudent=async function(id){
 
-await db.collection("students").doc(id).delete();
+if(confirm("Delete Student?")){
+
+await deleteDoc(doc(db,"students",id));
 
 loadStudents();
 
 }
 
-async function addClass(){
-
-let c=document.getElementById("className").value;
-
-await db.collection("classes").add({name:c});
-
-loadClasses();
-
 }
 
-async function deleteClass(){
+window.editStudent=async function(id){
 
-let c=document.getElementById("class").value;
+let newName=prompt("Enter new name");
 
-let q=await db.collection("classes").where("name","==",c).get();
+await updateDoc(doc(db,"students",id),{
 
-q.forEach(doc=>doc.ref.delete());
-
-loadClasses();
-
-}
-
-async function loadClasses(){
-
-let snapshot=await db.collection("classes").get();
-
-let html="";
-
-snapshot.forEach(doc=>{
-
-let c=doc.data().name;
-
-html+=`<option>${c}</option>`;
+name:newName
 
 });
 
-document.getElementById("class").innerHTML=html;
-
-document.getElementById("filterClass").innerHTML='<option value="">All Class</option>'+html;
+loadStudents();
 
 }
 
-function searchStudent(){
+window.searchStudent=function(){
 
-let input=document.getElementById("search").value.toLowerCase();
+let text=search.value.toLowerCase();
 
-let rows=document.querySelectorAll("#studentsTable tr");
+let filtered=students.filter(s=>s.name.toLowerCase().includes(text));
 
-rows.forEach(row=>{
+render(filtered);
 
-row.style.display=row.innerText.toLowerCase().includes(input)?"":"none";
+}
 
+window.filterClass=function(){
+
+let c=classFilter.value;
+
+if(c===""){render(students);return}
+
+let filtered=students.filter(s=>s.class===c);
+
+render(filtered);
+
+}
+
+window.exportCSV=function(){
+
+let csv="Name,Father,Class,Mobile\n";
+
+students.forEach(s=>{
+csv+=`${s.name},${s.father},${s.class},${s.mobile}\n`;
 });
 
-}
+let blob=new Blob([csv]);
 
-async function exportExcel(){
+let a=document.createElement("a");
 
-let snapshot=await db.collection("students").get();
+a.href=URL.createObjectURL(blob);
+a.download="students.csv";
 
-let arr=[];
-
-snapshot.forEach(doc=>arr.push(doc.data()));
-
-let ws=XLSX.utils.json_to_sheet(arr);
-
-let wb=XLSX.utils.book_new();
-
-XLSX.utils.book_append_sheet(wb,ws,"Students");
-
-XLSX.writeFile(wb,"students.xlsx");
+a.click();
 
 }
 
-function importExcel(){
+window.importCSV=function(){
 
-let file=document.getElementById("excelFile").files[0];
+let file=importFile.files[0];
 
 let reader=new FileReader();
 
 reader.onload=function(e){
 
-let data=new Uint8Array(e.target.result);
+let rows=e.target.result.split("\n");
 
-let workbook=XLSX.read(data,{type:"array"});
+rows.slice(1).forEach(async r=>{
 
-let sheet=workbook.Sheets[workbook.SheetNames[0]];
+let col=r.split(",");
 
-let json=XLSX.utils.sheet_to_json(sheet);
+if(col.length>3){
 
-json.forEach(s=>db.collection("students").add(s));
+await addDoc(collection(db,"students"),{
 
-alert("Excel Imported");
+name:col[0],
+father:col[1],
+class:col[2],
+mobile:col[3]
 
-loadStudents();
-
-};
-
-reader.readAsArrayBuffer(file);
+});
 
 }
 
-loadClasses();
+});
+
 loadStudents();
 
-</script>
+}
 
-</body>
+reader.readAsText(file);
+
+}
+
+loadStudents();
+
+</script></body>
 </html>
