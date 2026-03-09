@@ -169,7 +169,7 @@ background:green;
 </select>
 
 <button onclick="printStudents()" class="printbtn">Print Student List</button>
-<button onclick="exportExcel()">Export Excel</button>
+<button onclick="exportExcel()">Export CSV</button>
 <input type="file" id="importExcel">
 
 <button onclick="promoteStudents()">Promote Class</button>
@@ -215,37 +215,25 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
 async function uploadImgBB(file){
+
 const formData=new FormData();
 formData.append("image",file);
 
-const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{method:"POST",body:formData});
+const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+method:"POST",
+body:formData
+});
+
 const data=await res.json();
 return data.data.url;
-}
 
-document.getElementById("photo").addEventListener("change",function(){
-const file=this.files[0];
-if(file){
-const reader=new FileReader();
-reader.onload=function(e){
-document.getElementById("preview").src=e.target.result;
 }
-reader.readAsDataURL(file);
-}
-});
 
 document.getElementById("form").addEventListener("submit",async function(e){
 
 e.preventDefault();
 
-const photo=document.getElementById("photo").files[0];
-const documentFile=document.getElementById("document").files[0];
-
-let photoURL=await uploadImgBB(photo);
-let docURL=await uploadImgBB(documentFile);
-
-await addDoc(collection(db,"admissions"),{
-
+let data={
 name:name.value,
 father:father.value,
 mobile:mobile.value,
@@ -266,14 +254,20 @@ scholer:scholer.value,
 admissionDate:admissionDate.value,
 dob:dob.value,
 class:document.getElementById("class").value,
-message:message.value,
-photo:photoURL,
-document:docURL
+message:message.value
+};
 
-});
+let photoURL=await uploadImgBB(photo.files[0]);
+let docURL=await uploadImgBB(document.files[0]);
+
+data.photo=photoURL;
+data.document=docURL;
+
+await addDoc(collection(db,"admissions"),data);
 
 msg.innerText="Admission Submitted Successfully";
 form.reset();
+
 loadStudents();
 
 });
@@ -301,7 +295,6 @@ html+=`
 <td>${data.mobile}</td>
 <td><img src="${data.photo}" width="50"></td>
 <td>
-<button onclick="event.stopPropagation();editStudent('${docSnap.id}')">Edit</button>
 <button onclick="event.stopPropagation();deleteStudent('${docSnap.id}')">Delete</button>
 </td>
 </tr>
@@ -312,11 +305,12 @@ html+=`
 studentList.innerHTML=html;
 total.innerText=count;
 
-let statsHTML="";
+let stats="";
 for(let c in classCount){
-statsHTML+=`Class ${c} : ${classCount[c]} Students <br>`;
+stats+=`Class ${c} : ${classCount[c]} Students <br>`;
 }
-classStats.innerHTML=statsHTML;
+
+classStats.innerHTML=stats;
 
 }
 
@@ -334,28 +328,23 @@ let win=window.open("");
 
 win.document.write(`
 <h2>Admission Form</h2>
-<p>Name: ${data.name}</p>
-<p>Father: ${data.father}</p>
-<p>Mobile: ${data.mobile}</p>
-<p>Village: ${data.village}</p>
-<p>City: ${data.city}</p>
-<p>Post: ${data.post}</p>
-<p>District: ${data.district}</p>
-<p>State: ${data.state}</p>
-<p>Nationality: ${data.national}</p>
-<p>SSSM ID: ${data.sssm}</p>
-<p>Family ID: ${data.family}</p>
-<p>APAR ID: ${data.apar}</p>
-<p>Aadhar: ${data.adhar}</p>
-<p>Caste: ${data.caste}</p>
-<p>Category: ${data.category}</p>
-<p>Roll: ${data.roll}</p>
-<p>Scholar: ${data.scholer}</p>
-<p>Admission Date: ${data.admissionDate}</p>
-<p>DOB: ${data.dob}</p>
-<p>Class: ${data.class}</p>
-<img src="${data.photo}" width="120"><br><br>
-<button onclick="window.print()">Print</button>
+
+<p>Name : ${data.name}</p>
+<p>Father : ${data.father}</p>
+<p>Mobile : ${data.mobile}</p>
+<p>Village : ${data.village}</p>
+<p>City : ${data.city}</p>
+<p>District : ${data.district}</p>
+<p>State : ${data.state}</p>
+<p>Aadhar : ${data.adhar}</p>
+<p>Class : ${data.class}</p>
+
+<img src="${data.photo}" width="120">
+
+<br><br>
+
+<button onclick="window.print()">Print Admission Form</button>
+
 `);
 
 }
@@ -365,65 +354,31 @@ win.document.write(`
 }
 
 window.deleteStudent=async function(id){
+
 if(confirm("Delete Student?")){
 await deleteDoc(doc(db,"admissions",id));
 loadStudents();
 }
-}
-
-window.editStudent=async function(id){
-
-const snap=await getDocs(collection(db,"admissions"));
-
-snap.forEach(async(d)=>{
-
-if(d.id==id){
-
-const data=d.data();
-
-let name=prompt("Student Name",data.name);
-let father=prompt("Father Name",data.father);
-let mobile=prompt("Mobile",data.mobile);
-let village=prompt("Village",data.village);
-let cls=prompt("Class",data.class);
-
-await updateDoc(doc(db,"admissions",id),{
-name,father,mobile,village,class:cls
-});
-
-loadStudents();
-
-}
-
-})
 
 }
 
 function exportExcel(){
 
-let filter=document.getElementById("classFilter").value;
 let rows=document.querySelectorAll("#studentList tr");
 
-let table="<table border='1'><tr><th>Name</th><th>Class</th><th>Mobile</th></tr>";
+let csv="Name,Class,Mobile\n";
 
-rows.forEach(row=>{
-let cls=row.children[1].innerText;
-if(filter=="" || cls==filter){
-table+=`<tr>
-<td>${row.children[0].innerText}</td>
-<td>${cls}</td>
-<td>${row.children[2].innerText}</td>
-</tr>`;
-}
+rows.forEach(r=>{
+csv+=`${r.children[0].innerText},${r.children[1].innerText},${r.children[2].innerText}\n`;
 });
 
-table+="</table>";
+let blob=new Blob([csv],{type:"text/csv"});
+let url=URL.createObjectURL(blob);
 
-let url='data:application/vnd.ms-excel,'+escape(table);
-let link=document.createElement("a");
-link.href=url;
-link.download="students.xls";
-link.click();
+let a=document.createElement("a");
+a.href=url;
+a.download="students.csv";
+a.click();
 
 }
 
@@ -432,13 +387,13 @@ document.getElementById("importExcel").addEventListener("change",function(){
 const file=this.files[0];
 const reader=new FileReader();
 
-reader.onload=function(e){
+reader.onload=async function(e){
 
 let rows=e.target.result.split("\n");
 
-rows.forEach(async(row)=>{
+for(let i=1;i<rows.length;i++){
 
-let col=row.split(",");
+let col=rows[i].split(",");
 
 if(col.length>=3){
 
@@ -450,9 +405,9 @@ mobile:col[2]
 
 }
 
-});
+}
 
-alert("CSV Students Imported");
+alert("Students Imported");
 loadStudents();
 
 };
@@ -463,20 +418,11 @@ reader.readAsText(file);
 
 async function promoteStudents(){
 
-let selectedClass=document.getElementById("classFilter").value;
-
-if(selectedClass==""){
-alert("Select Class First");
-return;
-}
-
 const snap=await getDocs(collection(db,"admissions"));
 
 snap.forEach(async(d)=>{
 
 let data=d.data();
-
-if(data.class==selectedClass){
 
 let cls=parseInt(data.class);
 
@@ -488,26 +434,13 @@ class:String(cls+1)
 
 }
 
-}
-
 });
 
-alert("Selected Class Students Promoted");
+alert("Students Promoted");
+
 loadStudents();
 
 }
-
-document.getElementById("searchStudent").addEventListener("keyup",function(){
-
-let filter=this.value.toLowerCase();
-let rows=document.querySelectorAll("#studentList tr");
-
-rows.forEach(row=>{
-let name=row.children[0].innerText.toLowerCase();
-row.style.display=name.includes(filter)?"":"none";
-});
-
-});
 
 function printStudents(){
 
@@ -515,7 +448,10 @@ let table=document.querySelector("table").outerHTML;
 
 let win=window.open("");
 
-win.document.write(`<h2>Student List</h2>${table}`);
+win.document.write(`
+<h2>Student List</h2>
+${table}
+`);
 
 win.print();
 
@@ -526,4 +462,4 @@ loadStudents();
 </script>
 
 </body>
-             </html>
+</html>
