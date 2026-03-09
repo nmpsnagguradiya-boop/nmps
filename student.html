@@ -26,68 +26,56 @@ label { font-weight:bold; display:block; margin-top:10px; }
 </header>
 
 <div class="container">
+
+  <!-- Add/Edit Student Form -->
   <div class="card">
-    <h3>Add Student</h3>
+    <h3 id="formTitle">Add Student</h3>
     <form id="studentForm">
       <label>Photo</label>
       <input type="file" id="photo" accept="image/*">
       <img id="photoPreview" src="" alt="Photo Preview">
-      <label>Name</label>
-      <input type="text" placeholder="Name" id="name" required>
+      <label>Name</label><input type="text" placeholder="Name" id="name" required>
       <label>Father's Name</label><input type="text" placeholder="Father's Name" id="fatherName">
       <label>Mother's Name</label><input type="text" placeholder="Mother's Name" id="motherName">
       <label>Address</label><input type="text" placeholder="Address" id="address">
-      <label>SSSM ID</label><input type="text" placeholder="SSSM ID" id="sssmId">
-      <label>Family ID</label><input type="text" placeholder="Family ID" id="familyId">
-      <label>Aadhaar Card Number</label><input type="text" placeholder="Aadhaar Card Number" id="aadhaar">
-      <label>Roll Number</label><input type="text" placeholder="Roll Number" id="rollNo">
-      <label>Date of Birth</label><input type="date" placeholder="Date of Birth" id="dob">
-      <label>APAR ID</label><input type="text" placeholder="APAR ID" id="aparId">
-      <label>Caste</label><input type="text" placeholder="Caste" id="caste">
       <label>Category</label><input type="text" placeholder="Category" id="category">
-      <label>Mobile Number</label><input type="text" placeholder="Mobile Number" id="mobile">
-      <label>Gender</label>
-      <select id="gender">
-        <option value="">Select Gender</option>
-        <option value="Male">Male</option>
-        <option value="Female">Female</option>
-        <option value="Other">Other</option>
-      </select>
-      <label>Post</label><input type="text" placeholder="Post" id="post">
-      <label>District</label><input type="text" placeholder="District" id="district">
-      <label>State</label><input type="text" placeholder="State" id="state">
-      <label>Postal Code</label><input type="text" placeholder="Postal Code" id="postalCode">
-      <label>Admission Date</label><input type="date" placeholder="Admission Date" id="admissionDate">
-      <label>Scholar Number</label><input type="text" placeholder="Scholar Number" id="scholarNo">
-      <label>Email ID</label><input type="email" placeholder="Email ID" id="email">
+      <label>Roll Number</label><input type="text" placeholder="Roll Number" id="rollNo">
       <label>Class</label>
-      <select id="studentClass">
-        <option value="">Select Class</option>
-        <option value="Class 1">Class 1</option>
-        <option value="Class 2">Class 2</option>
-        <option value="Class 3">Class 3</option>
-        <option value="Class 4">Class 4</option>
-        <option value="Class 5">Class 5</option>
-      </select>
-      <button type="submit">Add Student</button>
+      <select id="studentClass"></select>
+      <button type="submit" id="submitBtn">Add Student</button>
+      <button type="button" id="cancelEditBtn" style="display:none; background:#ff7b7b;">Cancel Edit</button>
     </form>
   </div>
 
+  <!-- Class Management -->
   <div class="card">
-    <h3>Class & Category Filter</h3>
+    <h3>Manage Classes</h3>
+    <input type="text" id="newClass" placeholder="New Class Name">
+    <button onclick="addClass()">Add Class</button>
+    <select id="classList"></select>
+    <button onclick="deleteClass()" style="background:#ff7b7b;">Delete Selected Class</button>
+  </div>
+
+  <!-- Filter & Promote -->
+  <div class="card">
+    <h3>Filter & Promote</h3>
     <select id="filterClass">
       <option value="">All Classes</option>
-      <option value="Class 1">Class 1</option>
-      <option value="Class 2">Class 2</option>
-      <option value="Class 3">Class 3</option>
-      <option value="Class 4">Class 4</option>
-      <option value="Class 5">Class 5</option>
     </select>
     <input type="text" id="filterCategory" placeholder="Category Filter">
     <button onclick="applyFilter()">Apply Filter</button>
     <button onclick="promoteSelected()">Promote Selected to Next Class</button>
   </div>
 
+  <!-- Excel Options -->
+  <div class="card">
+    <h3>Excel Options</h3>
+    <button onclick="downloadExcel()">Download Students Excel</button>
+    <input type="file" id="excelUpload" accept=".xlsx,.xls">
+    <button onclick="uploadExcel()">Upload Students Excel</button>
+  </div>
+
+  <!-- Students List -->
   <div class="card">
     <h3>Students List</h3>
     <table id="studentTable">
@@ -96,10 +84,11 @@ label { font-weight:bold; display:block; margin-top:10px; }
           <th>Select</th>
           <th>Photo</th>
           <th>Name</th>
-          <th>Father's Name</th>
-          <th>Mother's Name</th>
+          <th>Father</th>
+          <th>Mother</th>
           <th>Address</th>
           <th>Category</th>
+          <th>Roll No</th>
           <th>Class</th>
           <th>Actions</th>
         </tr>
@@ -107,6 +96,7 @@ label { font-weight:bold; display:block; margin-top:10px; }
       <tbody></tbody>
     </table>
   </div>
+
 </div>
 
 <script type="module">
@@ -125,24 +115,46 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let students = [];
+let classes = ["Class 1","Class 2","Class 3","Class 4","Class 5"];
+let editId = '';
 
+const studentForm = document.getElementById('studentForm');
+const studentClassSelect = document.getElementById('studentClass');
+const filterClassSelect = document.getElementById('filterClass');
+const classListSelect = document.getElementById('classList');
+
+// Populate classes
+function refreshClassOptions(){
+  studentClassSelect.innerHTML = '';
+  filterClassSelect.innerHTML = '<option value="">All Classes</option>';
+  classListSelect.innerHTML = '';
+  classes.forEach(c=>{
+    studentClassSelect.innerHTML += `<option value="${c}">${c}</option>`;
+    filterClassSelect.innerHTML += `<option value="${c}">${c}</option>`;
+    classListSelect.innerHTML += `<option value="${c}">${c}</option>`;
+  });
+}
+refreshClassOptions();
+
+// Photo Preview
 document.getElementById('photo').addEventListener('change', function(){
   const file = this.files[0];
   document.getElementById('photoPreview').src = file ? URL.createObjectURL(file) : '';
 });
 
-// Upload photo to ImgBB
+// ImgBB Upload
 async function uploadToImgBB(file){
+  if(!file) return '';
   const apiKey = '21000d5a5d14fcef4b6af4d13647da5a8';
   const formData = new FormData();
   formData.append('image', file);
-  const res = await fetch('https://api.imgbb.com/1/upload?key='+apiKey,{method:'POST',body:formData});
+  const res = await fetch('https://api.imgbb.com/1/upload?key='+apiKey, {method:'POST', body:formData});
   const data = await res.json();
   return data.success ? data.data.url : '';
 }
 
-// Add student
-document.getElementById('studentForm').addEventListener('submit', async function(e){
+// Add/Edit student
+studentForm.addEventListener('submit', async e=>{
   e.preventDefault();
   const photoFile = document.getElementById('photo').files[0];
   let photoURL = '';
@@ -155,24 +167,40 @@ document.getElementById('studentForm').addEventListener('submit', async function
     motherName: document.getElementById('motherName').value,
     address: document.getElementById('address').value,
     category: document.getElementById('category').value,
+    rollNo: document.getElementById('rollNo').value,
     studentClass: document.getElementById('studentClass').value
   };
 
-  const studentId = student.name+'_'+student.studentClass;
+  const studentId = editId || student.name+'_'+student.studentClass;
   await setDoc(doc(db,'students',studentId), student);
-  this.reset();
-  document.getElementById('photoPreview').src = '';
+  resetForm();
 });
 
-onSnapshot(collection(db,'students'), snapshot=>{
+// Reset form
+function resetForm(){
+  studentForm.reset();
+  document.getElementById('photoPreview').src='';
+  document.getElementById('formTitle').innerText='Add Student';
+  document.getElementById('submitBtn').innerText='Add Student';
+  document.getElementById('cancelEditBtn').style.display='none';
+  editId = '';
+}
+
+// Cancel Edit
+document.getElementById('cancelEditBtn').addEventListener('click', resetForm);
+
+// Real-time snapshot
+onSnapshot(collection(db,'students'), snap=>{
   students = [];
-  snapshot.forEach(docSnap => { students.push(docSnap.data()); });
+  snap.forEach(docSnap => students.push(docSnap.data()));
   updateStudentTable();
 });
 
+// Update table
 function updateStudentTable(filterClass='', filterCategory=''){
   const tbody = document.querySelector('#studentTable tbody');
   tbody.innerHTML='';
+  students.sort((a,b)=> (a.rollNo || 0) - (b.rollNo || 0)); // roll number sort
   students.forEach((s,i)=>{
     if(filterClass && s.studentClass !== filterClass) return;
     if(filterCategory && s.category.toLowerCase() !== filterCategory.toLowerCase()) return;
@@ -185,18 +213,41 @@ function updateStudentTable(filterClass='', filterCategory=''){
       <td>${s.motherName}</td>
       <td>${s.address}</td>
       <td>${s.category}</td>
+      <td>${s.rollNo}</td>
       <td>${s.studentClass}</td>
-      <td><button onclick="deleteStudent('${s.name}','${s.studentClass}')">Delete</button></td>
+      <td>
+        <button onclick="editStudent(${i})">Edit</button>
+        <button onclick="deleteStudent('${s.name}','${s.studentClass}')">Delete</button>
+      </td>
     `;
     tbody.appendChild(tr);
   });
   document.getElementById('totalStudents').innerText = students.length;
 }
 
-async function deleteStudent(name, cls){
+// Edit Student
+function editStudent(index){
+  const s = students[index];
+  editId = s.name+'_'+s.studentClass;
+  document.getElementById('name').value = s.name;
+  document.getElementById('fatherName').value = s.fatherName;
+  document.getElementById('motherName').value = s.motherName;
+  document.getElementById('address').value = s.address;
+  document.getElementById('category').value = s.category;
+  document.getElementById('rollNo').value = s.rollNo;
+  document.getElementById('studentClass').value = s.studentClass;
+  if(s.photo) document.getElementById('photoPreview').src = s.photo;
+  document.getElementById('formTitle').innerText='Edit Student';
+  document.getElementById('submitBtn').innerText='Update Student';
+  document.getElementById('cancelEditBtn').style.display='inline-block';
+}
+
+// Delete Student
+async function deleteStudent(name,cls){
   if(confirm('Are you sure?')) await deleteDoc(doc(db,'students',name+'_'+cls));
 }
 
+// Promote
 function promoteSelected(){
   const checkboxes = document.querySelectorAll('.selectStudent:checked');
   checkboxes.forEach(async cb=>{
@@ -211,11 +262,63 @@ function promoteSelected(){
   });
 }
 
+// Filter
 function applyFilter(){
   const fClass = document.getElementById('filterClass').value;
   const fCat = document.getElementById('filterCategory').value;
   updateStudentTable(fClass,fCat);
 }
+
+// Class Management
+function addClass(){
+  const c = document.getElementById('newClass').value.trim();
+  if(c && !classes.includes(c)){
+    classes.push(c);
+    refreshClassOptions();
+    document.getElementById('newClass').value='';
+  }
+}
+function deleteClass(){
+  const c = classListSelect.value;
+  if(c && confirm('Delete class '+c+'?')){
+    classes = classes.filter(cl => cl!==c);
+    refreshClassOptions();
+  }
+}
+
+// Excel (import/export)
+function downloadExcel(){
+  const ws_data = [["Name","Father","Mother","Address","Category","RollNo","Class","Photo"]];
+  students.forEach(s=> ws_data.push([s.name,s.fatherName,s.motherName,s.address,s.category,s.rollNo,s.studentClass,s.photo]));
+  const wb = XLSX.utils.book_new();
+  const ws = XLSX.utils.aoa_to_sheet(ws_data);
+  XLSX.utils.book_append_sheet(wb,ws,"Students");
+  XLSX.writeFile(wb,"students.xlsx");
+}
+
+function uploadExcel(){
+  const file = document.getElementById('excelUpload').files[0];
+  if(!file) return alert('Select Excel file');
+  const reader = new FileReader();
+  reader.onload = async e=>{
+    const data = new Uint8Array(e.target.result);
+    const workbook = XLSX.read(data,{type:'array'});
+    const sheet = workbook.Sheets[workbook.SheetNames[0]];
+    const json = XLSX.utils.sheet_to_json(sheet,{header:1});
+    const headers = json[0];
+    for(let i=1;i<json.length;i++){
+      const row = json[i];
+      let s = {};
+      headers.forEach((h,j)=> s[h]=row[j]||'');
+      s.studentClass = s.Class || '';
+      s.photo = s.Photo || '';
+      const studentId = s.name+'_'+s.studentClass;
+      await setDoc(doc(db,'students',studentId), s);
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
 </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 </body>
-  </html>
+      </html>
