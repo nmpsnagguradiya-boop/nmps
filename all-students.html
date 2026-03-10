@@ -25,18 +25,10 @@ font-size:22px;
 padding:20px;
 }
 
-.search{
+.search,select{
 width:100%;
 padding:10px;
 margin-top:10px;
-border-radius:5px;
-border:1px solid #ccc;
-}
-
-select{
-padding:10px;
-margin-top:10px;
-width:100%;
 border-radius:5px;
 border:1px solid #ccc;
 }
@@ -65,26 +57,15 @@ padding:6px 10px;
 border:none;
 border-radius:4px;
 cursor:pointer;
+margin:2px;
 }
 
-.edit{
-background:#ffcc00;
-}
-
-.delete{
-background:red;
-color:white;
-}
-
-.view{
-background:#004aad;
-color:white;
-}
-
-.id{
-background:green;
-color:white;
-}
+.edit{background:#ffc107;}
+.delete{background:red;color:white;}
+.view{background:#004aad;color:white;}
+.photo{background:#28a745;color:white;}
+.id{background:#6f42c1;color:white;}
+.pdf{background:#17a2b8;color:white;}
 
 .stats{
 margin-top:20px;
@@ -152,13 +133,13 @@ border-radius:6px;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore,collection,getDocs,deleteDoc,doc,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId: "nmpsnagguradiya-b9b94",
-storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId: "811957568318",
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94",
+storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId:"811957568318",
+appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -180,6 +161,7 @@ querySnapshot.forEach((docSnap)=>{
 
 const data=docSnap.data();
 data.id=docSnap.id;
+
 students.push(data);
 
 count++;
@@ -191,19 +173,32 @@ classCount[data.class]=0;
 classCount[data.class]++;
 
 html+=`
+
 <tr>
+
 <td>${data.name}</td>
 <td>${data.class}</td>
 <td>${data.mobile}</td>
-<td><img src="${data.photo}" width="40"></td>
+<td><img src="${data.photo || ''}" width="40"></td>
+
 <td>
-<button class="view" onclick="viewStudent('${docSnap.id}')">View</button>
-<button class="edit" onclick="editStudent('${docSnap.id}')">Edit</button>
-<button class="delete" onclick="deleteStudent('${docSnap.id}')">Delete</button>
-<button class="id" onclick="generateID('${docSnap.id}')">ID Card</button>
-<button class="view" onclick="downloadPDF('${docSnap.id}')">PDF</button>
+
+<button class="view" onclick="viewStudent('${data.id}')">Form</button>
+
+<button class="edit" onclick="editStudent('${data.id}')">Edit</button>
+
+<button class="photo" onclick="uploadPhoto('${data.id}')">Photo</button>
+
+<button class="delete" onclick="deleteStudent('${data.id}')">Delete</button>
+
+<button class="id" onclick="generateID('${data.id}')">ID Card</button>
+
+<button class="pdf" onclick="downloadPDF('${data.id}')">PDF</button>
+
 </td>
+
 </tr>
+
 `;
 
 });
@@ -232,25 +227,39 @@ loadStudents();
 
 window.editStudent=async function(id){
 
-const s=students.find(x=>x.id==id);
+let s=students.find(x=>x.id==id);
 
 let name=prompt("Name",s.name);
 let father=prompt("Father",s.father);
 let mobile=prompt("Mobile",s.mobile);
 let village=prompt("Village",s.village);
-let cls=prompt("Class",s.class);
+let city=prompt("City",s.city);
+let post=prompt("Post",s.post);
+let district=prompt("District",s.district);
+let state=prompt("State",s.state);
+let adhar=prompt("Aadhar",s.adhar);
+let apar=prompt("APAR",s.apar);
+let sssm=prompt("SSSM",s.sssm);
+let family=prompt("Family ID",s.family);
+let roll=prompt("Roll",s.roll);
+let scholer=prompt("Scholar",s.scholer);
+let caste=prompt("Caste",s.caste);
+let category=prompt("Category",s.category);
+let dob=prompt("DOB",s.dob);
+let admissionDate=prompt("Admission Date",s.admissionDate);
 
 await updateDoc(doc(db,"admissions",id),{
-name,
-father,
-mobile,
-village,
-class:cls
+
+name,father,mobile,village,city,post,district,state,
+adhar,apar,sssm,family,roll,scholer,caste,category,dob,admissionDate
+
 });
 
-let photoUpdate=confirm("Update Photo?");
+loadStudents();
 
-if(photoUpdate){
+}
+
+window.uploadPhoto=async function(id){
 
 let input=document.createElement("input");
 input.type="file";
@@ -279,17 +288,11 @@ loadStudents();
 
 input.click();
 
-}else{
-
-loadStudents();
-
-}
-
 }
 
 window.viewStudent=function(id){
 
-const s=students.find(x=>x.id==id);
+let s=students.find(x=>x.id==id);
 
 let win=window.open("");
 
@@ -299,23 +302,26 @@ win.document.write(`
 
 body{font-family:Arial;padding:20px;}
 
-.card{padding:20px;}
+.form{
+padding:20px;
+}
 
 @media print{
 
 body{background:#ffeb3b;}
 
-.card{
+.form{
 background:#004aad;
 color:white;
-padding:20px;
+padding:25px;
+border-radius:10px;
 }
 
 }
 
 </style>
 
-<div class="card">
+<div class="form">
 
 <h2>Student Admission Form</h2>
 
@@ -323,6 +329,20 @@ padding:20px;
 <p>Father : ${s.father}</p>
 <p>Mobile : ${s.mobile}</p>
 <p>Village : ${s.village}</p>
+<p>City : ${s.city}</p>
+<p>Post : ${s.post}</p>
+<p>District : ${s.district}</p>
+<p>State : ${s.state}</p>
+<p>Aadhar : ${s.adhar}</p>
+<p>APAR : ${s.apar}</p>
+<p>SSSM : ${s.sssm}</p>
+<p>Family ID : ${s.family}</p>
+<p>Roll : ${s.roll}</p>
+<p>Scholar : ${s.scholer}</p>
+<p>Caste : ${s.caste}</p>
+<p>Category : ${s.category}</p>
+<p>DOB : ${s.dob}</p>
+<p>Admission Date : ${s.admissionDate}</p>
 <p>Class : ${s.class}</p>
 
 <img src="${s.photo}" width="120">
@@ -339,7 +359,7 @@ padding:20px;
 
 window.generateID=function(id){
 
-const s=students.find(x=>x.id==id);
+let s=students.find(x=>x.id==id);
 
 let win=window.open("");
 
@@ -347,31 +367,43 @@ win.document.write(`
 
 <style>
 
-body{font-family:Arial;text-align:center;}
+body{
+font-family:Arial;
+display:flex;
+justify-content:center;
+align-items:center;
+height:100vh;
+}
 
 .card{
 width:300px;
 border:3px solid #004aad;
-padding:20px;
 border-radius:10px;
+padding:20px;
+text-align:center;
 }
 
-h3{
+.head{
 background:#004aad;
 color:white;
 padding:5px;
+margin-bottom:10px;
 }
 
 </style>
 
 <div class="card">
 
-<h3>Student ID Card</h3>
+<div class="head">Student ID Card</div>
 
-<img src="${s.photo}" width="100">
+<img src="${s.photo}" width="90"><br><br>
 
-<p>${s.name}</p>
+<b>${s.name}</b>
+
 <p>Class : ${s.class}</p>
+
+<p>Roll : ${s.roll}</p>
+
 <p>Mobile : ${s.mobile}</p>
 
 <button onclick="window.print()">Print</button>
@@ -384,20 +416,28 @@ padding:5px;
 
 window.downloadPDF=function(id){
 
-const s=students.find(x=>x.id==id);
+let s=students.find(x=>x.id==id);
 
-const { jsPDF } = window.jspdf;
+const { jsPDF }=window.jspdf;
 
-const docPDF=new jsPDF();
+let pdf=new jsPDF();
 
-docPDF.text("Student Admission Form",20,20);
-docPDF.text("Name : "+s.name,20,40);
-docPDF.text("Father : "+s.father,20,50);
-docPDF.text("Mobile : "+s.mobile,20,60);
-docPDF.text("Village : "+s.village,20,70);
-docPDF.text("Class : "+s.class,20,80);
+pdf.text("Student Admission Form",20,20);
 
-docPDF.save(s.name+"_admission_form.pdf");
+let y=40;
+
+for(let key in s){
+
+if(key!="id" && key!="photo"){
+
+pdf.text(key+" : "+s[key],20,y);
+y+=10;
+
+}
+
+}
+
+pdf.save(s.name+"_form.pdf");
 
 }
 
@@ -408,11 +448,8 @@ let filter=this.value.toLowerCase();
 let rows=document.querySelectorAll("#studentList tr");
 
 rows.forEach(row=>{
-
 let name=row.children[0].innerText.toLowerCase();
-
 row.style.display=name.includes(filter)?"":"none";
-
 });
 
 });
@@ -424,11 +461,8 @@ let filter=this.value;
 let rows=document.querySelectorAll("#studentList tr");
 
 rows.forEach(row=>{
-
 let cls=row.children[1].innerText;
-
-row.style.display=(filter=="" || cls==filter)?"":"none";
-
+row.style.display=(filter==""||cls==filter)?"":"none";
 });
 
 });
