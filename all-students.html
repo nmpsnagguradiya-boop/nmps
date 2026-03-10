@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>All Students</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f4f4f4;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
+
+.container{
+padding:20px;
+}
+
+.search{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+select{
+padding:10px;
+margin-top:10px;
+width:100%;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+table{
+width:100%;
+margin-top:20px;
+border-collapse:collapse;
+background:white;
+}
+
+table th{
+background:#004aad;
+color:white;
+padding:10px;
+}
+
+table td{
+padding:8px;
+border:1px solid #ccc;
+text-align:center;
+}
+
+button{
+padding:6px 10px;
+border:none;
+border-radius:4px;
+cursor:pointer;
+}
+
+.edit{
+background:#ffcc00;
+}
+
+.delete{
+background:red;
+color:white;
+}
+
+.view{
+background:#004aad;
+color:white;
+}
+
+.print{
+background:green;
+color:white;
+margin-top:10px;
+padding:10px;
+width:100%;
+}
+
+.stats{
+margin-top:20px;
+background:white;
+padding:15px;
+border-radius:6px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>All Students</header>
+
+<div class="container">
+
+<input type="text" id="search" class="search" placeholder="Search Student">
+
+<select id="classFilter">
+<option value="">All Classes</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+
+<div class="stats">
+<h3>Total Students : <span id="total">0</span></h3>
+<div id="classStats"></div>
+</div>
+
+<table>
+
+<thead>
+<tr>
+<th>Name</th>
+<th>Class</th>
+<th>Mobile</th>
+<th>Photo</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="studentList"></tbody>
+
+</table>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,getDocs,deleteDoc,doc,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+async function loadStudents(){
+
+const querySnapshot=await getDocs(collection(db,"admissions"));
+
+let html="";
+let count=0;
+let classCount={};
+
+querySnapshot.forEach((docSnap)=>{
+
+const data=docSnap.data();
+count++;
+
+if(!classCount[data.class]){
+classCount[data.class]=0;
+}
+
+classCount[data.class]++;
+
+html+=`
+<tr>
+<td>${data.name}</td>
+<td>${data.class}</td>
+<td>${data.mobile}</td>
+<td><img src="${data.photo}" width="40"></td>
+<td>
+<button class="view" onclick="viewStudent('${docSnap.id}')">View</button>
+<button class="edit" onclick="editStudent('${docSnap.id}')">Edit</button>
+<button class="delete" onclick="deleteStudent('${docSnap.id}')">Delete</button>
+</td>
+</tr>
+`;
+
+});
+
+document.getElementById("studentList").innerHTML=html;
+document.getElementById("total").innerText=count;
+
+let statsHTML="";
+
+for(let c in classCount){
+
+statsHTML+=`Class ${c} : ${classCount[c]} Students <br>`;
+
+}
+
+document.getElementById("classStats").innerHTML=statsHTML;
+
+}
+
+window.deleteStudent=async function(id){
+
+if(confirm("Delete Student?")){
+
+await deleteDoc(doc(db,"admissions",id));
+
+loadStudents();
+
+}
+
+}
+
+window.editStudent=async function(id){
+
+const snap=await getDocs(collection(db,"admissions"));
+
+snap.forEach(async(d)=>{
+
+if(d.id==id){
+
+const data=d.data();
+
+let name=prompt("Name",data.name);
+let mobile=prompt("Mobile",data.mobile);
+let cls=prompt("Class",data.class);
+
+await updateDoc(doc(db,"admissions",id),{
+
+name,
+mobile,
+class:cls
+
+});
+
+loadStudents();
+
+}
+
+})
+
+}
+
+window.viewStudent=async function(id){
+
+const snap=await getDocs(collection(db,"admissions"));
+
+snap.forEach((d)=>{
+
+if(d.id==id){
+
+const data=d.data();
+
+let win=window.open("");
+
+win.document.write(`
+
+<style>
+body{
+font-family:Arial;
+padding:20px;
+background:#ffeb3b;
+}
+
+.card{
+background:#004aad;
+color:white;
+padding:20px;
+border-radius:10px;
+}
+
+img{
+margin-top:10px;
+border-radius:5px;
+}
+
+button{
+margin-top:15px;
+padding:10px;
+background:black;
+color:white;
+border:none;
+}
+</style>
+
+<div class="card">
+
+<h2>Student Admission Form</h2>
+
+<p>Name : ${data.name}</p>
+<p>Father : ${data.father}</p>
+<p>Mobile : ${data.mobile}</p>
+<p>Village : ${data.village}</p>
+<p>Class : ${data.class}</p>
+
+<img src="${data.photo}" width="120">
+
+<br><br>
+
+<button onclick="window.print()">Print / Download</button>
+
+</div>
+
+`);
+
+}
+
+})
+
+}
+
+document.getElementById("search").addEventListener("keyup",function(){
+
+let filter=this.value.toLowerCase();
+
+let rows=document.querySelectorAll("#studentList tr");
+
+rows.forEach(row=>{
+
+let name=row.children[0].innerText.toLowerCase();
+
+row.style.display=name.includes(filter)?"":"none";
+
+});
+
+});
+
+document.getElementById("classFilter").addEventListener("change",function(){
+
+let filter=this.value;
+
+let rows=document.querySelectorAll("#studentList tr");
+
+rows.forEach(row=>{
+
+let cls=row.children[1].innerText;
+
+row.style.display=(filter=="" || cls==filter)?"":"none";
+
+});
+
+});
+
+loadStudents();
+
+</script>
+
+</body>
+</html>
