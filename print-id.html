@@ -36,7 +36,7 @@ border:2px solid #ccc;
 margin-bottom:20px;
 }
 
-/* GRID FOR 8 ID CARDS */
+/* GRID 8 CARDS */
 
 .cards{
 display:grid;
@@ -45,46 +45,64 @@ gap:10px;
 justify-items:center;
 }
 
-/* CARD DESIGN */
+/* CARD */
 
 .card{
-width:260px;
-height:370px;
+width:250px;
+height:360px;
 border:3px solid black;
 border-radius:10px;
 overflow:hidden;
 background:white;
 }
 
+/* HEADER FOOTER COLOURS */
+
+.design1 .header{background:#004aad;color:white;}
+.design1 .footer{background:#ffeb3b;}
+
+.design2 .header{background:#1b5e20;color:white;}
+.design2 .footer{background:#a5d6a7;}
+
+.design3 .header{background:#6a1b9a;color:white;}
+.design3 .footer{background:#e1bee7;}
+
+.design4 .header{background:#e65100;color:white;}
+.design4 .footer{background:#ffe0b2;}
+
+.design5 .header{background:#283593;color:white;}
+.design5 .footer{background:#c5cae9;}
+
+.design6 .header{background:#00695c;color:white;}
+.design6 .footer{background:#b2dfdb;}
+
+.design7 .header{background:#263238;color:white;}
+.design7 .footer{background:#90a4ae;}
+
 /* HEADER */
 
 .header{
-background:#004aad;
-color:white;
 padding:8px;
 font-weight:bold;
 font-style:italic;
-font-size:16px;
+font-size:15px;
 }
 
 /* PHOTO */
 
-.photo{
-margin-top:8px;
-}
-
 .photo img{
-width:90px;
-height:110px;
-border:3px solid black;
+width:85px;
+height:100px;
+border:2px solid black;
 border-radius:6px;
+margin-top:5px;
 object-fit:cover;
 }
 
 /* NAME */
 
 .name{
-font-size:18px;
+font-size:16px;
 font-weight:bold;
 font-style:italic;
 margin-top:5px;
@@ -93,23 +111,22 @@ margin-top:5px;
 /* DETAILS */
 
 .details{
-font-size:13px;
+font-size:12px;
 font-weight:bold;
 font-style:italic;
-margin-top:5px;
-line-height:18px;
+line-height:17px;
+margin-top:4px;
 }
 
 /* FOOTER */
 
 .footer{
-background:#ffeb3b;
-margin-top:6px;
+margin-top:5px;
 padding:4px;
 }
 
 .qr canvas{
-width:70px;
+width:60px;
 }
 
 @media print{
@@ -120,10 +137,6 @@ display:none;
 
 .students{
 display:none;
-}
-
-.cards{
-grid-template-columns:repeat(4,1fr);
 }
 
 .card{
@@ -157,6 +170,18 @@ print-color-adjust:exact;
 <option>8</option>
 <option>9</option>
 <option>10</option>
+
+</select>
+
+<select id="designSelect">
+
+<option value="design1">Blue / Yellow</option>
+<option value="design2">Green</option>
+<option value="design3">Purple</option>
+<option value="design4">Orange</option>
+<option value="design5">Royal Blue</option>
+<option value="design6">Teal</option>
+<option value="design7">Dark Grey</option>
 
 </select>
 
@@ -232,6 +257,8 @@ window.printSelected=function(){
 
 let checked=document.querySelectorAll("#studentSelect input:checked");
 
+let design=document.getElementById("designSelect").value;
+
 let html="";
 
 checked.forEach(c=>{
@@ -242,7 +269,7 @@ let sid="STU-"+s.id.substring(0,6).toUpperCase();
 
 html+=`
 
-<div class="card">
+<div class="card ${design}">
 
 <div class="header">
 YOUR SCHOOL NAME
@@ -289,11 +316,11 @@ QRCode.toCanvas(document.getElementById("qr"+s.id),sid);
 
 });
 
-/* PRINT DIRECT */
+/* DIRECT PRINT */
 
 setTimeout(()=>{
 window.print();
-},500);
+},300);
 
 }
 
@@ -304,4 +331,4 @@ loadStudents();
 </script>
 
 </body>
-  </html>
+                                                      </html>
