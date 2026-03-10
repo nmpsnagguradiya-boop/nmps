@@ -58,6 +58,31 @@ text-align:center;
 margin-top:10px;
 }
 
+table{
+width:100%;
+margin-top:20px;
+background:white;
+border-collapse:collapse;
+}
+
+table th,table td{
+border:1px solid #ccc;
+padding:8px;
+text-align:center;
+}
+
+.search{
+margin-top:20px;
+padding:10px;
+width:100%;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+.printbtn{
+background:green;
+}
+
 </style>
 
 </head>
@@ -124,17 +149,58 @@ margin-top:10px;
 
 </form>
 
-<br>
+<input type="text" id="searchStudent" class="search" placeholder="Search Student">
 
+<select id="classFilter">
+<option value="">All Classes</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+
+<button onclick="printStudents()" class="printbtn">Print Student List</button>
 <button onclick="exportExcel()">Export Excel</button>
 <input type="file" id="importExcel">
+
+<button onclick="promoteStudents()">Promote Class</button>
+
+<h3>Class Wise Total Students</h3>
+<div id="classStats"></div>
+
+<h3>Total Students : <span id="total">0</span></h3>
+
+<table>
+
+<thead>
+<tr>
+<th>Name</th>
+<th>Class</th>
+<th>Mobile</th>
+<th>Photo</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="studentList"></tbody>
+
+</table>
 
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,addDoc,getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,collection,addDoc,getDocs,deleteDoc,doc,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -215,29 +281,147 @@ date:new Date()
 document.getElementById("msg").innerText="Admission Submitted Successfully";
 document.getElementById("form").reset();
 
+loadStudents();
+
 });
 
-async function exportExcel(){
+async function loadStudents(){
 
 const querySnapshot=await getDocs(collection(db,"admissions"));
 
-let table="<table border='1'><tr><th>Name</th><th>Father</th><th>Mobile</th><th>Village</th><th>Class</th></tr>";
+let html="";
+let count=0;
+let classCount={};
 
-querySnapshot.forEach((doc)=>{
+querySnapshot.forEach((docSnap)=>{
 
-let d=doc.data();
+const data=docSnap.data();
+count++;
 
-table+=`<tr>
-<td>${d.name}</td>
-<td>${d.father}</td>
-<td>${d.mobile}</td>
-<td>${d.village}</td>
-<td>${d.class}</td>
-</tr>`;
+if(!classCount[data.class]){
+classCount[data.class]=0;
+}
+
+classCount[data.class]++;
+
+html+=`
+<tr onclick="viewStudent('${docSnap.id}')">
+<td>${data.name}</td>
+<td>${data.class}</td>
+<td>${data.mobile}</td>
+<td><img src="${data.photo}" width="50"></td>
+<td>
+<button onclick="event.stopPropagation();editStudent('${docSnap.id}')">Edit</button>
+<button onclick="event.stopPropagation();deleteStudent('${docSnap.id}')">Delete</button>
+</td>
+</tr>
+`;
 
 });
 
-table+="</table>";
+document.getElementById("studentList").innerHTML=html;
+document.getElementById("total").innerText=count;
+
+let statsHTML="";
+
+for(let c in classCount){
+statsHTML+=`Class ${c} : ${classCount[c]} Students <br>`;
+}
+
+document.getElementById("classStats").innerHTML=statsHTML;
+
+}
+
+window.viewStudent=async function(id){
+
+const snap=await getDocs(collection(db,"admissions"));
+
+snap.forEach((d)=>{
+
+if(d.id==id){
+
+const data=d.data();
+
+let win=window.open("");
+
+win.document.write(`
+<h2>Admission Receipt</h2>
+<p>Name : ${data.name}</p>
+<p>Father : ${data.father}</p>
+<p>Mobile : ${data.mobile}</p>
+<p>Village : ${data.village}</p>
+<p>Class : ${data.class}</p>
+<img src="${data.photo}" width="120">
+<br><br>
+<button onclick="window.print()">Print Receipt</button>
+`);
+
+}
+
+})
+
+}
+
+window.deleteStudent=async function(id){
+
+if(confirm("Delete Student?")){
+await deleteDoc(doc(db,"admissions",id));
+loadStudents();
+}
+
+}
+
+window.editStudent=async function(id){
+
+const snap=await getDocs(collection(db,"admissions"));
+
+snap.forEach(async(d)=>{
+
+if(d.id==id){
+
+const data=d.data();
+
+let name=prompt("Student Name",data.name);
+let father=prompt("Father Name",data.father);
+let mobile=prompt("Mobile",data.mobile);
+let village=prompt("Village",data.village);
+let cls=prompt("Class",data.class);
+
+await updateDoc(doc(db,"admissions",id),{
+name,
+father,
+mobile,
+village,
+class:cls
+});
+
+loadStudents();
+
+}
+
+})
+
+}
+
+document.getElementById("classFilter").addEventListener("change",function(){
+
+let filter=this.value;
+
+let rows=document.querySelectorAll("#studentList tr");
+
+rows.forEach(row=>{
+
+let cls=row.children[1].innerText;
+
+row.style.display=(filter=="" || cls==filter)?"":"none";
+
+});
+
+});
+
+function exportExcel(){
+
+let table=document.querySelector("table").outerHTML;
 
 let url='data:application/vnd.ms-excel,'+escape(table);
 
@@ -252,11 +436,69 @@ link.click();
 
 document.getElementById("importExcel").addEventListener("change",function(){
 
-alert("Excel Import Enabled");
+alert("Excel Import Basic Enabled");
 
 });
+
+async function promoteStudents(){
+
+const snap=await getDocs(collection(db,"admissions"));
+
+snap.forEach(async(d)=>{
+
+let data=d.data();
+
+let cls=parseInt(data.class);
+
+if(!isNaN(cls) && cls<10){
+
+await updateDoc(doc(db,"admissions",d.id),{
+class:String(cls+1)
+});
+
+}
+
+});
+
+alert("Students Promoted");
+
+loadStudents();
+
+}
+
+document.getElementById("searchStudent").addEventListener("keyup",function(){
+
+let filter=this.value.toLowerCase();
+let rows=document.querySelectorAll("#studentList tr");
+
+rows.forEach(row=>{
+
+let name=row.children[0].innerText.toLowerCase();
+
+row.style.display=name.includes(filter)?"":"none";
+
+});
+
+});
+
+function printStudents(){
+
+let table=document.querySelector("table").outerHTML;
+
+let win=window.open("");
+
+win.document.write(`
+<h2>Student List</h2>
+${table}
+`);
+
+win.print();
+
+}
+
+loadStudents();
 
 </script>
 
 </body>
-  </html>
+</html>
