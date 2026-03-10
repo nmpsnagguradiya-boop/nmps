@@ -3,14 +3,14 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Student Admission</title>
+<title>All Students</title>
 
 <style>
 
 body{
 font-family:Arial;
 margin:0;
-background:#f2f2f2;
+background:#f4f4f4;
 }
 
 header{
@@ -25,14 +25,7 @@ font-size:22px;
 padding:20px;
 }
 
-form{
-background:white;
-padding:20px;
-border-radius:10px;
-box-shadow:0 0 10px rgba(0,0,0,0.2);
-}
-
-input,select,textarea{
+.search,select{
 width:100%;
 padding:10px;
 margin-top:10px;
@@ -40,27 +33,44 @@ border-radius:5px;
 border:1px solid #ccc;
 }
 
-button{
-margin-top:15px;
+table{
+width:100%;
+margin-top:20px;
+border-collapse:collapse;
+background:white;
+}
+
+table th{
 background:#004aad;
 color:white;
-padding:12px;
-border:none;
-width:100%;
-border-radius:5px;
-font-size:16px;
-cursor:pointer;
+padding:10px;
 }
 
-.success{
-color:green;
+table td{
+padding:8px;
+border:1px solid #ccc;
 text-align:center;
-margin-top:10px;
 }
 
-.download{
-background:#28a745;
-margin-top:10px;
+button{
+padding:6px 10px;
+border:none;
+border-radius:4px;
+cursor:pointer;
+margin:2px;
+}
+
+.edit{background:#ffc107;}
+.delete{background:red;color:white;}
+.view{background:#004aad;color:white;}
+.photo{background:#28a745;color:white;}
+.print{background:#17a2b8;color:white;}
+
+.stats{
+margin-top:20px;
+background:white;
+padding:15px;
+border-radius:6px;
 }
 
 </style>
@@ -69,22 +79,14 @@ margin-top:10px;
 
 <body>
 
-<header>Student Admission Form</header>
+<header>All Students</header>
 
 <div class="container">
 
-<form id="form">
+<input type="text" id="search" class="search" placeholder="Search Student">
 
-<input type="text" id="name" placeholder="Student Name" required>
-
-<input type="text" id="father" placeholder="Father Name" required>
-
-<input type="text" id="mobile" placeholder="Mobile Number" required>
-
-<input type="text" id="village" placeholder="Village" required>
-
-<select id="class">
-<option>Select Class</option>
+<select id="classFilter">
+<option value="">All Classes</option>
 <option>Nursery</option>
 <option>LKG</option>
 <option>UKG</option>
@@ -100,112 +102,198 @@ margin-top:10px;
 <option>10</option>
 </select>
 
-<input type="date" id="dob">
+<div class="stats">
+<h3>Total Students : <span id="total">0</span></h3>
+<div id="classStats"></div>
+</div>
 
-<textarea id="message" placeholder="Message"></textarea>
+<table>
 
-<label>Student Photo</label>
-<input type="file" id="photo" required>
+<thead>
+<tr>
+<th>Name</th>
+<th>Class</th>
+<th>Mobile</th>
+<th>Photo</th>
+<th>Action</th>
+</tr>
+</thead>
 
-<label>Document Upload</label>
-<input type="file" id="document" required>
+<tbody id="studentList"></tbody>
 
-<button type="submit">Submit Admission</button>
-
-<button type="button" class="download" id="downloadForm" style="display:none">Download Admission Form</button>
-
-<div class="success" id="msg"></div>
-
-</form>
+</table>
 
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,collection,getDocs,deleteDoc,doc,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId: "nmpsnagguradiya-b9b94",
-storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId: "811957568318",
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94",
+storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId:"811957568318",
+appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
 };
 
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-let savedData=null;
+let students=[];
 
-document.getElementById("form").addEventListener("submit",async function(e){
+async function loadStudents(){
 
-e.preventDefault();
+const querySnapshot=await getDocs(collection(db,"admissions"));
 
-const name=document.getElementById("name").value;
-const father=document.getElementById("father").value;
-const mobile=document.getElementById("mobile").value;
-const village=document.getElementById("village").value;
-const className=document.getElementById("class").value;
-const dob=document.getElementById("dob").value;
-const message=document.getElementById("message").value;
+let html="";
+let count=0;
+let classCount={};
 
-const photo=document.getElementById("photo").files[0];
-const documentFile=document.getElementById("document").files[0];
+students=[];
 
-let photoURL="";
-let docURL="";
+querySnapshot.forEach((docSnap)=>{
 
-async function uploadImgBB(file){
+const data=docSnap.data();
+data.id=docSnap.id;
 
-const formData=new FormData();
+students.push(data);
+
+count++;
+
+if(!classCount[data.class]){
+classCount[data.class]=0;
+}
+
+classCount[data.class]++;
+
+html+=`
+
+<tr>
+
+<td>${data.name}</td>
+<td>${data.class}</td>
+<td>${data.mobile}</td>
+<td><img src="${data.photo || ''}" width="40"></td>
+
+<td>
+
+<button class="view" onclick="viewStudent('${data.id}')">Form</button>
+
+<button class="edit" onclick="editStudent('${data.id}')">Edit</button>
+
+<button class="photo" onclick="uploadPhoto('${data.id}')">Photo</button>
+
+<button class="delete" onclick="deleteStudent('${data.id}')">Delete</button>
+
+<button class="print" onclick="openPrintForm('${data.id}')">Print Form</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+document.getElementById("studentList").innerHTML=html;
+document.getElementById("total").innerText=count;
+
+let statsHTML="";
+
+for(let c in classCount){
+statsHTML+=`Class ${c} : ${classCount[c]} Students <br>`;
+}
+
+document.getElementById("classStats").innerHTML=statsHTML;
+
+}
+
+window.openPrintForm=function(id){
+
+window.location.href="print-form.html?id="+id;
+
+}
+
+window.deleteStudent=async function(id){
+
+if(confirm("Delete Student?")){
+await deleteDoc(doc(db,"admissions",id));
+loadStudents();
+}
+
+}
+
+window.editStudent=async function(id){
+
+let s=students.find(x=>x.id==id);
+
+let name=prompt("Name",s.name);
+let father=prompt("Father",s.father);
+let mobile=prompt("Mobile",s.mobile);
+let village=prompt("Village",s.village);
+let city=prompt("City",s.city);
+let post=prompt("Post",s.post);
+let district=prompt("District",s.district);
+let state=prompt("State",s.state);
+let adhar=prompt("Aadhar",s.adhar);
+let apar=prompt("APAR",s.apar);
+let sssm=prompt("SSSM",s.sssm);
+let family=prompt("Family ID",s.family);
+let roll=prompt("Roll",s.roll);
+let scholer=prompt("Scholar",s.scholer);
+let caste=prompt("Caste",s.caste);
+let category=prompt("Category",s.category);
+let dob=prompt("DOB",s.dob);
+let admissionDate=prompt("Admission Date",s.admissionDate);
+
+await updateDoc(doc(db,"admissions",id),{
+
+name,father,mobile,village,city,post,district,state,
+adhar,apar,sssm,family,roll,scholer,caste,category,dob,admissionDate
+
+});
+
+loadStudents();
+
+}
+
+window.uploadPhoto=async function(id){
+
+let input=document.createElement("input");
+input.type="file";
+
+input.onchange=async function(){
+
+let file=input.files[0];
+
+let formData=new FormData();
 formData.append("image",file);
 
-const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+let res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
 method:"POST",
 body:formData
 });
 
-const data=await res.json();
+let data=await res.json();
 
-return data.data.url;
+await updateDoc(doc(db,"admissions",id),{
+photo:data.data.url
+});
+
+loadStudents();
+
+};
+
+input.click();
 
 }
 
-photoURL=await uploadImgBB(photo);
-docURL=await uploadImgBB(documentFile);
+window.viewStudent=function(id){
 
-await addDoc(collection(db,"admissions"),{
-
-name:name,
-father:father,
-mobile:mobile,
-village:village,
-class:className,
-dob:dob,
-message:message,
-photo:photoURL,
-document:docURL,
-date:new Date()
-
-});
-
-savedData={
-name,father,mobile,village,className,dob,message,photoURL
-};
-
-document.getElementById("msg").innerText="Admission Submitted Successfully";
-
-document.getElementById("downloadForm").style.display="block";
-
-document.getElementById("form").reset();
-
-});
-
-document.getElementById("downloadForm").onclick=function(){
-
-let s=savedData;
+let s=students.find(x=>x.id==id);
 
 let win=window.open("");
 
@@ -213,74 +301,90 @@ win.document.write(`
 
 <style>
 
-body{
-font-family:Arial;
-padding:40px;
+body{font-family:Arial;padding:20px;}
+
+.form{
+padding:20px;
 }
 
-.school{
-text-align:center;
-font-size:22px;
-font-weight:bold;
+@media print{
+
+body{background:#ffeb3b;}
+
+.form{
+background:#004aad;
+color:white;
+padding:25px;
+border-radius:10px;
 }
 
-.info{
-text-align:center;
-margin-bottom:20px;
-}
-
-.photo{
-position:absolute;
-left:40px;
-top:120px;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
-}
-
-td{
-border:1px solid black;
-padding:10px;
-}
-
-@page{
-size:A4;
-margin:20mm;
 }
 
 </style>
 
-<div class="school">New Mahankal Public School Nagguradiya</div>
+<div class="form">
 
-<div class="info">
-DISE Code : 1234567888 <br>
-PS ID : 1247754336
-</div>
+<h2>Student Admission Form</h2>
 
-<img class="photo" src="${s.photoURL}" width="120">
+<p>Name : ${s.name}</p>
+<p>Father : ${s.father}</p>
+<p>Mobile : ${s.mobile}</p>
+<p>Village : ${s.village}</p>
+<p>City : ${s.city}</p>
+<p>Post : ${s.post}</p>
+<p>District : ${s.district}</p>
+<p>State : ${s.state}</p>
+<p>Aadhar : ${s.adhar}</p>
+<p>APAR : ${s.apar}</p>
+<p>SSSM : ${s.sssm}</p>
+<p>Family ID : ${s.family}</p>
+<p>Roll : ${s.roll}</p>
+<p>Scholar : ${s.scholer}</p>
+<p>Caste : ${s.caste}</p>
+<p>Category : ${s.category}</p>
+<p>DOB : ${s.dob}</p>
+<p>Admission Date : ${s.admissionDate}</p>
+<p>Class : ${s.class}</p>
 
-<table>
-
-<tr><td>Student Name</td><td>${s.name}</td></tr>
-<tr><td>Father Name</td><td>${s.father}</td></tr>
-<tr><td>Mobile</td><td>${s.mobile}</td></tr>
-<tr><td>Village</td><td>${s.village}</td></tr>
-<tr><td>Class</td><td>${s.className}</td></tr>
-<tr><td>DOB</td><td>${s.dob}</td></tr>
-<tr><td>Message</td><td>${s.message}</td></tr>
-
-</table>
+<img src="${s.photo}" width="120">
 
 <br><br>
 
-<button onclick="window.print()">Print / Download</button>
+<button onclick="window.print()">Print</button>
+
+</div>
 
 `);
 
 }
+
+document.getElementById("search").addEventListener("keyup",function(){
+
+let filter=this.value.toLowerCase();
+
+let rows=document.querySelectorAll("#studentList tr");
+
+rows.forEach(row=>{
+let name=row.children[0].innerText.toLowerCase();
+row.style.display=name.includes(filter)?"":"none";
+});
+
+});
+
+document.getElementById("classFilter").addEventListener("change",function(){
+
+let filter=this.value;
+
+let rows=document.querySelectorAll("#studentList tr");
+
+rows.forEach(row=>{
+let cls=row.children[1].innerText;
+row.style.display=(filter==""||cls==filter)?"":"none";
+});
+
+});
+
+loadStudents();
 
 </script>
 
