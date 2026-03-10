@@ -81,12 +81,9 @@ background:#004aad;
 color:white;
 }
 
-.print{
+.id{
 background:green;
 color:white;
-margin-top:10px;
-padding:10px;
-width:100%;
 }
 
 .stats{
@@ -148,6 +145,8 @@ border-radius:6px;
 
 </div>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -165,6 +164,8 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
+let students=[];
+
 async function loadStudents(){
 
 const querySnapshot=await getDocs(collection(db,"admissions"));
@@ -173,9 +174,14 @@ let html="";
 let count=0;
 let classCount={};
 
+students=[];
+
 querySnapshot.forEach((docSnap)=>{
 
 const data=docSnap.data();
+data.id=docSnap.id;
+students.push(data);
+
 count++;
 
 if(!classCount[data.class]){
@@ -194,6 +200,8 @@ html+=`
 <button class="view" onclick="viewStudent('${docSnap.id}')">View</button>
 <button class="edit" onclick="editStudent('${docSnap.id}')">Edit</button>
 <button class="delete" onclick="deleteStudent('${docSnap.id}')">Delete</button>
+<button class="id" onclick="generateID('${docSnap.id}')">ID Card</button>
+<button class="view" onclick="downloadPDF('${docSnap.id}')">PDF</button>
 </td>
 </tr>
 `;
@@ -206,9 +214,7 @@ document.getElementById("total").innerText=count;
 let statsHTML="";
 
 for(let c in classCount){
-
 statsHTML+=`Class ${c} : ${classCount[c]} Students <br>`;
-
 }
 
 document.getElementById("classStats").innerHTML=statsHTML;
@@ -218,102 +224,112 @@ document.getElementById("classStats").innerHTML=statsHTML;
 window.deleteStudent=async function(id){
 
 if(confirm("Delete Student?")){
-
 await deleteDoc(doc(db,"admissions",id));
-
 loadStudents();
-
 }
 
 }
 
 window.editStudent=async function(id){
 
-const snap=await getDocs(collection(db,"admissions"));
+const s=students.find(x=>x.id==id);
 
-snap.forEach(async(d)=>{
-
-if(d.id==id){
-
-const data=d.data();
-
-let name=prompt("Name",data.name);
-let mobile=prompt("Mobile",data.mobile);
-let cls=prompt("Class",data.class);
+let name=prompt("Name",s.name);
+let father=prompt("Father",s.father);
+let mobile=prompt("Mobile",s.mobile);
+let village=prompt("Village",s.village);
+let cls=prompt("Class",s.class);
 
 await updateDoc(doc(db,"admissions",id),{
-
 name,
+father,
 mobile,
+village,
 class:cls
-
 });
+
+let photoUpdate=confirm("Update Photo?");
+
+if(photoUpdate){
+
+let input=document.createElement("input");
+input.type="file";
+
+input.onchange=async function(){
+
+let file=input.files[0];
+
+let formData=new FormData();
+formData.append("image",file);
+
+let res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+method:"POST",
+body:formData
+});
+
+let data=await res.json();
+
+await updateDoc(doc(db,"admissions",id),{
+photo:data.data.url
+});
+
+loadStudents();
+
+};
+
+input.click();
+
+}else{
 
 loadStudents();
 
 }
 
-})
-
 }
 
-window.viewStudent=async function(id){
+window.viewStudent=function(id){
 
-const snap=await getDocs(collection(db,"admissions"));
-
-snap.forEach((d)=>{
-
-if(d.id==id){
-
-const data=d.data();
+const s=students.find(x=>x.id==id);
 
 let win=window.open("");
 
 win.document.write(`
 
 <style>
-body{
-font-family:Arial;
-padding:20px;
-background:#ffeb3b;
-}
+
+body{font-family:Arial;padding:20px;}
+
+.card{padding:20px;}
+
+@media print{
+
+body{background:#ffeb3b;}
 
 .card{
 background:#004aad;
 color:white;
 padding:20px;
-border-radius:10px;
 }
 
-img{
-margin-top:10px;
-border-radius:5px;
 }
 
-button{
-margin-top:15px;
-padding:10px;
-background:black;
-color:white;
-border:none;
-}
 </style>
 
 <div class="card">
 
 <h2>Student Admission Form</h2>
 
-<p>Name : ${data.name}</p>
-<p>Father : ${data.father}</p>
-<p>Mobile : ${data.mobile}</p>
-<p>Village : ${data.village}</p>
-<p>Class : ${data.class}</p>
+<p>Name : ${s.name}</p>
+<p>Father : ${s.father}</p>
+<p>Mobile : ${s.mobile}</p>
+<p>Village : ${s.village}</p>
+<p>Class : ${s.class}</p>
 
-<img src="${data.photo}" width="120">
+<img src="${s.photo}" width="120">
 
 <br><br>
 
-<button onclick="window.print()">Print / Download</button>
+<button onclick="window.print()">Print</button>
 
 </div>
 
@@ -321,7 +337,67 @@ border:none;
 
 }
 
-})
+window.generateID=function(id){
+
+const s=students.find(x=>x.id==id);
+
+let win=window.open("");
+
+win.document.write(`
+
+<style>
+
+body{font-family:Arial;text-align:center;}
+
+.card{
+width:300px;
+border:3px solid #004aad;
+padding:20px;
+border-radius:10px;
+}
+
+h3{
+background:#004aad;
+color:white;
+padding:5px;
+}
+
+</style>
+
+<div class="card">
+
+<h3>Student ID Card</h3>
+
+<img src="${s.photo}" width="100">
+
+<p>${s.name}</p>
+<p>Class : ${s.class}</p>
+<p>Mobile : ${s.mobile}</p>
+
+<button onclick="window.print()">Print</button>
+
+</div>
+
+`);
+
+}
+
+window.downloadPDF=function(id){
+
+const s=students.find(x=>x.id==id);
+
+const { jsPDF } = window.jspdf;
+
+const docPDF=new jsPDF();
+
+docPDF.text("Student Admission Form",20,20);
+docPDF.text("Name : "+s.name,20,40);
+docPDF.text("Father : "+s.father,20,50);
+docPDF.text("Mobile : "+s.mobile,20,60);
+docPDF.text("Village : "+s.village,20,70);
+docPDF.text("Class : "+s.class,20,80);
+
+docPDF.save(s.name+"_admission_form.pdf");
 
 }
 
