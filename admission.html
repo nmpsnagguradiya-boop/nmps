@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta charset="UTF-8">
 <title>Student Admission</title>
 
@@ -32,7 +31,7 @@ border-radius:10px;
 box-shadow:0 0 10px rgba(0,0,0,0.2);
 }
 
-input,select{
+input,select,textarea{
 width:100%;
 padding:10px;
 margin-top:10px;
@@ -59,7 +58,6 @@ margin-top:10px;
 }
 
 </style>
-
 </head>
 
 <body>
@@ -76,6 +74,34 @@ margin-top:10px;
 
 <input type="text" id="mother" placeholder="Mother Name">
 
+<input type="text" id="mobile" placeholder="Mobile Number">
+
+<input type="text" id="village" placeholder="Village">
+
+<input type="text" id="post" placeholder="Post">
+
+<input type="text" id="district" placeholder="District">
+
+<input type="text" id="state" placeholder="State">
+
+<input type="text" id="nationality" placeholder="Nationality">
+
+<input type="text" id="sssm" placeholder="SSSM ID">
+
+<input type="text" id="familyid" placeholder="Family ID">
+
+<input type="text" id="aparid" placeholder="APAR ID">
+
+<input type="text" id="aadhar" placeholder="Aadhar Card">
+
+<input type="text" id="caste" placeholder="Caste">
+
+<input type="text" id="category" placeholder="Category">
+
+<input type="text" id="roll" placeholder="Roll Number">
+
+<input type="text" id="scholar" placeholder="Scholar Number">
+
 <select id="class">
 <option>Select Class</option>
 <option>Nursery</option>
@@ -91,42 +117,17 @@ margin-top:10px;
 <option>8</option>
 <option>9</option>
 <option>10</option>
-<option>11</option>
-<option>12</option>
 </select>
-
-<input type="text" id="mobile" placeholder="Mobile Number">
 
 <input type="date" id="dob">
 
-<input type="text" id="village" placeholder="Village / City">
-
-<input type="text" id="post" placeholder="Post">
-
-<input type="text" id="district" placeholder="District">
-
-<input type="text" id="state" placeholder="State">
-
-<input type="text" id="national" placeholder="National">
-
-<input type="text" id="sssm" placeholder="SSSM ID">
-
-<input type="text" id="familyid" placeholder="Family ID">
-
-<input type="text" id="aparid" placeholder="Apar ID">
-
-<input type="text" id="adhar" placeholder="Aadhar Card">
-
-<input type="text" id="caste" placeholder="Caste">
-
-<input type="text" id="category" placeholder="Category">
-
-<input type="text" id="roll" placeholder="Roll Number">
-
-<input type="text" id="scholer" placeholder="Scholer Number">
+<textarea id="message" placeholder="Message"></textarea>
 
 <label>Student Photo</label>
-<input type="file" id="photo">
+<input type="file" id="photo" required>
+
+<label>Document Upload</label>
+<input type="file" id="document" required>
 
 <button type="submit">Submit Admission</button>
 
@@ -166,41 +167,39 @@ const village=document.getElementById("village").value;
 const post=document.getElementById("post").value;
 const district=document.getElementById("district").value;
 const state=document.getElementById("state").value;
-const national=document.getElementById("national").value;
+const nationality=document.getElementById("nationality").value;
 const sssm=document.getElementById("sssm").value;
 const familyid=document.getElementById("familyid").value;
 const aparid=document.getElementById("aparid").value;
-const adhar=document.getElementById("adhar").value;
+const aadhar=document.getElementById("aadhar").value;
 const caste=document.getElementById("caste").value;
 const category=document.getElementById("category").value;
 const roll=document.getElementById("roll").value;
-const scholer=document.getElementById("scholer").value;
+const scholar=document.getElementById("scholar").value;
 const className=document.getElementById("class").value;
 const dob=document.getElementById("dob").value;
+const message=document.getElementById("message").value;
 
 const photo=document.getElementById("photo").files[0];
-
-let photoURL="";
+const documentFile=document.getElementById("document").files[0];
 
 async function uploadImgBB(file){
-
-if(!file) return "";
 
 const formData=new FormData();
 formData.append("image",file);
 
-const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a8",{
+const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
 method:"POST",
 body:formData
 });
 
 const data=await res.json();
-
 return data.data.url;
 
 }
 
-photoURL=await uploadImgBB(photo);
+const photoURL=await uploadImgBB(photo);
+const docURL=await uploadImgBB(documentFile);
 
 await addDoc(collection(db,"admissions"),{
 
@@ -208,22 +207,24 @@ name,
 father,
 mother,
 mobile,
-class:className,
-dob,
 village,
 post,
 district,
 state,
-national,
+nationality,
 sssm,
 familyid,
 aparid,
-adhar,
+aadhar,
 caste,
 category,
 roll,
-scholer,
+scholar,
+class:className,
+dob,
+message,
 photo:photoURL,
+document:docURL,
 date:new Date()
 
 });
