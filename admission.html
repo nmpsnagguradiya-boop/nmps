@@ -1,101 +1,83 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
-<title>School Admission</title>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-database.js"></script>
+<meta charset="UTF-8">
+<title>Student Admission</title>
 
 <style>
 
 body{
-font-family: Arial;
+font-family:Arial;
+margin:0;
 background:#f2f2f2;
-padding:20px;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
 }
 
 .container{
-max-width:700px;
-margin:auto;
+padding:20px;
+}
+
+form{
 background:white;
 padding:20px;
 border-radius:10px;
-box-shadow:0 0 10px #ccc;
-}
-
-h2{
-text-align:center;
-}
-
-label{
-font-weight:bold;
-display:block;
-margin-top:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
 }
 
 input,select{
 width:100%;
-padding:8px;
-margin-top:5px;
-border:1px solid #ccc;
+padding:10px;
+margin-top:10px;
 border-radius:5px;
+border:1px solid #ccc;
 }
 
 button{
 margin-top:15px;
-width:100%;
-padding:10px;
-background:green;
+background:#004aad;
 color:white;
+padding:12px;
 border:none;
+width:100%;
 border-radius:5px;
 font-size:16px;
+cursor:pointer;
 }
 
 .success{
 color:green;
 text-align:center;
 margin-top:10px;
-font-weight:bold;
-}
-
-.counter{
-text-align:center;
-margin-bottom:15px;
-font-size:18px;
-font-weight:bold;
 }
 
 </style>
+
 </head>
 
 <body>
 
+<header>Student Admission Form</header>
+
 <div class="container">
 
-<h2>Admission Form</h2>
+<form id="form">
 
-<div class="counter">
-Total Students : <span id="totalStudents">0</span>
-</div>
+<input type="text" id="name" placeholder="Student Name" required>
 
-<form id="admissionForm">
+<input type="text" id="father" placeholder="Father Name" required>
 
-<label>Photo (Optional)</label>
-<input type="file" id="photo">
+<input type="text" id="mother" placeholder="Mother Name">
 
-<label>Student Name</label>
-<input type="text" id="studentName" required>
-
-<label>Father's Name</label>
-<input type="text" id="fatherName" required>
-
-<label>Mother's Name</label>
-<input type="text" id="motherName" required>
-
-<label>Class</label>
 <select id="class">
+<option>Select Class</option>
 <option>Nursery</option>
 <option>LKG</option>
 <option>UKG</option>
@@ -113,63 +95,51 @@ Total Students : <span id="totalStudents">0</span>
 <option>12</option>
 </select>
 
-<label>Mobile Number</label>
-<input type="number" id="mobile">
+<input type="text" id="mobile" placeholder="Mobile Number">
 
-<label>Date of Birth</label>
 <input type="date" id="dob">
 
-<label>Date of Admission</label>
-<input type="date" id="doa">
+<input type="text" id="village" placeholder="Village / City">
 
-<label>Village / City</label>
-<input type="text" id="village">
+<input type="text" id="post" placeholder="Post">
 
-<label>Post</label>
-<input type="text" id="post">
+<input type="text" id="district" placeholder="District">
 
-<label>District</label>
-<input type="text" id="district">
+<input type="text" id="state" placeholder="State">
 
-<label>State</label>
-<input type="text" id="state">
+<input type="text" id="national" placeholder="National">
 
-<label>National</label>
-<input type="text" id="national">
+<input type="text" id="sssm" placeholder="SSSM ID">
 
-<label>SSSM ID</label>
-<input type="text" id="sssm">
+<input type="text" id="familyid" placeholder="Family ID">
 
-<label>Family ID</label>
-<input type="text" id="family">
+<input type="text" id="aparid" placeholder="Apar ID">
 
-<label>APAR ID</label>
-<input type="text" id="apar">
+<input type="text" id="adhar" placeholder="Aadhar Card">
 
-<label>Aadhar Card</label>
-<input type="text" id="aadhar">
+<input type="text" id="caste" placeholder="Caste">
 
-<label>Caste</label>
-<input type="text" id="caste">
+<input type="text" id="category" placeholder="Category">
 
-<label>Category</label>
-<input type="text" id="category">
+<input type="text" id="roll" placeholder="Roll Number">
 
-<label>Roll Number</label>
-<input type="text" id="roll">
+<input type="text" id="scholer" placeholder="Scholer Number">
 
-<label>Scholar Number</label>
-<input type="text" id="scholar">
+<label>Student Photo</label>
+<input type="file" id="photo">
 
 <button type="submit">Submit Admission</button>
 
-</form>
+<div class="success" id="msg"></div>
 
-<div class="success" id="successMsg"></div>
+</form>
 
 </div>
 
-<script>
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -181,86 +151,90 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f",
 measurementId: "G-V4J8BP2LCN"
 };
 
-firebase.initializeApp(firebaseConfig);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-const db = firebase.database().ref("students");
-
-function uploadImage(file){
-
-return new Promise((resolve,reject)=>{
-
-if(!file){
-resolve("");
-return;
-}
-
-let formData = new FormData();
-formData.append("image",file);
-
-fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a8",{
-method:"POST",
-body:formData
-})
-.then(res=>res.json())
-.then(data=>{
-resolve(data.data.url);
-})
-.catch(err=>{
-reject(err);
-});
-
-});
-
-}
-
-document.getElementById("admissionForm").addEventListener("submit",async function(e){
+document.getElementById("form").addEventListener("submit",async function(e){
 
 e.preventDefault();
 
-let file = document.getElementById("photo").files[0];
+const name=document.getElementById("name").value;
+const father=document.getElementById("father").value;
+const mother=document.getElementById("mother").value;
+const mobile=document.getElementById("mobile").value;
+const village=document.getElementById("village").value;
+const post=document.getElementById("post").value;
+const district=document.getElementById("district").value;
+const state=document.getElementById("state").value;
+const national=document.getElementById("national").value;
+const sssm=document.getElementById("sssm").value;
+const familyid=document.getElementById("familyid").value;
+const aparid=document.getElementById("aparid").value;
+const adhar=document.getElementById("adhar").value;
+const caste=document.getElementById("caste").value;
+const category=document.getElementById("category").value;
+const roll=document.getElementById("roll").value;
+const scholer=document.getElementById("scholer").value;
+const className=document.getElementById("class").value;
+const dob=document.getElementById("dob").value;
 
-let imageUrl = await uploadImage(file);
+const photo=document.getElementById("photo").files[0];
 
-let studentData = {
+let photoURL="";
 
-photo:imageUrl,
-studentName:studentName.value,
-fatherName:fatherName.value,
-motherName:motherName.value,
-class:document.getElementById("class").value,
-mobile:mobile.value,
-dob:dob.value,
-doa:doa.value,
-village:village.value,
-post:post.value,
-district:district.value,
-state:state.value,
-national:national.value,
-sssm:sssm.value,
-family:family.value,
-apar:apar.value,
-aadhar:aadhar.value,
-caste:caste.value,
-category:category.value,
-roll:roll.value,
-scholar:scholar.value
+async function uploadImgBB(file){
 
-};
+if(!file) return "";
 
-db.push(studentData);
+const formData=new FormData();
+formData.append("image",file);
 
-document.getElementById("successMsg").innerText="Admission Successful";
+const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a8",{
+method:"POST",
+body:formData
+});
 
-document.getElementById("admissionForm").reset();
+const data=await res.json();
+
+return data.data.url;
+
+}
+
+photoURL=await uploadImgBB(photo);
+
+await addDoc(collection(db,"admissions"),{
+
+name,
+father,
+mother,
+mobile,
+class:className,
+dob,
+village,
+post,
+district,
+state,
+national,
+sssm,
+familyid,
+aparid,
+adhar,
+caste,
+category,
+roll,
+scholer,
+photo:photoURL,
+date:new Date()
 
 });
 
-db.on("value",snapshot=>{
-let total = snapshot.numChildren();
-document.getElementById("totalStudents").innerText = total;
+document.getElementById("msg").innerText="Admission Submitted Successfully";
+
+document.getElementById("form").reset();
+
 });
 
 </script>
 
 </body>
-                   </html>
+</html>
