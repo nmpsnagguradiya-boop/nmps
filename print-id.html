@@ -1,0 +1,236 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Student ID Card</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#eee;
+text-align:center;
+padding:20px;
+}
+
+.controls{
+margin-bottom:20px;
+}
+
+select,button{
+padding:8px 12px;
+margin:5px;
+cursor:pointer;
+}
+
+.card{
+width:330px;
+height:520px;
+margin:auto;
+background:white;
+border-radius:12px;
+overflow:hidden;
+border:3px solid #004aad;
+position:relative;
+}
+
+.header{
+text-align:center;
+padding:10px;
+font-weight:bold;
+}
+
+.logo{
+position:absolute;
+left:10px;
+top:10px;
+}
+
+.logo img{
+width:40px;
+}
+
+.photo{
+margin-top:60px;
+}
+
+.photo img{
+width:120px;
+height:140px;
+border-radius:6px;
+object-fit:cover;
+border:3px solid white;
+}
+
+.name{
+font-size:20px;
+font-weight:bold;
+margin-top:10px;
+}
+
+.details{
+padding:10px;
+font-size:14px;
+text-align:left;
+}
+
+.qr{
+text-align:center;
+margin-top:5px;
+}
+
+.signature{
+position:absolute;
+bottom:10px;
+right:10px;
+text-align:center;
+font-size:12px;
+}
+
+.signature img{
+width:80px;
+}
+
+/* DESIGN STYLES */
+
+.design1{background:linear-gradient(#004aad,#ffeb3b);}
+.design2{background:#004aad;color:white;}
+.design3{background:#2e7d32;color:white;}
+.design4{background:#8e0038;color:white;}
+.design5{background:#ff9800;}
+.design6{background:#673ab7;color:white;}
+.design7{background:#0097a7;color:white;}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="controls">
+
+<select id="designSelect">
+
+<option value="design1">Blue + Yellow</option>
+<option value="design2">Blue</option>
+<option value="design3">Green</option>
+<option value="design4">Maroon</option>
+<option value="design5">Orange</option>
+<option value="design6">Purple</option>
+<option value="design7">Teal</option>
+
+</select>
+
+<button onclick="window.print()">Print ID Card</button>
+
+</div>
+
+<div class="card design1" id="card">
+
+<div class="logo">
+<img src="school-logo.png">
+</div>
+
+<div class="header">
+
+YOUR SCHOOL NAME<br>
+Student ID Card
+
+</div>
+
+<div class="photo">
+<img id="photo">
+</div>
+
+<div class="name" id="name"></div>
+
+<div class="details">
+
+ID : <span id="studentID"></span><br>
+Class : <span id="class"></span><br>
+Roll : <span id="roll"></span><br>
+Father : <span id="father"></span><br>
+Mobile : <span id="mobile"></span>
+
+</div>
+
+<div class="qr">
+<canvas id="qr"></canvas>
+</div>
+
+<div class="signature">
+
+<img src="principal-sign.png"><br>
+Principal
+
+</div>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,doc,getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94",
+storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId:"811957568318",
+appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const params=new URLSearchParams(window.location.search);
+const id=params.get("id");
+
+async function loadStudent(){
+
+const ref=doc(db,"admissions",id);
+const snap=await getDoc(ref);
+
+if(snap.exists()){
+
+let s=snap.data();
+
+let sid="STU-"+id.substring(0,6).toUpperCase();
+
+document.getElementById("studentID").innerText=sid;
+document.getElementById("name").innerText=s.name||"";
+document.getElementById("class").innerText=s.class||"";
+document.getElementById("roll").innerText=s.roll||"";
+document.getElementById("father").innerText=s.father||"";
+document.getElementById("mobile").innerText=s.mobile||"";
+
+document.getElementById("photo").src=s.photo||"";
+
+QRCode.toCanvas(document.getElementById("qr"),window.location.href);
+
+}
+
+}
+
+document.getElementById("designSelect").addEventListener("change",function(){
+
+let card=document.getElementById("card");
+
+card.classList.remove(
+"design1","design2","design3","design4","design5","design6","design7"
+);
+
+card.classList.add(this.value);
+
+});
+
+loadStudent();
+
+</script>
+
+</body>
+</html>
