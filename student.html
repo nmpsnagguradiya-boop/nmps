@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Student Admission</title>
+<title>Student Admission System</title>
 
 <style>
 
@@ -52,12 +52,6 @@ font-size:16px;
 cursor:pointer;
 }
 
-.success{
-color:green;
-text-align:center;
-margin-top:10px;
-}
-
 table{
 width:100%;
 margin-top:20px;
@@ -75,12 +69,6 @@ text-align:center;
 margin-top:20px;
 padding:10px;
 width:100%;
-border-radius:5px;
-border:1px solid #ccc;
-}
-
-.printbtn{
-background:green;
 }
 
 </style>
@@ -96,10 +84,10 @@ background:green;
 <form id="form">
 
 <input type="text" id="name" placeholder="Student Name" required>
-<input type="text" id="father" placeholder="Father Name" required>
-<input type="text" id="mobile" placeholder="Mobile Number" required>
-<input type="text" id="village" placeholder="Village" required>
-<input type="text" id="city" placeholder="Village / City">
+<input type="text" id="father" placeholder="Father Name">
+<input type="text" id="mobile" placeholder="Mobile Number">
+<input type="text" id="village" placeholder="Village">
+<input type="text" id="city" placeholder="City">
 <input type="text" id="post" placeholder="Post">
 <input type="text" id="district" placeholder="District">
 <input type="text" id="state" placeholder="State">
@@ -107,11 +95,13 @@ background:green;
 <input type="text" id="sssm" placeholder="SSSM ID">
 <input type="text" id="family" placeholder="Family ID">
 <input type="text" id="apar" placeholder="APAR ID">
-<input type="text" id="adhar" placeholder="Aadhar Card">
+<input type="text" id="adhar" placeholder="Aadhar">
 <input type="text" id="caste" placeholder="Caste">
 <input type="text" id="category" placeholder="Category">
 <input type="text" id="roll" placeholder="Roll Number">
 <input type="text" id="scholer" placeholder="Scholar Number">
+
+<label>Admission Date</label>
 <input type="date" id="admissionDate">
 
 <select id="class">
@@ -131,51 +121,25 @@ background:green;
 <option>10</option>
 </select>
 
+<label>Date Of Birth</label>
 <input type="date" id="dob">
 
 <textarea id="message" placeholder="Message"></textarea>
 
 <label>Student Photo</label>
-<input type="file" id="photo" required>
-
-<img id="preview" width="80" style="margin-top:10px;">
+<input type="file" id="photo">
 
 <label>Document Upload</label>
-<input type="file" id="document" required>
+<input type="file" id="document">
 
 <button type="submit">Submit Admission</button>
-
-<div class="success" id="msg"></div>
 
 </form>
 
 <input type="text" id="searchStudent" class="search" placeholder="Search Student">
 
-<select id="classFilter">
-<option value="">All Classes</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-<option>6</option>
-<option>7</option>
-<option>8</option>
-<option>9</option>
-<option>10</option>
-</select>
-
-<button onclick="printStudents()" class="printbtn">Print Student List</button>
 <button onclick="exportExcel()">Export Excel</button>
 <input type="file" id="importExcel">
-
-<button onclick="promoteStudents()">Promote Class</button>
-
-<h3>Class Wise Total Students</h3>
-<div id="classStats"></div>
 
 <h3>Total Students : <span id="total">0</span></h3>
 
@@ -197,6 +161,9 @@ background:green;
 
 </div>
 
+
+<script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -208,8 +175,7 @@ authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
 projectId: "nmpsnagguradiya-b9b94",
 storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
 messagingSenderId: "811957568318",
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f",
-measurementId: "G-V4J8BP2LCN"
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -230,56 +196,52 @@ return data.data.url;
 
 }
 
-document.getElementById("photo").addEventListener("change",function(){
-
-const file=this.files[0];
-
-if(file){
-
-const reader=new FileReader();
-
-reader.onload=function(e){
-document.getElementById("preview").src=e.target.result;
-}
-
-reader.readAsDataURL(file);
-
-}
-
-});
-
 document.getElementById("form").addEventListener("submit",async function(e){
 
 e.preventDefault();
 
-const name=document.getElementById("name").value;
-const father=document.getElementById("father").value;
-const mobile=document.getElementById("mobile").value;
-const village=document.getElementById("village").value;
-const className=document.getElementById("class").value;
+let data={
+
+name:name.value,
+father:father.value,
+mobile:mobile.value,
+village:village.value,
+city:city.value,
+post:post.value,
+district:district.value,
+state:state.value,
+national:national.value,
+sssm:sssm.value,
+family:family.value,
+apar:apar.value,
+adhar:adhar.value,
+caste:caste.value,
+category:category.value,
+roll:roll.value,
+scholer:scholer.value,
+admissionDate:admissionDate.value,
+class:document.getElementById("class").value,
+dob:dob.value,
+message:message.value
+
+};
 
 const photo=document.getElementById("photo").files[0];
 const documentFile=document.getElementById("document").files[0];
 
-let photoURL="";
-let docURL="";
+if(photo){
+data.photo=await uploadImgBB(photo);
+}
 
-photoURL=await uploadImgBB(photo);
-docURL=await uploadImgBB(documentFile);
+if(documentFile){
+data.document=await uploadImgBB(documentFile);
+}
 
-await addDoc(collection(db,"admissions"),{
-name,
-father,
-mobile,
-village,
-class:className,
-photo:photoURL,
-document:docURL,
-date:new Date()
-});
+await addDoc(collection(db,"admissions"),data);
 
-document.getElementById("msg").innerText="Admission Submitted Successfully";
-document.getElementById("form").reset();
+alert("Student Added");
+
+form.reset();
 
 loadStudents();
 
@@ -291,176 +253,54 @@ const querySnapshot=await getDocs(collection(db,"admissions"));
 
 let html="";
 let count=0;
-let classCount={};
 
 querySnapshot.forEach((docSnap)=>{
 
 const data=docSnap.data();
+
 count++;
 
-if(!classCount[data.class]){
-classCount[data.class]=0;
-}
-
-classCount[data.class]++;
-
 html+=`
-<tr onclick="viewStudent('${docSnap.id}')">
-<td>${data.name}</td>
-<td>${data.class}</td>
-<td>${data.mobile}</td>
-<td><img src="${data.photo}" width="50"></td>
+<tr>
+<td>${data.name||""}</td>
+<td>${data.class||""}</td>
+<td>${data.mobile||""}</td>
+<td><img src="${data.photo||""}" width="50"></td>
 <td>
-<button onclick="event.stopPropagation();editStudent('${docSnap.id}')">Edit</button>
-<button onclick="event.stopPropagation();deleteStudent('${docSnap.id}')">Delete</button>
+<button onclick="editStudent('${docSnap.id}')">Edit</button>
+<button onclick="deleteStudent('${docSnap.id}')">Delete</button>
 </td>
 </tr>
 `;
 
 });
 
-document.getElementById("studentList").innerHTML=html;
-document.getElementById("total").innerText=count;
-
-let statsHTML="";
-
-for(let c in classCount){
-statsHTML+=`Class ${c} : ${classCount[c]} Students <br>`;
-}
-
-document.getElementById("classStats").innerHTML=statsHTML;
-
-}
-
-window.viewStudent=async function(id){
-
-const snap=await getDocs(collection(db,"admissions"));
-
-snap.forEach((d)=>{
-
-if(d.id==id){
-
-const data=d.data();
-
-let win=window.open("");
-
-win.document.write(`
-<h2>Admission Receipt</h2>
-<p>Name : ${data.name}</p>
-<p>Father : ${data.father}</p>
-<p>Mobile : ${data.mobile}</p>
-<p>Village : ${data.village}</p>
-<p>Class : ${data.class}</p>
-<img src="${data.photo}" width="120">
-<br><br>
-<button onclick="window.print()">Print Receipt</button>
-`);
-
-}
-
-})
+studentList.innerHTML=html;
+total.innerText=count;
 
 }
 
 window.deleteStudent=async function(id){
 
 if(confirm("Delete Student?")){
+
 await deleteDoc(doc(db,"admissions",id));
+
 loadStudents();
+
 }
 
 }
 
 window.editStudent=async function(id){
 
-const snap=await getDocs(collection(db,"admissions"));
-
-snap.forEach(async(d)=>{
-
-if(d.id==id){
-
-const data=d.data();
-
-let name=prompt("Student Name",data.name);
-let father=prompt("Father Name",data.father);
-let mobile=prompt("Mobile",data.mobile);
-let village=prompt("Village",data.village);
-let cls=prompt("Class",data.class);
+let name=prompt("New Name");
 
 await updateDoc(doc(db,"admissions",id),{
-name,
-father,
-mobile,
-village,
-class:cls
-});
 
-loadStudents();
-
-}
-
-})
-
-}
-
-document.getElementById("classFilter").addEventListener("change",function(){
-
-let filter=this.value;
-
-let rows=document.querySelectorAll("#studentList tr");
-
-rows.forEach(row=>{
-
-let cls=row.children[1].innerText;
-
-row.style.display=(filter=="" || cls==filter)?"":"none";
+name:name
 
 });
-
-});
-
-function exportExcel(){
-
-let table=document.querySelector("table").outerHTML;
-
-let url='data:application/vnd.ms-excel,'+escape(table);
-
-let link=document.createElement("a");
-
-link.href=url;
-link.download="students.xls";
-
-link.click();
-
-}
-
-document.getElementById("importExcel").addEventListener("change",function(){
-
-alert("Excel Import Basic Enabled");
-
-});
-
-async function promoteStudents(){
-
-const snap=await getDocs(collection(db,"admissions"));
-
-snap.forEach(async(d)=>{
-
-let data=d.data();
-
-let cls=parseInt(data.class);
-
-if(!isNaN(cls) && cls<10){
-
-await updateDoc(doc(db,"admissions",d.id),{
-class:String(cls+1)
-});
-
-}
-
-});
-
-alert("Students Promoted");
 
 loadStudents();
 
@@ -469,6 +309,7 @@ loadStudents();
 document.getElementById("searchStudent").addEventListener("keyup",function(){
 
 let filter=this.value.toLowerCase();
+
 let rows=document.querySelectorAll("#studentList tr");
 
 rows.forEach(row=>{
@@ -481,24 +322,51 @@ row.style.display=name.includes(filter)?"":"none";
 
 });
 
-function printStudents(){
+function exportExcel(){
 
-let table=document.querySelector("table").outerHTML;
+let table=document.querySelector("table");
 
-let win=window.open("");
+let wb=XLSX.utils.table_to_book(table);
 
-win.document.write(`
-<h2>Student List</h2>
-${table}
-`);
-
-win.print();
+XLSX.writeFile(wb,"students.xlsx");
 
 }
+
+document.getElementById("importExcel").addEventListener("change",function(e){
+
+const file=e.target.files[0];
+
+const reader=new FileReader();
+
+reader.onload=function(event){
+
+const data=new Uint8Array(event.target.result);
+
+const workbook=XLSX.read(data,{type:"array"});
+
+const sheet=workbook.Sheets[workbook.SheetNames[0]];
+
+const students=XLSX.utils.sheet_to_json(sheet);
+
+students.forEach(async(student)=>{
+
+await addDoc(collection(db,"admissions"),student);
+
+});
+
+alert("Students Imported");
+
+loadStudents();
+
+};
+
+reader.readAsArrayBuffer(file);
+
+});
 
 loadStudents();
 
 </script>
 
 </body>
-</html>
+  </html>
