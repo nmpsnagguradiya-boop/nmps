@@ -24,27 +24,60 @@ margin:5px;
 cursor:pointer;
 }
 
+.students{
+background:white;
+padding:10px;
+max-height:200px;
+overflow:auto;
+border:1px solid #ccc;
+margin-bottom:20px;
+}
+
 .cards{
 display:flex;
 flex-wrap:wrap;
-justify-content:center;
 gap:20px;
+justify-content:center;
 }
 
 .card{
 width:320px;
 height:500px;
-border-radius:12px;
+border-radius:10px;
 overflow:hidden;
-color:white;
+border:3px solid #000;
 position:relative;
+color:white;
 }
 
-.header{
-text-align:center;
-padding:8px;
-font-weight:bold;
-font-size:15px;
+/* TWO COLOR TOP BOTTOM */
+
+.design1{
+background:linear-gradient(to bottom,#004aad 50%,#ffeb3b 50%);
+}
+
+.design2{
+background:linear-gradient(to bottom,#2e7d32 50%,#a5d6a7 50%);
+}
+
+.design3{
+background:linear-gradient(to bottom,#8e0038 50%,#ffcdd2 50%);
+}
+
+.design4{
+background:linear-gradient(to bottom,#ff9800 50%,#ffe0b2 50%);
+}
+
+.design5{
+background:linear-gradient(to bottom,#673ab7 50%,#d1c4e9 50%);
+}
+
+.design6{
+background:linear-gradient(to bottom,#0097a7 50%,#b2ebf2 50%);
+}
+
+.design7{
+background:linear-gradient(to bottom,#263238 50%,#90a4ae 50%);
 }
 
 .logo{
@@ -57,9 +90,15 @@ top:10px;
 width:40px;
 }
 
+.header{
+text-align:center;
+padding-top:15px;
+font-weight:bold;
+}
+
 .photo{
 text-align:center;
-margin-top:70px;
+margin-top:50px;
 }
 
 .photo img{
@@ -73,13 +112,18 @@ object-fit:cover;
 .name{
 font-size:20px;
 font-weight:bold;
-margin-top:8px;
 text-align:center;
+margin-top:8px;
 }
 
 .details{
 padding:10px;
 font-size:14px;
+}
+
+.barcode{
+text-align:center;
+margin-top:5px;
 }
 
 .qr{
@@ -98,50 +142,14 @@ text-align:center;
 width:70px;
 }
 
-/* 7 DESIGN WITH 2 COLORS */
-
-.design1{
-background:linear-gradient(#004aad,#ffeb3b);
-}
-
-.design2{
-background:linear-gradient(#2e7d32,#a5d6a7);
-}
-
-.design3{
-background:linear-gradient(#8e0038,#ffcdd2);
-}
-
-.design4{
-background:linear-gradient(#ff9800,#ffe0b2);
-}
-
-.design5{
-background:linear-gradient(#673ab7,#d1c4e9);
-}
-
-.design6{
-background:linear-gradient(#0097a7,#b2ebf2);
-}
-
-.design7{
-background:linear-gradient(#263238,#90a4ae);
-}
-
-/* PRINT COLOR FIX */
-
 @media print{
-
-body{
-background:white;
-}
 
 button,select{
 display:none;
 }
 
-.cards{
-gap:10px;
+.students{
+display:none;
 }
 
 .card{
@@ -178,7 +186,7 @@ print-color-adjust:exact;
 
 <select id="designSelect">
 
-<option value="design1">Blue + Yellow</option>
+<option value="design1">Blue / Yellow</option>
 <option value="design2">Green</option>
 <option value="design3">Maroon</option>
 <option value="design4">Orange</option>
@@ -188,12 +196,15 @@ print-color-adjust:exact;
 
 </select>
 
-<button onclick="window.print()">Print Selected IDs</button>
+<button onclick="printSelected()">Print Selected IDs</button>
 
 </div>
 
+<div class="students" id="studentSelect"></div>
+
 <div class="cards" id="cards"></div>
 
+<script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.5/dist/JsBarcode.all.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
 
 <script type="module">
@@ -217,30 +228,54 @@ let students=[];
 
 async function loadStudents(){
 
-const querySnapshot=await getDocs(collection(db,"admissions"));
+const snap=await getDocs(collection(db,"admissions"));
 
 students=[];
 
-querySnapshot.forEach(doc=>{
-let data=doc.data();
-data.id=doc.id;
-students.push(data);
+snap.forEach(doc=>{
+let d=doc.data();
+d.id=doc.id;
+students.push(d);
 });
 
-renderCards();
+renderStudentList();
 
 }
 
-function renderCards(){
+function renderStudentList(){
 
 let cls=document.getElementById("classFilter").value;
-let design=document.getElementById("designSelect").value;
 
 let html="";
 
 students.forEach(s=>{
 
 if(cls && s.class!=cls) return;
+
+html+=`
+<label>
+<input type="checkbox" value="${s.id}">
+${s.name} (Class ${s.class})
+</label><br>
+`;
+
+});
+
+document.getElementById("studentSelect").innerHTML=html;
+
+}
+
+window.printSelected=function(){
+
+let checked=document.querySelectorAll("#studentSelect input:checked");
+
+let design=document.getElementById("designSelect").value;
+
+let html="";
+
+checked.forEach(c=>{
+
+let s=students.find(x=>x.id==c.value);
 
 let sid="STU-"+s.id.substring(0,6).toUpperCase();
 
@@ -273,6 +308,10 @@ Mobile : ${s.mobile||''}
 
 </div>
 
+<div class="barcode">
+<svg id="barcode${s.id}"></svg>
+</div>
+
 <div class="qr">
 <canvas id="qr${s.id}"></canvas>
 </div>
@@ -290,21 +329,27 @@ Principal
 
 document.getElementById("cards").innerHTML=html;
 
-students.forEach(s=>{
-let canvas=document.getElementById("qr"+s.id);
-if(canvas){
-QRCode.toCanvas(canvas,"Student:"+s.name);
-}
+checked.forEach(c=>{
+
+let s=students.find(x=>x.id==c.value);
+
+let sid="STU-"+s.id.substring(0,6).toUpperCase();
+
+JsBarcode("#barcode"+s.id,sid);
+
+QRCode.toCanvas(document.getElementById("qr"+s.id),sid);
+
 });
 
+setTimeout(()=>window.print(),500);
+
 }
 
-document.getElementById("classFilter").addEventListener("change",renderCards);
-document.getElementById("designSelect").addEventListener("change",renderCards);
+document.getElementById("classFilter").addEventListener("change",renderStudentList);
 
 loadStudents();
 
 </script>
 
 </body>
-</html>
+  </html>
