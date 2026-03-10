@@ -3,15 +3,15 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Student ID Card</title>
+<title>Print Student ID Cards</title>
 
 <style>
 
 body{
 font-family:Arial;
-background:#eee;
-text-align:center;
+background:#f2f2f2;
 padding:20px;
+text-align:center;
 }
 
 .controls{
@@ -24,21 +24,27 @@ margin:5px;
 cursor:pointer;
 }
 
+.cards{
+display:flex;
+flex-wrap:wrap;
+justify-content:center;
+gap:20px;
+}
+
 .card{
-width:330px;
-height:520px;
-margin:auto;
-background:white;
+width:320px;
+height:500px;
 border-radius:12px;
 overflow:hidden;
-border:3px solid #004aad;
+color:white;
 position:relative;
 }
 
 .header{
 text-align:center;
-padding:10px;
+padding:8px;
 font-weight:bold;
+font-size:15px;
 }
 
 .logo{
@@ -52,55 +58,98 @@ width:40px;
 }
 
 .photo{
-margin-top:60px;
+text-align:center;
+margin-top:70px;
 }
 
 .photo img{
-width:120px;
-height:140px;
+width:110px;
+height:130px;
 border-radius:6px;
-object-fit:cover;
 border:3px solid white;
+object-fit:cover;
 }
 
 .name{
 font-size:20px;
 font-weight:bold;
-margin-top:10px;
+margin-top:8px;
+text-align:center;
 }
 
 .details{
 padding:10px;
 font-size:14px;
-text-align:left;
 }
 
 .qr{
 text-align:center;
-margin-top:5px;
 }
 
 .signature{
 position:absolute;
 bottom:10px;
 right:10px;
-text-align:center;
 font-size:12px;
+text-align:center;
 }
 
 .signature img{
-width:80px;
+width:70px;
 }
 
-/* DESIGN STYLES */
+/* 7 DESIGN WITH 2 COLORS */
 
-.design1{background:linear-gradient(#004aad,#ffeb3b);}
-.design2{background:#004aad;color:white;}
-.design3{background:#2e7d32;color:white;}
-.design4{background:#8e0038;color:white;}
-.design5{background:#ff9800;}
-.design6{background:#673ab7;color:white;}
-.design7{background:#0097a7;color:white;}
+.design1{
+background:linear-gradient(#004aad,#ffeb3b);
+}
+
+.design2{
+background:linear-gradient(#2e7d32,#a5d6a7);
+}
+
+.design3{
+background:linear-gradient(#8e0038,#ffcdd2);
+}
+
+.design4{
+background:linear-gradient(#ff9800,#ffe0b2);
+}
+
+.design5{
+background:linear-gradient(#673ab7,#d1c4e9);
+}
+
+.design6{
+background:linear-gradient(#0097a7,#b2ebf2);
+}
+
+.design7{
+background:linear-gradient(#263238,#90a4ae);
+}
+
+/* PRINT COLOR FIX */
+
+@media print{
+
+body{
+background:white;
+}
+
+button,select{
+display:none;
+}
+
+.cards{
+gap:10px;
+}
+
+.card{
+-webkit-print-color-adjust:exact;
+print-color-adjust:exact;
+}
+
+}
 
 </style>
 
@@ -110,70 +159,47 @@ width:80px;
 
 <div class="controls">
 
+<select id="classFilter">
+<option value="">All Classes</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+
 <select id="designSelect">
 
 <option value="design1">Blue + Yellow</option>
-<option value="design2">Blue</option>
-<option value="design3">Green</option>
-<option value="design4">Maroon</option>
-<option value="design5">Orange</option>
-<option value="design6">Purple</option>
-<option value="design7">Teal</option>
+<option value="design2">Green</option>
+<option value="design3">Maroon</option>
+<option value="design4">Orange</option>
+<option value="design5">Purple</option>
+<option value="design6">Teal</option>
+<option value="design7">Dark</option>
 
 </select>
 
-<button onclick="window.print()">Print ID Card</button>
+<button onclick="window.print()">Print Selected IDs</button>
 
 </div>
 
-<div class="card design1" id="card">
-
-<div class="logo">
-<img src="school-logo.png">
-</div>
-
-<div class="header">
-
-YOUR SCHOOL NAME<br>
-Student ID Card
-
-</div>
-
-<div class="photo">
-<img id="photo">
-</div>
-
-<div class="name" id="name"></div>
-
-<div class="details">
-
-ID : <span id="studentID"></span><br>
-Class : <span id="class"></span><br>
-Roll : <span id="roll"></span><br>
-Father : <span id="father"></span><br>
-Mobile : <span id="mobile"></span>
-
-</div>
-
-<div class="qr">
-<canvas id="qr"></canvas>
-</div>
-
-<div class="signature">
-
-<img src="principal-sign.png"><br>
-Principal
-
-</div>
-
-</div>
+<div class="cards" id="cards"></div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,doc,getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,collection,getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -187,48 +213,96 @@ appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-const params=new URLSearchParams(window.location.search);
-const id=params.get("id");
+let students=[];
 
-async function loadStudent(){
+async function loadStudents(){
 
-const ref=doc(db,"admissions",id);
-const snap=await getDoc(ref);
+const querySnapshot=await getDocs(collection(db,"admissions"));
 
-if(snap.exists()){
+students=[];
 
-let s=snap.data();
+querySnapshot.forEach(doc=>{
+let data=doc.data();
+data.id=doc.id;
+students.push(data);
+});
 
-let sid="STU-"+id.substring(0,6).toUpperCase();
-
-document.getElementById("studentID").innerText=sid;
-document.getElementById("name").innerText=s.name||"";
-document.getElementById("class").innerText=s.class||"";
-document.getElementById("roll").innerText=s.roll||"";
-document.getElementById("father").innerText=s.father||"";
-document.getElementById("mobile").innerText=s.mobile||"";
-
-document.getElementById("photo").src=s.photo||"";
-
-QRCode.toCanvas(document.getElementById("qr"),window.location.href);
+renderCards();
 
 }
 
-}
+function renderCards(){
 
-document.getElementById("designSelect").addEventListener("change",function(){
+let cls=document.getElementById("classFilter").value;
+let design=document.getElementById("designSelect").value;
 
-let card=document.getElementById("card");
+let html="";
 
-card.classList.remove(
-"design1","design2","design3","design4","design5","design6","design7"
-);
+students.forEach(s=>{
 
-card.classList.add(this.value);
+if(cls && s.class!=cls) return;
+
+let sid="STU-"+s.id.substring(0,6).toUpperCase();
+
+html+=`
+
+<div class="card ${design}">
+
+<div class="logo">
+<img src="school-logo.png">
+</div>
+
+<div class="header">
+YOUR SCHOOL NAME<br>
+Student ID Card
+</div>
+
+<div class="photo">
+<img src="${s.photo||''}">
+</div>
+
+<div class="name">${s.name||''}</div>
+
+<div class="details">
+
+ID : ${sid}<br>
+Class : ${s.class||''}<br>
+Roll : ${s.roll||''}<br>
+Father : ${s.father||''}<br>
+Mobile : ${s.mobile||''}
+
+</div>
+
+<div class="qr">
+<canvas id="qr${s.id}"></canvas>
+</div>
+
+<div class="signature">
+<img src="principal-sign.png"><br>
+Principal
+</div>
+
+</div>
+
+`;
 
 });
 
-loadStudent();
+document.getElementById("cards").innerHTML=html;
+
+students.forEach(s=>{
+let canvas=document.getElementById("qr"+s.id);
+if(canvas){
+QRCode.toCanvas(canvas,"Student:"+s.name);
+}
+});
+
+}
+
+document.getElementById("classFilter").addEventListener("change",renderCards);
+document.getElementById("designSelect").addEventListener("change",renderCards);
+
+loadStudents();
 
 </script>
 
