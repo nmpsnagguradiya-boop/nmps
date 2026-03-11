@@ -1,229 +1,487 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
+
 <head>
+
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NMPS Admin Fees Management</title>
+<title>School Fees Management</title>
+
 <style>
-body, html {margin:0; padding:0; font-family: Arial,sans-serif; background:#f2f2f2;}
-header {background:#82caff; color:white; padding:15px; text-align:center;}
-.container {max-width:1200px; margin:20px auto; padding:20px;}
-.card {background:white; padding:20px; margin:20px 0; border-radius:10px; box-shadow:0 0 10px rgba(0,0,0,0.1);}
-input, select {width:100%; padding:8px; margin:5px 0;}
-button {background:#82caff; border:none; color:white; padding:10px 15px; margin:5px 0; cursor:pointer; border-radius:5px;}
-table {width:100%; border-collapse: collapse; margin-top:15px;}
-table, th, td {border:1px solid #ddd;}
-th, td {padding:8px; text-align:left;}
-img.qr-preview {width:80px; height:80px; margin-top:5px;}
-.filters {display:flex; gap:10px; margin-bottom:10px;}
-.filters select, .filters button {width:auto; padding:5px;}
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
+
+.container{
+padding:20px;
+}
+
+select,input,button{
+padding:8px;
+margin:5px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+margin-top:20px;
+}
+
+th{
+background:#004aad;
+color:white;
+padding:8px;
+}
+
+td{
+padding:8px;
+border:1px solid #ccc;
+text-align:center;
+}
+
+.deposit{background:#28a745;color:white;border:none}
+.history{background:#ffc107;border:none}
+.whatsapp{background:#25D366;color:white;border:none}
+
+.report{
+background:white;
+padding:15px;
+margin-top:20px;
+border-radius:6px;
+}
+
 </style>
+
 </head>
+
 <body>
 
-<header>
-  <h2>NMPS Admin Fees Management</h2>
-</header>
+<header>School Fees Management</header>
 
 <div class="container">
-  <div class="card">
-    <h3>Update Student Fees</h3>
-    <form id="feesForm">
-      <input type="text" id="studentName" placeholder="Student Name" required>
-      <input type="text" id="className" placeholder="Class" required>
-      <input type="text" id="accountNumber" placeholder="Account Number" required>
-      <label>Upload QR Code</label>
-      <input type="file" id="qrCode" accept="image/*">
-      <img id="qrPreview" class="qr-preview" src="" alt="">
-      <input type="number" id="vehicleFees" placeholder="Vehicle Fees">
-      <input type="number" id="oldFees" placeholder="Old Fees">
-      <input type="number" id="totalFees" placeholder="Total Fees">
-      <input type="number" id="installment" placeholder="Installment">
-      <input type="number" id="totalUpdate" placeholder="Total Update">
-      <button type="submit">Add/Update Fees</button>
-    </form>
-  </div>
 
-  <div class="card">
-    <h3>Filter Students</h3>
-    <div class="filters">
-      <select id="filterClass">
-        <option value="">All Classes</option>
-      </select>
-      <button onclick="sortFeesDesc()">Highest Fees First</button>
-      <button onclick="showPending()">Pending Fees</button>
-      <button onclick="showAll()">Show All</button>
-    </div>
+<select id="classFilter">
 
-    <table id="feesTable">
-      <thead>
-        <tr>
-          <th>Student Name</th>
-          <th>Class</th>
-          <th>Account Number</th>
-          <th>QR Code</th>
-          <th>Vehicle Fees</th>
-          <th>Old Fees</th>
-          <th>Total Fees</th>
-          <th>Installment</th>
-          <th>Total Update</th>
-          <th>Actions</th>
-        </tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<option value="">All Classes</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+
+</select>
+
+<br>
+
+<input type="number" id="feesAmount" placeholder="School Fees">
+
+<button onclick="addFees()">Add Fees</button>
+
+<input type="number" id="vehicleFees" placeholder="Vehicle Fees">
+
+<button onclick="addVehicleFees()">Add Vehicle Fees</button>
+
+<button onclick="downloadExcel()">Download Excel Report</button>
+
+<div class="report">
+
+<h3>Total Collection : ₹ <span id="collection">0</span></h3>
+
+<h3>Total Pending : ₹ <span id="pending">0</span></h3>
+
 </div>
 
+<table>
+
+<thead>
+
+<tr>
+
+<th>Select</th>
+<th>Name</th>
+<th>Father</th>
+<th>Village</th>
+<th>Class</th>
+<th>Mobile</th>
+<th>Fees</th>
+<th>Vehicle</th>
+<th>Installment</th>
+<th>Deposit</th>
+<th>Receipt</th>
+<th>History</th>
+<th>WhatsApp</th>
+
+</tr>
+
+</thead>
+
+<tbody id="studentList"></tbody>
+
+</table>
+
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, setDoc, onSnapshot } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
-import { getStorage, ref, uploadBytes, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-storage.js";
 
-const firebaseConfig = {
-  apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-  authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-  projectId: "nmpsnagguradiya-b9b94",
-  storageBucket: "nmpsnagguradiya-b9b94.appspot.com",
-  messagingSenderId: "811957568318",
-  appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+getDocs,
+doc,
+updateDoc,
+addDoc,
+query,
+where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94",
+storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId:"811957568318",
+appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
 };
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const storage = getStorage(app);
 
-const feesForm = document.getElementById('feesForm');
-const qrInput = document.getElementById('qrCode');
-const qrPreview = document.getElementById('qrPreview');
-let allRecords = [];
+const app=initializeApp(firebaseConfig);
 
-// QR preview
-qrInput.addEventListener('change', ()=>{
-  const file = qrInput.files[0];
-  if(file) qrPreview.src = URL.createObjectURL(file);
+const db=getFirestore(app);
+
+let students=[];
+
+async function loadStudents(){
+
+const snap=await getDocs(collection(db,"admissions"));
+
+let html="";
+
+let totalCollection=0;
+let totalPending=0;
+
+students=[];
+
+snap.forEach(docSnap=>{
+
+let s=docSnap.data();
+
+s.id=docSnap.id;
+
+students.push(s);
+
+let fees=s.fees||0;
+
+let vehicle=s.vehicleFees||0;
+
+let total=fees+vehicle;
+
+let paid=(s.installment||0)*(total/3);
+
+let pending=total-paid;
+
+totalCollection+=paid;
+
+totalPending+=pending;
+
+html+=`
+
+<tr>
+
+<td><input type="checkbox" value="${s.id}"></td>
+
+<td>${s.name||''}</td>
+
+<td>${s.father||''}</td>
+
+<td>${s.village||''}</td>
+
+<td>${s.class||''}</td>
+
+<td>${s.mobile||''}</td>
+
+<td>${fees}</td>
+
+<td>${vehicle}</td>
+
+<td>${s.installment||0}/3</td>
+
+<td>
+
+<button class="deposit" onclick="depositFees('${s.id}')">
+Deposit
+</button>
+
+</td>
+
+<td>
+
+<button onclick="downloadReceipt('${s.id}')">
+PDF
+</button>
+
+</td>
+
+<td>
+
+<button class="history" onclick="viewHistory('${s.id}')">
+History
+</button>
+
+</td>
+
+<td>
+
+<button class="whatsapp" onclick="sendWhatsApp('${s.id}')">
+WhatsApp
+</button>
+
+</td>
+
+</tr>
+
+`;
+
 });
 
-// Add/Update fees
-feesForm.addEventListener('submit', async function(e){
-  e.preventDefault();
-  const studentName = document.getElementById('studentName').value;
-  const className = document.getElementById('className').value;
-  const accountNumber = document.getElementById('accountNumber').value;
-  const vehicleFees = +document.getElementById('vehicleFees').value || 0;
-  const oldFees = +document.getElementById('oldFees').value || 0;
-  const totalFees = +document.getElementById('totalFees').value || 0;
-  const installment = +document.getElementById('installment').value || 0;
-  const totalUpdate = +document.getElementById('totalUpdate').value || 0;
-  
-  let qrURL = '';
-  if(qrInput.files[0]){
-    const file = qrInput.files[0];
-    const storageRef = ref(storage, 'qrCodes/'+Date.now()+'_'+file.name);
-    await uploadBytes(storageRef, file);
-    qrURL = await getDownloadURL(storageRef);
-  }
+document.getElementById("studentList").innerHTML=html;
 
-  // Check if student exists, update
-  const studentDoc = doc(db,'fees',studentName+'_'+className);
-  await setDoc(studentDoc,{
-    studentName,className,accountNumber,qrURL,vehicleFees,oldFees,totalFees,installment,totalUpdate
-  });
+document.getElementById("collection").innerText=totalCollection;
 
-  feesForm.reset();
-  qrPreview.src='';
+document.getElementById("pending").innerText=totalPending;
+
+}
+
+window.addFees=async function(){
+
+let amount=parseInt(document.getElementById("feesAmount").value);
+
+let checked=document.querySelectorAll("#studentList input:checked");
+
+checked.forEach(async c=>{
+
+await updateDoc(doc(db,"admissions",c.value),{
+fees:amount
 });
 
-// Live snapshot
-onSnapshot(collection(db,'fees'), (snapshot)=>{
-  allRecords = [];
-  snapshot.forEach(docSnap=>{
-    allRecords.push(docSnap.data());
-  });
-  populateFilters();
-  renderTable(allRecords);
 });
 
-// Populate class filter
-function populateFilters(){
-  const filterClass = document.getElementById('filterClass');
-  const classes = [...new Set(allRecords.map(r=>r.className))];
-  filterClass.innerHTML = '<option value="">All Classes</option>';
-  classes.forEach(c=>{
-    const opt = document.createElement('option');
-    opt.value = c; opt.textContent = c;
-    filterClass.appendChild(opt);
-  });
+alert("Fees Added");
+
+loadStudents();
+
 }
 
-// Render table
-function renderTable(records){
-  const tbody = document.querySelector('#feesTable tbody');
-  tbody.innerHTML='';
-  records.forEach((f, idx)=>{
-    const tr = document.createElement('tr');
-    tr.innerHTML=`
-      <td>${f.studentName}</td>
-      <td>${f.className}</td>
-      <td>${f.accountNumber}</td>
-      <td>${f.qrURL ? '<img src="'+f.qrURL+'" width="50"/>' : ''}</td>
-      <td>${f.vehicleFees}</td>
-      <td>${f.oldFees}</td>
-      <td>${f.totalFees}</td>
-      <td>${f.installment}</td>
-      <td>${f.totalUpdate}</td>
-      <td>
-        <button onclick="editRecord('${f.studentName}','${f.className}')">Edit</button>
-        <button onclick="deleteRecord('${f.studentName}','${f.className}')">Delete</button>
-      </td>
-    `;
-    tbody.appendChild(tr);
-  });
-}
+window.addVehicleFees=async function(){
 
-// Edit record
-function editRecord(name,className){
-  const record = allRecords.find(r=>r.studentName===name && r.className===className);
-  if(!record) return;
-  document.getElementById('studentName').value = record.studentName;
-  document.getElementById('className').value = record.className;
-  document.getElementById('accountNumber').value = record.accountNumber;
-  document.getElementById('vehicleFees').value = record.vehicleFees;
-  document.getElementById('oldFees').value = record.oldFees;
-  document.getElementById('totalFees').value = record.totalFees;
-  document.getElementById('installment').value = record.installment;
-  document.getElementById('totalUpdate').value = record.totalUpdate;
-  qrPreview.src = record.qrURL;
-}
+let amount=parseInt(document.getElementById("vehicleFees").value);
 
-// Delete record
-async function deleteRecord(name,className){
-  if(confirm('Delete this record?')){
-    const studentDoc = doc(db,'fees',name+'_'+className);
-    await deleteDoc(studentDoc);
-  }
-}
+let checked=document.querySelectorAll("#studentList input:checked");
 
-// Filters
-document.getElementById('filterClass').addEventListener('change', function(){
-  const cls = this.value;
-  if(cls) renderTable(allRecords.filter(r=>r.className===cls));
-  else renderTable(allRecords);
+checked.forEach(async c=>{
+
+await updateDoc(doc(db,"admissions",c.value),{
+vehicleFees:amount
 });
 
-function sortFeesDesc(){
-  const sorted = [...allRecords].sort((a,b)=>b.totalFees - a.totalFees);
-  renderTable(sorted);
+});
+
+alert("Vehicle Fees Added");
+
+loadStudents();
+
 }
 
-function showPending(){
-  renderTable(allRecords.filter(r=>r.totalUpdate>0));
+window.depositFees=async function(id){
+
+let s=students.find(x=>x.id==id);
+
+let inst=(s.installment||0)+1;
+
+if(inst>3){
+
+alert("All Installments Paid");
+
+return;
+
 }
 
-function showAll(){
-  renderTable(allRecords);
+let total=(s.fees||0)+(s.vehicleFees||0);
+
+let instAmount=total/3;
+
+await updateDoc(doc(db,"admissions",id),{
+installment:inst
+});
+
+await addDoc(collection(db,"fees_history"),{
+
+studentId:id,
+
+name:s.name,
+
+class:s.class,
+
+mobile:s.mobile,
+
+amount:instAmount,
+
+installment:inst,
+
+date:new Date().toLocaleDateString()
+
+});
+
+alert("Installment "+inst+" Deposited");
+
+loadStudents();
+
 }
+
+window.viewHistory=async function(id){
+
+let q=query(collection(db,"fees_history"),where("studentId","==",id));
+
+let snap=await getDocs(q);
+
+let text="Fees History\n\n";
+
+snap.forEach(d=>{
+
+let h=d.data();
+
+text+=
+"Date : "+h.date+
+"\nInstallment : "+h.installment+
+"\nAmount : "+h.amount+
+"\n\n";
+
+});
+
+alert(text);
+
+}
+
+window.downloadReceipt=function(id){
+
+let s=students.find(x=>x.id==id);
+
+const { jsPDF }=window.jspdf;
+
+let pdf=new jsPDF();
+
+pdf.text("School Fees Receipt",20,20);
+
+pdf.text("Student : "+s.name,20,40);
+
+pdf.text("Class : "+s.class,20,50);
+
+pdf.text("Mobile : "+s.mobile,20,60);
+
+pdf.text("Fees : "+(s.fees||0),20,80);
+
+pdf.text("Vehicle Fees : "+(s.vehicleFees||0),20,90);
+
+pdf.text("Installment : "+(s.installment||0),20,110);
+
+pdf.save("receipt_"+s.name+".pdf");
+
+}
+
+window.sendWhatsApp=function(id){
+
+let s=students.find(x=>x.id==id);
+
+let total=(s.fees||0)+(s.vehicleFees||0);
+
+let paid=(s.installment||0)*(total/3);
+
+let msg=
+"School Fees Receipt%0A"+
+"Student : "+s.name+"%0A"+
+"Class : "+s.class+"%0A"+
+"Paid : ₹"+paid+"%0A"+
+"Installment : "+(s.installment||0)+"/3";
+
+let phone=s.mobile.replace(/\D/g,'');
+
+let url="https://wa.me/91"+phone+"?text="+msg;
+
+window.open(url);
+
+}
+
+window.downloadExcel=function(){
+
+let csv="Name,Father,Village,Class,Mobile,Fees,Vehicle Fees,Installment\n";
+
+students.forEach(s=>{
+
+csv+=
+(s.name||"")+","+
+(s.father||"")+","+
+(s.village||"")+","+
+(s.class||"")+","+
+(s.mobile||"")+","+
+(s.fees||0)+","+
+(s.vehicleFees||0)+","+
+(s.installment||0)+"\n";
+
+});
+
+let blob=new Blob([csv],{type:"text/csv"});
+
+let a=document.createElement("a");
+
+a.href=URL.createObjectURL(blob);
+
+a.download="fees-report.csv";
+
+a.click();
+
+}
+
+document.getElementById("classFilter").addEventListener("change",function(){
+
+let cls=this.value;
+
+let rows=document.querySelectorAll("#studentList tr");
+
+rows.forEach(r=>{
+
+let c=r.children[4].innerText;
+
+r.style.display=(cls==""||c==cls)?"":"none";
+
+});
+
+});
+
+loadStudents();
 
 </script>
 
 </body>
+
 </html>
