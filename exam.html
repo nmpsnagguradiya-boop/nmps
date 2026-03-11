@@ -32,8 +32,10 @@ td {padding:8px; border:1px solid #ccc; text-align:center;}
 <h3>Create / Edit Session & Exam</h3>
 <select id="sessionSelect"></select>
 <input type="text" id="sessionInput" placeholder="Session (2024-25)">
+<button class="delete" onclick="deleteSession()">Delete Session</button>
 <select id="examSelect"></select>
 <input type="text" id="examInput" placeholder="Exam Name">
+<button class="delete" onclick="deleteExam()">Delete Exam</button>
 <button class="save" onclick="saveExamSession()">Save / Update</button>
 </div>
 
@@ -143,6 +145,20 @@ loadSessionsExams();
 alert("Session & Exam Saved / Updated");
 }
 
+// Delete Session
+window.deleteSession=async function(){
+let sessionId=document.getElementById("sessionSelect").value;
+if(!sessionId){alert("Select session to delete"); return;}
+if(confirm("Delete this session?")){ await deleteDoc(doc(db,"exam_sessions",sessionId)); loadSessionsExams(); alert("Session Deleted"); }
+}
+
+// Delete Exam
+window.deleteExam=async function(){
+let examId=document.getElementById("examSelect").value;
+if(!examId){alert("Select exam to delete"); return;}
+if(confirm("Delete this exam?")){ await deleteDoc(doc(db,"exam_sessions",examId)); loadSessionsExams(); alert("Exam Deleted"); }
+}
+
 // Load Subjects
 async function loadSubjects(){
 let snap=await getDocs(collection(db,"exam_subjects"));
@@ -164,7 +180,7 @@ html+=`
 <td>${e.status}</td>
 <td><button class="edit" onclick="editSubject('${d.id}')">Edit</button></td>
 <td><button class="delete" onclick="deleteSubject('${d.id}')">Delete</button></td>
-<td><button class="admit" onclick="downloadAdmit('${d.id}')">Download</button></td>
+<td><button class="admit" onclick="downloadAdmit('${d.id}')">Admit Card</button></td>
 </tr>
 `;
 });
@@ -244,7 +260,9 @@ loadSubjects();
 
 // Admit Card
 window.downloadAdmit=function(id){
-alert("Admit Card Download will be implemented");
+const sessionId=document.getElementById("sessionSubject").value;
+const examId=document.getElementById("examSubject").value;
+window.location.href=`print-admit-card.html?subjectId=${id}&sessionId=${sessionId}&examId=${examId}`;
 }
 
 // Initialize
