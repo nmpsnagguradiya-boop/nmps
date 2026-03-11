@@ -9,18 +9,20 @@ body {font-family:Arial, sans-serif; background:#f2f2f2; margin:0; padding:0;}
 header {background:#004aad; color:white; text-align:center; padding:15px; font-size:22px;}
 .container {max-width:1000px; margin:auto; padding:20px;}
 .card {background:white; padding:20px; margin-bottom:20px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
-.admit-card {border:2px solid #004aad; padding:10px; margin:10px; width:48%; display:inline-block; vertical-align:top; box-sizing:border-box; page-break-inside:avoid;}
+.admit-card {border:2px solid #004aad; padding:10px; margin:10px; width:48%; display:inline-block; vertical-align:top; box-sizing:border-box; page-break-inside:avoid; background:white;}
 .admit-card img {width:80px; height:100px; object-fit:cover; float:right;}
 .admit-card h3 {margin:5px 0;}
 .admit-card table {width:100%; border-collapse:collapse; margin-top:10px;}
 .admit-card table, th, td {border:1px solid #ccc;}
 th, td {padding:6px; text-align:center;}
 .guideline {margin-top:10px; font-size:14px; color:#333;}
+.signature {margin-top:20px; display:flex; justify-content:space-between; font-weight:bold;}
 button {padding:8px 12px; margin:5px; border:none; border-radius:5px; cursor:pointer;}
 .save {background:#004aad;color:white;}
 .print {background:#28a745;color:white;}
 #studentsList {max-height:150px; overflow-y:auto; border:1px solid #ccc; padding:5px;}
 .studentItem {display:block; margin:3px 0;}
+input[type=time] {width:auto;}
 @media (max-width:768px){
   .admit-card {width:100%; margin:5px 0;}
   img {float:none; display:block; margin:auto;}
@@ -45,10 +47,11 @@ button {padding:8px 12px; margin:5px; border:none; border-radius:5px; cursor:poi
 <button class="save" onclick="loadStudents()">Load Students</button>
 </div>
 
-<!-- Guideline -->
+<!-- Guideline & Time -->
 <div class="card">
 <input type="text" id="guidelineInput" placeholder="Enter guideline for admit card">
-<button class="save" onclick="saveGuideline()">Save Guideline</button>
+<input type="time" id="timeInput" value="09:00">
+<button class="save" onclick="saveGuideline()">Save Guideline & Time</button>
 </div>
 
 <!-- Student Selection -->
@@ -76,6 +79,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let guidelineText = "";
+let examTime = "";
 
 // Load exams into dropdown
 async function loadExams(){
@@ -86,12 +90,13 @@ async function loadExams(){
 }
 loadExams();
 
-// Save guideline
+// Save guideline & time
 window.saveGuideline = async function(){
   guidelineText = document.getElementById("guidelineInput").value;
+  examTime = document.getElementById("timeInput").value;
   if(!guidelineText) return alert("Enter guideline");
-  await setDoc(doc(db,"admit_guidelines","guideline"), {text: guidelineText});
-  alert("Guideline saved");
+  await setDoc(doc(db,"admit_guidelines","guideline"), {text: guidelineText, time: examTime});
+  alert("Guideline & Time saved");
 }
 
 // Load students for selected class
@@ -120,11 +125,17 @@ window.generateAdmitCards = async function(){
 
   // Get timetable for class & exam
   const ttSnap = await getDocs(collection(db,"timetable"));
-  const timetable = ttSnap.docs.filter(d=>d.data().class===cls && d.data().examId===examId).map(d=>d.data());
+  const timetableDocs = ttSnap.docs.filter(d=>d.data().class===cls && d.data().examId===examId);
 
-  // Get guideline
+  // Get subjects names
+  const subjectSnap = await getDocs(collection(db,"subjects"));
+  const subjectsMap = {};
+  subjectSnap.docs.forEach(d=>{ subjectsMap[d.id] = d.data().name; });
+
+  // Get guideline & time
   const guideDoc = await getDoc(doc(db,"admit_guidelines","guideline"));
   guidelineText = guideDoc.exists() ? guideDoc.data().text : "";
+  examTime = guideDoc.exists() ? guideDoc.data().time : "09:00";
 
   let html="";
   for(let i=0;i<selectedIds.length;i++){
@@ -139,20 +150,25 @@ window.generateAdmitCards = async function(){
       <p><b>Father:</b> ${s.father}</p>
       <p><b>Roll:</b> ${s.roll}</p>
       <p><b>Class:</b> ${s.class}</p>
+      <p><b>Exam Time:</b> ${examTime}</p>
       <table>
         <tr><th>Subject</th><th>Date</th><th>Day</th><th>Time</th></tr>`;
 
-    timetable.forEach(tt=>{
+    timetableDocs.forEach(tt=>{
       html += `<tr>
-        <td>${tt.subjectId}</td>
-        <td>${tt.date}</td>
-        <td>${tt.day}</td>
-        <td>${tt.time}</td>
+        <td>${subjectsMap[tt.data().subjectId] || tt.data().subjectId}</td>
+        <td>${tt.data().date}</td>
+        <td>${tt.data().day}</td>
+        <td>${tt.data().time}</td>
       </tr>`;
     });
 
     html += `</table>
       <div class="guideline">${guidelineText}</div>
+      <div class="signature">
+        <span>Principal</span>
+        <span>Director</span>
+      </div>
     </div>`;
 
     if((i+1)%2===0) html+='<div style="clear:both"></div>';
@@ -162,4 +178,4 @@ window.generateAdmitCards = async function(){
 }
 </script>
 </body>
-</html>
+  </html>
