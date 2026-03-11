@@ -50,7 +50,7 @@ th {background:#004aad; color:white;}
 
 <!-- Timetable Creation -->
 <div class="card">
-<h3>Class-wise Timetable</h3>
+<h3>Timetable Creation</h3>
 <select id="ttExam"></select>
 <select id="ttSubject"></select>
 <select id="ttClass"><option value="">Select Class</option>
@@ -73,14 +73,6 @@ th {background:#004aad; color:white;}
 <!-- Timetable Preview -->
 <div class="card">
 <h3>Timetable Preview</h3>
-<select id="filterClass">
-<option value="">Select Class</option>
-<option>Nursery</option><option>LKG</option><option>UKG</option>
-<option>1</option><option>2</option><option>3</option><option>4</option>
-<option>5</option><option>6</option><option>7</option><option>8</option>
-<option>9</option><option>10</option>
-</select>
-<button class="save" onclick="loadTimetablePreview()">Filter</button>
 <table>
 <thead>
 <tr>
@@ -93,7 +85,7 @@ th {background:#004aad; color:white;}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -105,6 +97,7 @@ const db = getFirestore(app);
 
 let editExamId=null, editSubjectId=null;
 let editTimetableId=null;
+let timetableCache = []; // cache for instant update
 
 // Load Exams & Subjects
 async function loadData(){
@@ -119,6 +112,8 @@ async function loadData(){
   subsnap.forEach(d=>{ subHTML+=`<option value="${d.id}">${d.data().name}</option>`; });
   document.getElementById("subjectList").innerHTML = subHTML;
   document.getElementById("ttSubject").innerHTML = subHTML;
+
+  await loadTimetablePreview(); // load all timetable on page load
 }
 loadData();
 
@@ -170,26 +165,38 @@ window.saveTimetable = async function(){
   const time=document.getElementById("ttTime").value;
   if(!examId||!subjectId||!cls||!date||!day||!time) return alert("Fill all fields");
 
+  let entry;
   if(editTimetableId){
-    await updateDoc(doc(db,"timetable",editTimetableId), {examId, subjectId, class:cls, date, day, time});
-    editTimetableId=null;
+    entry = {examId, subjectId, class:cls, date, day, time};
+    await updateDoc(doc(db,"timetable",editTimetableId), entry);
+    // update cache instantly
+    const idx = timetableCache.findIndex(e=>e.id===editTimetableId);
+    if(idx>=0) timetableCache[idx].data = entry;
+    editTimetableId = null;
   } else {
-    await addDoc(collection(db,"timetable"), {examId, subjectId, class:cls, date, day, time});
+    const docRef = await addDoc(collection(db,"timetable"), {examId, subjectId, class:cls, date, day, time});
+    entry = {id: docRef.id, data: {examId, subjectId, class:cls, date, day, time}};
+    timetableCache.push(entry);
   }
 
-  document.getElementById("ttStatus").innerText=`Timetable saved for class ${cls}`;
-  loadTimetablePreview();
+  document.getElementById("ttStatus").innerText=`Timetable saved.`;
+  renderTimetablePreview();
 }
 
 // Timetable Preview
 async function loadTimetablePreview(){
-  const cls = document.getElementById("filterClass").value;
-  let q = collection(db,"timetable");
-  if(cls) q = query(q, where("class","==",cls));
-  const snap = await getDocs(q);
-  let html="";
+  const snap = await getDocs(collection(db,"timetable"));
+  timetableCache = [];
   for(const d of snap.docs){
-    const data = d.data();
+    timetableCache.push({id:d.id, data:d.data()});
+  }
+  renderTimetablePreview();
+}
+
+async function renderTimetablePreview(){
+  let html="";
+  for(const item of timetableCache){
+    const data = item.data;
     const examDoc = await getDoc(doc(db,"exam_sessions",data.examId));
     const subjectDoc = await getDoc(doc(db,"subjects",data.subjectId));
     const examName = examDoc.exists() ? examDoc.data().examName : "";
@@ -202,8 +209,8 @@ async function loadTimetablePreview(){
       <td>${data.date}</td>
       <td>${data.day}</td>
       <td>${data.time}</td>
-      <td><button class="edit" onclick="editTimetable('${d.id}')">Edit</button></td>
-      <td><button class="delete" onclick="deleteTimetable('${d.id}')">Delete</button></td>
+      <td><button class="edit" onclick="editTimetable('${item.id}')">Edit</button></td>
+      <td><button class="delete" onclick="deleteTimetable('${item.id}')">Delete</button></td>
     </tr>`;
   }
   document.getElementById("timetablePreview").innerHTML = html;
@@ -227,7 +234,9 @@ window.editTimetable = async function(id){
 window.deleteTimetable = async function(id){
   if(confirm("Delete this timetable entry?")){
     await deleteDoc(doc(db,"timetable",id));
-    loadTimetablePreview();
+    // remove from cache instantly
+    timetableCache = timetableCache.filter(e=>e.id!==id);
+    renderTimetablePreview();
   }
 }
 
