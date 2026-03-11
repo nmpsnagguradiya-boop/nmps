@@ -6,52 +6,19 @@
 <title>Exam Management</title>
 
 <style>
-body{
-font-family:Arial;
-margin:0;
-background:#f2f2f2;
-}
-header{
-background:#004aad;
-color:white;
-padding:15px;
-text-align:center;
-font-size:22px;
-}
-.container{
-padding:20px;
-}
-.card{
-background:white;
-padding:20px;
-border-radius:6px;
-margin-bottom:20px;
-}
-input,select,button{
-padding:8px;
-margin:5px;
-}
-table{
-width:100%;
-border-collapse:collapse;
-background:white;
-}
-th{
-background:#004aad;
-color:white;
-padding:8px;
-}
-td{
-padding:8px;
-border:1px solid #ccc;
-text-align:center;
-}
+body {font-family:Arial; margin:0; background:#f2f2f2;}
+header {background:#004aad; color:white; padding:15px; text-align:center; font-size:22px;}
+.container {padding:20px;}
+.card {background:white; padding:20px; border-radius:6px; margin-bottom:20px;}
+input,select,button {padding:8px; margin:5px;}
+table {width:100%; border-collapse:collapse; background:white;}
+th {background:#004aad; color:white; padding:8px;}
+td {padding:8px; border:1px solid #ccc; text-align:center;}
 .edit{background:#ffc107;border:none;padding:6px 10px;}
 .delete{background:#dc3545;color:white;border:none;padding:6px 10px;}
 .admit{background:#28a745;color:white;border:none;padding:6px 10px;}
 .save{background:#004aad;color:white;border:none;padding:8px 15px;}
 </style>
-
 </head>
 
 <body>
@@ -60,28 +27,23 @@ text-align:center;
 
 <div class="container">
 
-<!-- Session & Exam Create Section -->
+<!-- Session & Exam Create/Edit -->
 <div class="card">
-<h3>Create Session / Exam</h3>
-<input type="text" id="session" placeholder="Session (2024-25)">
-<input type="text" id="examName" placeholder="Exam Name">
-<button class="save" onclick="saveExamSession()">Save Session & Exam</button>
+<h3>Create / Edit Session & Exam</h3>
+<select id="sessionSelect"></select>
+<input type="text" id="sessionInput" placeholder="Session (2024-25)">
+<select id="examSelect"></select>
+<input type="text" id="examInput" placeholder="Exam Name">
+<button class="save" onclick="saveExamSession()">Save / Update</button>
 </div>
 
-<!-- Subject Create Section -->
+<!-- Subject Create/Edit -->
 <div class="card">
-<h3>Create Subject for Exam</h3>
-
-<select id="selectSession">
-<option value="">Select Session</option>
-</select>
-
-<select id="selectExam">
-<option value="">Select Exam</option>
-</select>
-
-<input type="text" id="subject" placeholder="Subject">
-
+<h3>Create / Edit Subject</h3>
+<select id="sessionSubject"></select>
+<select id="examSubject"></select>
+<select id="subjectSelect"></select>
+<input type="text" id="subjectInput" placeholder="Subject Name">
 <select id="class">
 <option value="">Select Class</option>
 <option>Nursery</option>
@@ -98,55 +60,32 @@ text-align:center;
 <option>9</option>
 <option>10</option>
 </select>
-
 <input type="number" id="max" placeholder="Maximum Marks">
-
-<select id="type">
-<option value="">Exam Type</option>
-<option>Written</option>
-<option>Oral</option>
-</select>
-
+<select id="type"><option value="">Exam Type</option><option>Written</option><option>Oral</option></select>
 <input type="date" id="date">
 <select id="day">
 <option value="">Select Day</option>
-<option>Monday</option>
-<option>Tuesday</option>
-<option>Wednesday</option>
-<option>Thursday</option>
-<option>Friday</option>
-<option>Saturday</option>
+<option>Monday</option><option>Tuesday</option><option>Wednesday</option>
+<option>Thursday</option><option>Friday</option><option>Saturday</option>
 </select>
 <input type="time" id="time">
-
 <select id="status">
 <option value="Pending">Pending</option>
 <option value="Completed">Completed</option>
 </select>
-
 <br>
-<button class="save" onclick="saveSubject()">Save Subject</button>
+<button class="save" onclick="saveSubject()">Save / Update Subject</button>
 </div>
 
-<!-- Exam List -->
+<!-- Exam List Table -->
 <div class="card">
 <h3>Exam Subject List</h3>
 <table>
 <thead>
 <tr>
-<th>Session</th>
-<th>Exam</th>
-<th>Subject</th>
-<th>Class</th>
-<th>Max</th>
-<th>Type</th>
-<th>Date</th>
-<th>Day</th>
-<th>Time</th>
-<th>Status</th>
-<th>Edit</th>
-<th>Delete</th>
-<th>Admit Card</th>
+<th>Session</th><th>Exam</th><th>Subject</th><th>Class</th>
+<th>Max</th><th>Type</th><th>Date</th><th>Day</th>
+<th>Time</th><th>Status</th><th>Edit</th><th>Delete</th><th>Admit Card</th>
 </tr>
 </thead>
 <tbody id="examList"></tbody>
@@ -157,15 +96,7 @@ text-align:center;
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import {
-getFirestore,
-collection,
-addDoc,
-getDocs,
-doc,
-deleteDoc,
-updateDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -175,28 +106,64 @@ projectId:"nmpsnagguradiya-b9b94"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-let editId=null;
+let editSessionId=null;
+let editExamId=null;
+let editSubjectId=null;
 
-// Load Exam List
-async function loadExams(){
-const snap=await getDocs(collection(db,"exam_subjects"));
+// Load Session & Exam
+async function loadSessionsExams(){
+let snap=await getDocs(collection(db,"exam_sessions"));
+let sessionHTML='<option value="">Select Session</option>';
+let examHTML='<option value="">Select Exam</option>';
+snap.forEach(d=>{
+let e=d.data();
+sessionHTML+=`<option value="${d.id}">${e.session}</option>`;
+examHTML+=`<option value="${d.id}">${e.examName}</option>`;
+});
+document.getElementById("sessionSelect").innerHTML=sessionHTML;
+document.getElementById("examSelect").innerHTML=examHTML;
+document.getElementById("sessionSubject").innerHTML=sessionHTML;
+document.getElementById("examSubject").innerHTML=examHTML;
+}
+
+// Save / Update Session & Exam
+window.saveExamSession=async function(){
+let session=document.getElementById("sessionInput").value;
+let exam=document.getElementById("examInput").value;
+
+if(editSessionId){
+await updateDoc(doc(db,"exam_sessions",editSessionId),{session,examName:exam});
+editSessionId=null;
+}else{
+await addDoc(collection(db,"exam_sessions"),{session,examName:exam});
+}
+document.getElementById("sessionInput").value="";
+document.getElementById("examInput").value="";
+loadSessionsExams();
+alert("Session & Exam Saved / Updated");
+}
+
+// Load Subjects
+async function loadSubjects(){
+let snap=await getDocs(collection(db,"exam_subjects"));
+let subjectHTML='<option value="">Select Subject</option>';
+snap.forEach(d=>{
+let e=d.data();
+subjectHTML+=`<option value="${d.id}">${e.subject}</option>`;
+});
+document.getElementById("subjectSelect").innerHTML=subjectHTML;
+
 let html="";
 snap.forEach(d=>{
 let e=d.data();
 html+=`
 <tr>
-<td>${e.session}</td>
-<td>${e.examName}</td>
-<td>${e.subject}</td>
-<td>${e.class}</td>
-<td>${e.max}</td>
-<td>${e.type}</td>
-<td>${e.date}</td>
-<td>${e.day}</td>
-<td>${e.time}</td>
+<td>${e.sessionName}</td><td>${e.examName}</td><td>${e.subject}</td>
+<td>${e.class}</td><td>${e.max}</td><td>${e.type}</td>
+<td>${e.date}</td><td>${e.day}</td><td>${e.time}</td>
 <td>${e.status}</td>
-<td><button class="edit" onclick="editExam('${d.id}')">Edit</button></td>
-<td><button class="delete" onclick="deleteExam('${d.id}')">Delete</button></td>
+<td><button class="edit" onclick="editSubject('${d.id}')">Edit</button></td>
+<td><button class="delete" onclick="deleteSubject('${d.id}')">Delete</button></td>
 <td><button class="admit" onclick="downloadAdmit('${d.id}')">Download</button></td>
 </tr>
 `;
@@ -204,37 +171,11 @@ html+=`
 document.getElementById("examList").innerHTML=html;
 }
 
-// Load Sessions & Exams into dropdown
-async function loadSessionExam(){
-const snap=await getDocs(collection(db,"exam_sessions"));
-let sessionHTML='<option value="">Select Session</option>';
-let examHTML='<option value="">Select Exam</option>';
-snap.forEach(d=>{
-let e=d.data();
-sessionHTML+=`<option value="${e.session}">${e.session}</option>`;
-examHTML+=`<option value="${e.examName}">${e.examName}</option>`;
-});
-document.getElementById("selectSession").innerHTML=sessionHTML;
-document.getElementById("selectExam").innerHTML=examHTML;
-}
-
-// Save Session & Exam
-window.saveExamSession=async function(){
-let session=document.getElementById("session").value;
-let examName=document.getElementById("examName").value;
-if(!session || !examName){alert("Enter both Session & Exam"); return;}
-await addDoc(collection(db,"exam_sessions"),{session,examName});
-document.getElementById("session").value="";
-document.getElementById("examName").value="";
-loadSessionExam();
-alert("Session & Exam Saved");
-}
-
-// Save Subject
+// Save / Update Subject
 window.saveSubject=async function(){
-let session=document.getElementById("selectSession").value;
-let examName=document.getElementById("selectExam").value;
-let subject=document.getElementById("subject").value;
+let sessionId=document.getElementById("sessionSubject").value;
+let examId=document.getElementById("examSubject").value;
+let subject=document.getElementById("subjectInput").value;
 let cls=document.getElementById("class").value;
 let max=document.getElementById("max").value;
 let type=document.getElementById("type").value;
@@ -243,13 +184,22 @@ let day=document.getElementById("day").value;
 let time=document.getElementById("time").value;
 let status=document.getElementById("status").value;
 
-if(!session || !examName || !subject || !cls){alert("Please fill all required fields"); return;}
+if(!sessionId || !examId || !subject){alert("Fill all required fields"); return;}
 
-await addDoc(collection(db,"exam_subjects"),{
-session,examName,subject,class:cls,max,type,date,day,time,status
+const sessionName=document.getElementById("sessionSubject").selectedOptions[0].text;
+const examName=document.getElementById("examSubject").selectedOptions[0].text;
+
+if(editSubjectId){
+await updateDoc(doc(db,"exam_subjects",editSubjectId),{
+sessionId,sessionName,examId,examName,subject,class:cls,max,type,date,day,time,status
 });
-
-document.getElementById("subject").value="";
+editSubjectId=null;
+}else{
+await addDoc(collection(db,"exam_subjects"),{
+sessionId,sessionName,examId,examName,subject,class:cls,max,type,date,day,time,status
+});
+}
+document.getElementById("subjectInput").value="";
 document.getElementById("class").value="";
 document.getElementById("max").value="";
 document.getElementById("type").value="";
@@ -258,19 +208,20 @@ document.getElementById("day").value="";
 document.getElementById("time").value="";
 document.getElementById("status").value="Pending";
 
-alert("Subject Saved");
-loadExams();
+alert("Subject Saved / Updated");
+loadSubjects();
 }
 
-// Edit Exam Subject
-window.editExam=async function(id){
-const snap=await getDocs(collection(db,"exam_subjects"));
+// Edit Subject
+window.editSubject=function(id){
+editSubjectId=id;
+getDocs(collection(db,"exam_subjects")).then(snap=>{
 snap.forEach(d=>{
 if(d.id==id){
 let e=d.data();
-document.getElementById("selectSession").value=e.session;
-document.getElementById("selectExam").value=e.examName;
-document.getElementById("subject").value=e.subject;
+document.getElementById("sessionSubject").value=e.sessionId;
+document.getElementById("examSubject").value=e.examId;
+document.getElementById("subjectInput").value=e.subject;
 document.getElementById("class").value=e.class;
 document.getElementById("max").value=e.max;
 document.getElementById("type").value=e.type;
@@ -278,28 +229,28 @@ document.getElementById("date").value=e.date;
 document.getElementById("day").value=e.day;
 document.getElementById("time").value=e.time;
 document.getElementById("status").value=e.status;
-editId=id;
 }
+});
 });
 }
 
-// Delete Exam Subject
-window.deleteExam=async function(id){
-if(confirm("Delete this exam subject?")){
+// Delete Subject
+window.deleteSubject=async function(id){
+if(confirm("Delete this subject?")){
 await deleteDoc(doc(db,"exam_subjects",id));
-loadExams();
+loadSubjects();
 }
 }
 
-// Admit Card Download
+// Admit Card
 window.downloadAdmit=function(id){
-alert("Admit Card Download Feature will be implemented here");
+alert("Admit Card Download will be implemented");
 }
 
 // Initialize
-loadSessionExam();
-loadExams();
+loadSessionsExams();
+loadSubjects();
 </script>
 
 </body>
-  </html>
+</html>
