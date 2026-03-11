@@ -2,18 +2,15 @@
 <html>
 
 <head>
-
 <meta charset="UTF-8">
 <title>Exam Management</title>
 
 <style>
-
 body{
 font-family:Arial;
 margin:0;
 background:#f2f2f2;
 }
-
 header{
 background:#004aad;
 color:white;
@@ -21,61 +18,38 @@ padding:15px;
 text-align:center;
 font-size:22px;
 }
-
 .container{
 padding:20px;
 }
-
 .card{
 background:white;
 padding:20px;
 border-radius:6px;
 margin-bottom:20px;
 }
-
 input,select,button{
 padding:8px;
 margin:5px;
 }
-
 table{
 width:100%;
 border-collapse:collapse;
 background:white;
 }
-
 th{
 background:#004aad;
 color:white;
 padding:8px;
 }
-
 td{
 padding:8px;
 border:1px solid #ccc;
 text-align:center;
 }
-
-.edit{
-background:#ffc107;
-border:none;
-padding:6px 10px;
-}
-
-.delete{
-background:#dc3545;
-color:white;
-border:none;
-padding:6px 10px;
-}
-
-.save{
-background:#28a745;
-color:white;
-border:none;
-padding:8px 15px;
-}
-
+.edit{background:#ffc107;border:none;padding:6px 10px;}
+.delete{background:#dc3545;color:white;border:none;padding:6px 10px;}
+.admit{background:#28a745;color:white;border:none;padding:6px 10px;}
+.save{background:#004aad;color:white;border:none;padding:8px 15px;}
 </style>
 
 </head>
@@ -86,18 +60,29 @@ padding:8px 15px;
 
 <div class="container">
 
+<!-- Session & Exam Create Section -->
 <div class="card">
-
-<h3>Create / Edit Exam</h3>
-
+<h3>Create Session / Exam</h3>
 <input type="text" id="session" placeholder="Session (2024-25)">
-
 <input type="text" id="examName" placeholder="Exam Name">
+<button class="save" onclick="saveExamSession()">Save Session & Exam</button>
+</div>
+
+<!-- Subject Create Section -->
+<div class="card">
+<h3>Create Subject for Exam</h3>
+
+<select id="selectSession">
+<option value="">Select Session</option>
+</select>
+
+<select id="selectExam">
+<option value="">Select Exam</option>
+</select>
 
 <input type="text" id="subject" placeholder="Subject">
 
 <select id="class">
-
 <option value="">Select Class</option>
 <option>Nursery</option>
 <option>LKG</option>
@@ -112,63 +97,66 @@ padding:8px 15px;
 <option>8</option>
 <option>9</option>
 <option>10</option>
-
 </select>
-
-<br>
-
-<input type="number" id="min" placeholder="Minimum Marks">
 
 <input type="number" id="max" placeholder="Maximum Marks">
 
 <select id="type">
-
 <option value="">Exam Type</option>
 <option>Written</option>
 <option>Oral</option>
+</select>
 
+<input type="date" id="date">
+<select id="day">
+<option value="">Select Day</option>
+<option>Monday</option>
+<option>Tuesday</option>
+<option>Wednesday</option>
+<option>Thursday</option>
+<option>Friday</option>
+<option>Saturday</option>
+</select>
+<input type="time" id="time">
+
+<select id="status">
+<option value="Pending">Pending</option>
+<option value="Completed">Completed</option>
 </select>
 
 <br>
-
-<button class="save" onclick="saveExam()">Save Exam</button>
-
+<button class="save" onclick="saveSubject()">Save Subject</button>
 </div>
 
+<!-- Exam List -->
 <div class="card">
-
-<h3>Exam List</h3>
-
+<h3>Exam Subject List</h3>
 <table>
-
 <thead>
-
 <tr>
 <th>Session</th>
 <th>Exam</th>
 <th>Subject</th>
 <th>Class</th>
-<th>Min</th>
 <th>Max</th>
 <th>Type</th>
+<th>Date</th>
+<th>Day</th>
+<th>Time</th>
+<th>Status</th>
 <th>Edit</th>
 <th>Delete</th>
+<th>Admit Card</th>
 </tr>
-
 </thead>
-
 <tbody id="examList"></tbody>
-
 </table>
-
 </div>
 
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
 import {
 getFirestore,
 collection,
@@ -184,139 +172,134 @@ apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
 projectId:"nmpsnagguradiya-b9b94"
 };
-
 const app=initializeApp(firebaseConfig);
-
 const db=getFirestore(app);
 
 let editId=null;
 
+// Load Exam List
 async function loadExams(){
-
-const snap=await getDocs(collection(db,"exams"));
-
+const snap=await getDocs(collection(db,"exam_subjects"));
 let html="";
-
 snap.forEach(d=>{
-
 let e=d.data();
-
 html+=`
-
 <tr>
-
 <td>${e.session}</td>
 <td>${e.examName}</td>
 <td>${e.subject}</td>
 <td>${e.class}</td>
-<td>${e.min}</td>
 <td>${e.max}</td>
 <td>${e.type}</td>
-
-<td>
-<button class="edit" onclick="editExam('${d.id}')">Edit</button>
-</td>
-
-<td>
-<button class="delete" onclick="deleteExam('${d.id}')">Delete</button>
-</td>
-
+<td>${e.date}</td>
+<td>${e.day}</td>
+<td>${e.time}</td>
+<td>${e.status}</td>
+<td><button class="edit" onclick="editExam('${d.id}')">Edit</button></td>
+<td><button class="delete" onclick="deleteExam('${d.id}')">Delete</button></td>
+<td><button class="admit" onclick="downloadAdmit('${d.id}')">Download</button></td>
 </tr>
-
 `;
+});
+document.getElementById("examList").innerHTML=html;
+}
 
+// Load Sessions & Exams into dropdown
+async function loadSessionExam(){
+const snap=await getDocs(collection(db,"exam_sessions"));
+let sessionHTML='<option value="">Select Session</option>';
+let examHTML='<option value="">Select Exam</option>';
+snap.forEach(d=>{
+let e=d.data();
+sessionHTML+=`<option value="${e.session}">${e.session}</option>`;
+examHTML+=`<option value="${e.examName}">${e.examName}</option>`;
+});
+document.getElementById("selectSession").innerHTML=sessionHTML;
+document.getElementById("selectExam").innerHTML=examHTML;
+}
+
+// Save Session & Exam
+window.saveExamSession=async function(){
+let session=document.getElementById("session").value;
+let examName=document.getElementById("examName").value;
+if(!session || !examName){alert("Enter both Session & Exam"); return;}
+await addDoc(collection(db,"exam_sessions"),{session,examName});
+document.getElementById("session").value="";
+document.getElementById("examName").value="";
+loadSessionExam();
+alert("Session & Exam Saved");
+}
+
+// Save Subject
+window.saveSubject=async function(){
+let session=document.getElementById("selectSession").value;
+let examName=document.getElementById("selectExam").value;
+let subject=document.getElementById("subject").value;
+let cls=document.getElementById("class").value;
+let max=document.getElementById("max").value;
+let type=document.getElementById("type").value;
+let date=document.getElementById("date").value;
+let day=document.getElementById("day").value;
+let time=document.getElementById("time").value;
+let status=document.getElementById("status").value;
+
+if(!session || !examName || !subject || !cls){alert("Please fill all required fields"); return;}
+
+await addDoc(collection(db,"exam_subjects"),{
+session,examName,subject,class:cls,max,type,date,day,time,status
 });
 
-document.getElementById("examList").innerHTML=html;
+document.getElementById("subject").value="";
+document.getElementById("class").value="";
+document.getElementById("max").value="";
+document.getElementById("type").value="";
+document.getElementById("date").value="";
+document.getElementById("day").value="";
+document.getElementById("time").value="";
+document.getElementById("status").value="Pending";
 
+alert("Subject Saved");
+loadExams();
 }
 
-window.saveExam=async function(){
-
-let data={
-
-session:document.getElementById("session").value,
-examName:document.getElementById("examName").value,
-subject:document.getElementById("subject").value,
-class:document.getElementById("class").value,
-min:document.getElementById("min").value,
-max:document.getElementById("max").value,
-type:document.getElementById("type").value
-
-}
-
-if(editId){
-
-await updateDoc(doc(db,"exams",editId),data)
-
-editId=null
-
-}else{
-
-await addDoc(collection(db,"exams"),data)
-
-}
-
-clearForm()
-
-loadExams()
-
-}
-
+// Edit Exam Subject
 window.editExam=async function(id){
-
-const snap=await getDocs(collection(db,"exams"))
-
+const snap=await getDocs(collection(db,"exam_subjects"));
 snap.forEach(d=>{
-
 if(d.id==id){
-
-let e=d.data()
-
-document.getElementById("session").value=e.session
-document.getElementById("examName").value=e.examName
-document.getElementById("subject").value=e.subject
-document.getElementById("class").value=e.class
-document.getElementById("min").value=e.min
-document.getElementById("max").value=e.max
-document.getElementById("type").value=e.type
-
-editId=id
-
+let e=d.data();
+document.getElementById("selectSession").value=e.session;
+document.getElementById("selectExam").value=e.examName;
+document.getElementById("subject").value=e.subject;
+document.getElementById("class").value=e.class;
+document.getElementById("max").value=e.max;
+document.getElementById("type").value=e.type;
+document.getElementById("date").value=e.date;
+document.getElementById("day").value=e.day;
+document.getElementById("time").value=e.time;
+document.getElementById("status").value=e.status;
+editId=id;
+}
+});
 }
 
-})
-
-}
-
+// Delete Exam Subject
 window.deleteExam=async function(id){
-
-if(confirm("Delete this exam?")){
-
-await deleteDoc(doc(db,"exams",id))
-
-loadExams()
-
+if(confirm("Delete this exam subject?")){
+await deleteDoc(doc(db,"exam_subjects",id));
+loadExams();
+}
 }
 
+// Admit Card Download
+window.downloadAdmit=function(id){
+alert("Admit Card Download Feature will be implemented here");
 }
 
-function clearForm(){
-
-document.getElementById("session").value=""
-document.getElementById("examName").value=""
-document.getElementById("subject").value=""
-document.getElementById("class").value=""
-document.getElementById("min").value=""
-document.getElementById("max").value=""
-document.getElementById("type").value=""
-
-}
-
-loadExams()
-
+// Initialize
+loadSessionExam();
+loadExams();
 </script>
 
 </body>
-
-</html>
+  </html>
