@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 <meta charset="UTF-8">
 <title>Enter Marks</title>
@@ -12,7 +13,6 @@ header {background:#004aad; color:white; padding:15px; text-align:center; font-s
 select,input,button {padding:10px; margin:5px; width:100%; max-width:300px;}
 button {cursor:pointer; border:none; border-radius:5px;}
 .save {background:#004aad;color:white;padding:10px;}
-.edit {background:#ffc107;color:white;padding:10px;}
 table {width:100%; border-collapse:collapse; margin-top:10px;}
 th, td {border:1px solid #ccc; padding:8px; text-align:center;}
 th {background:#004aad; color:white;}
@@ -83,15 +83,19 @@ async function loadData(){
 }
 loadData();
 
-// Load Students
+// Load Students for selected Class
 async function loadStudents(){
   const cls = document.getElementById("classSelect").value;
-  if(!cls) return alert("Select class");
+  const examId = document.getElementById("examSelect").value;
+  const subjectId = document.getElementById("subjectSelect").value;
+
+  if(!cls || !examId || !subjectId) return alert("Select Class, Exam & Subject");
+
   const studentsSnap = await getDocs(query(collection(db,"admissions"), where("class","==",cls)));
   let html="";
   for(const d of studentsSnap.docs){
     const s = d.data();
-    const markDoc = await getDoc(doc(db,"marks",`${d.id}_${document.getElementById("examSelect").value}_${document.getElementById("subjectSelect").value}`));
+    const markDoc = await getDoc(doc(db,"marks",`${d.id}_${examId}_${subjectId}`));
     const markValue = markDoc.exists() ? markDoc.data().marks : "";
     html += `<tr>
       <td>${s.roll}</td>
@@ -109,6 +113,7 @@ window.saveMark = async function(studentId){
   const examId = document.getElementById("examSelect").value;
   const subjectId = document.getElementById("subjectSelect").value;
   const marks = document.getElementById(`mark_${studentId}`).value;
+
   if(!examId || !subjectId) return alert("Select Exam & Subject");
   if(marks==="") return alert("Enter marks");
 
