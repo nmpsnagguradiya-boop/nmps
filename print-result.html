@@ -11,24 +11,38 @@
 
 <style>
 
-body{font-family:Arial;margin:0;background:#f2f2f2;}
+body{
+font-family:'Segoe UI',Arial;
+margin:0;
+background:#eef2f7;
+}
+
+/* header */
 
 header{
-background:#004aad;
+background:#1a237e;
 color:white;
 padding:15px;
 text-align:center;
-font-size:22px;
+font-size:24px;
+font-weight:bold;
+letter-spacing:1px;
 }
 
-.container{padding:20px;max-width:1200px;margin:auto;}
+/* layout */
+
+.container{
+padding:20px;
+max-width:1200px;
+margin:auto;
+}
 
 .card{
 background:white;
 padding:20px;
 border-radius:10px;
 margin-bottom:20px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1);
+box-shadow:0 5px 15px rgba(0,0,0,0.15);
 }
 
 select,button{
@@ -39,70 +53,109 @@ max-width:250px;
 }
 
 button{
-background:#004aad;
+background:#1a237e;
 color:white;
 border:none;
 cursor:pointer;
 }
 
+/* marksheet */
+
 #marksheet{
 display:none;
 padding:30px;
-border:5px solid #004aad;
+border:6px solid #1a237e;
+background:white;
 }
 
-/* 7 Styles */
+/* 7 colour styles */
 
-.style1{border-color:#004aad;background:#f4f8ff;}
-.style2{border-color:#009688;background:#f0fffa;}
-.style3{border-color:#e91e63;background:#fff0f6;}
-.style4{border-color:#ff9800;background:#fff8f0;}
-.style5{border-color:#673ab7;background:#f6f0ff;}
-.style6{border-color:#4caf50;background:#f1fff5;}
-.style7{border-color:#2196f3;background:#f0f8ff;}
+.style1{border-color:#1a237e;background:linear-gradient(#ffffff,#eef2ff);}
+.style2{border-color:#00695c;background:linear-gradient(#ffffff,#e0f7fa);}
+.style3{border-color:#ad1457;background:linear-gradient(#ffffff,#fce4ec);}
+.style4{border-color:#ef6c00;background:linear-gradient(#ffffff,#fff3e0);}
+.style5{border-color:#4a148c;background:linear-gradient(#ffffff,#f3e5f5);}
+.style6{border-color:#2e7d32;background:linear-gradient(#ffffff,#e8f5e9);}
+.style7{border-color:#1565c0;background:linear-gradient(#ffffff,#e3f2fd);}
 
-.school{text-align:center;font-size:26px;font-weight:bold;}
+/* school header */
+
+.school{
+text-align:center;
+font-size:28px;
+font-weight:bold;
+color:#1a237e;
+}
+
+/* student section */
 
 .student{
 display:flex;
 justify-content:space-between;
 margin-top:20px;
+border:2px solid #ddd;
+padding:15px;
+background:#fafafa;
 }
 
-.details{line-height:1.6;font-size:14px;}
+.details{
+line-height:1.7;
+font-size:14px;
+font-weight:500;
+}
 
 .photo{
 width:120px;
 height:140px;
-border:2px solid black;
+border:3px solid #1a237e;
 object-fit:cover;
 }
+
+/* professional table */
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:20px;
+margin-top:25px;
+font-size:14px;
 }
 
-th,td{
+th{
+background:#1a237e;
+color:white;
+padding:10px;
+font-weight:bold;
+font-style:italic;
+}
+
+td{
 border:1px solid #ccc;
 padding:8px;
-text-align:center;
+font-weight:bold;
+font-style:italic;
 }
 
-th{background:#004aad;color:white;}
+tr:nth-child(even){
+background:#f5f5f5;
+}
 
 .resultBox{
 margin-top:20px;
-font-weight:bold;
 font-size:18px;
+font-weight:bold;
+color:#1a237e;
+border-top:3px solid #1a237e;
+padding-top:10px;
 }
 
 .sign{
 margin-top:60px;
 display:flex;
 justify-content:space-between;
+font-weight:bold;
 }
+
+/* print */
 
 @media print{
 
@@ -133,9 +186,15 @@ border:none;
 <option>Nursery</option>
 <option>LKG</option>
 <option>UKG</option>
-<option>1</option><option>2</option><option>3</option>
-<option>4</option><option>5</option><option>6</option>
-<option>7</option><option>8</option><option>9</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
 <option>10</option>
 </select>
 
@@ -162,7 +221,6 @@ border:none;
 <button class="batchBtn" onclick="printClass()">Batch Print</button>
 
 </div>
-
 
 <div id="marksheet" class="style1">
 
@@ -202,7 +260,6 @@ National : <span id="national"></span><br>
 
 </div>
 
-
 <table>
 
 <thead id="tableHead"></thead>
@@ -229,7 +286,6 @@ Result : <span id="status"></span>
 <button class="printBtn" onclick="window.print()">Print Marksheet</button>
 
 </div>
-
 
 <script type="module">
 
@@ -258,7 +314,6 @@ exams.map(e=>`<option value="${e.id}">${e.name}</option>`).join("");
 const subSnap=await getDocs(collection(db,"subjects"));
 subjects=subSnap.docs.map(d=>({id:d.id,...d.data()}));
 
-
 window.loadStudents=async function(){
 
 const cls=document.getElementById("classSelect").value;
@@ -274,7 +329,6 @@ students.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
 
 }
 
-
 function grade(p){
 
 if(p>=90) return "A+";
@@ -286,7 +340,6 @@ return "F";
 
 }
 
-
 window.generateResult=async function(){
 
 const studentId=document.getElementById("studentSelect").value;
@@ -294,8 +347,6 @@ const studentId=document.getElementById("studentSelect").value;
 const selectedExams=[...document.getElementById("examSelect").selectedOptions].map(o=>o.value);
 
 const student=students.find(s=>s.id==studentId);
-
-/* student details */
 
 document.getElementById("name").innerText=student.name;
 document.getElementById("father").innerText=student.father;
@@ -318,12 +369,7 @@ document.getElementById("national").innerText=student.national;
 
 document.getElementById("photo").src=student.photo;
 
-/* QR */
-
 QRCode.toCanvas(document.getElementById("qr"),"Student:"+student.roll);
-
-
-/* table */
 
 let total=0;
 let max=0;
@@ -356,7 +402,7 @@ if(markDoc.exists()){
 
 const m=markDoc.data();
 
-row+=`<td>${m.marks}</td>`;
+row+=`<td>${m.marks} / ${m.maxMarks}</td>`;
 
 total+=m.marks;
 max+=m.maxMarks;
@@ -387,8 +433,6 @@ document.getElementById("marksheet").style.display="block";
 
 }
 
-/* style change */
-
 window.changeStyle=function(){
 
 const s=document.getElementById("styleSelect").value;
@@ -396,8 +440,6 @@ const s=document.getElementById("styleSelect").value;
 document.getElementById("marksheet").className=s;
 
 }
-
-/* excel */
 
 window.exportExcel=function(){
 
@@ -408,8 +450,6 @@ const wb=XLSX.utils.table_to_book(table,{sheet:"Result"});
 XLSX.writeFile(wb,"result.xlsx");
 
 }
-
-/* batch print */
 
 window.printClass=async function(){
 
@@ -428,4 +468,4 @@ window.print();
 </script>
 
 </body>
-          </html>
+</html>
