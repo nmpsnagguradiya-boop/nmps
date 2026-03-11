@@ -92,7 +92,10 @@ loadExams();
 // Load Students on Class change
 document.getElementById("classSelect").addEventListener("change", async function(){
   const cls = this.value;
-  if(!cls) return;
+  const selectBox = document.getElementById("studentSelect");
+  selectBox.innerHTML="Loading...";
+  if(!cls) { selectBox.innerHTML=""; return; }
+
   const q = query(collection(db,"admissions"), where("class","==",cls));
   const snap = await getDocs(q);
   let html="";
@@ -103,7 +106,7 @@ document.getElementById("classSelect").addEventListener("change", async function
     studentsData.push(s);
     html+=`<option value="${s.id}">${s.name} (${s.roll})</option>`;
   });
-  document.getElementById("studentSelect").innerHTML=html;
+  selectBox.innerHTML = html || '<option value="">No students found</option>';
 });
 
 // Generate Admit Cards
@@ -159,8 +162,9 @@ window.generateAdmitCards = async function(){
     container.innerHTML += cardHTML;
     container.innerHTML += cardHTML;
   });
+
   window.print();
 };
 </script>
 </body>
-  </html>
+</html>
