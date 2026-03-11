@@ -1,158 +1,358 @@
 <!DOCTYPE html>
-<html lang="hi">
+<html>
 <head>
+
 <meta charset="UTF-8">
-<title>Marks Sheet - Print</title>
+<title>Super Result System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<!-- Google Fonts for professional look -->
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
+
 <style>
-body { font-family: 'Roboto', sans-serif; margin:0; padding:0; background:#f2f2f2; }
-.container { max-width:1000px; margin:auto; padding:20px; }
-.card { background:white; padding:20px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-bottom:30px; }
-select, button { padding:10px; margin:5px; font-size:16px; }
-button { cursor:pointer; border:none; border-radius:5px; }
-table { width:100%; border-collapse: collapse; margin-top:10px; }
-th, td { border:1px solid #ccc; padding:8px; text-align:center; }
-th { font-weight:700; }
-#printArea { margin-top:20px; }
-@media print {
-  body { background:white; }
-  .no-print { display:none; }
-  .marksheet { page-break-after: always; width:100%; }
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
 }
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+font-weight:bold;
+}
+
+.container{
+padding:20px;
+max-width:1200px;
+margin:auto;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+box-shadow:0 3px 10px rgba(0,0,0,0.1);
+}
+
+select,button{
+padding:10px;
+margin:5px;
+width:100%;
+max-width:260px;
+}
+
+button{
+background:#004aad;
+color:white;
+border:none;
+cursor:pointer;
+}
+
+#marksheet{
+display:none;
+background:white;
+padding:30px;
+border:4px solid #004aad;
+}
+
+.school{
+text-align:center;
+font-size:26px;
+font-weight:bold;
+color:#004aad;
+}
+
+.student{
+display:flex;
+justify-content:space-between;
+margin-top:20px;
+}
+
+.photo{
+width:120px;
+height:140px;
+border:2px solid black;
+object-fit:cover;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+th,td{
+border:1px solid #ccc;
+padding:8px;
+text-align:center;
+}
+
+th{
+background:#004aad;
+color:white;
+}
+
+.resultBox{
+margin-top:20px;
+font-weight:bold;
+font-size:18px;
+}
+
+.sign{
+margin-top:60px;
+display:flex;
+justify-content:space-between;
+}
+
+@media print{
+
+header,.card,.printBtn{
+display:none;
+}
+
+#marksheet{
+display:block;
+border:none;
+}
+
+}
+
 </style>
 </head>
+
 <body>
+
+<header>Super Result System</header>
+
 <div class="container">
 
-<h2>Marks Sheet Print System</h2>
+<div class="card">
 
-<div class="card no-print">
-  <label>Class Filter:</label>
-  <select id="filterClass">
-    <option value="">Select Class</option>
-    <option>Nursery</option><option>LKG</option><option>UKG</option>
-    <option>1</option><option>2</option><option>3</option><option>4</option>
-    <option>5</option><option>6</option><option>7</option><option>8</option>
-    <option>9</option><option>10</option>
-  </select>
-  <button onclick="loadStudents()">Load Students</button>
+<select id="classSelect">
+<option value="">Select Class</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+
+<select id="examSelect" multiple style="height:120px;"></select>
+
+<select id="studentSelect"></select>
+
+<br>
+
+<button onclick="loadStudents()">Load Students</button>
+<button onclick="generateResult()">Generate Result</button>
+
 </div>
 
-<div class="card no-print" id="studentListDiv" style="display:none;">
-  <h3>Select Students</h3>
-  <div id="studentList"></div>
-  <button onclick="printSelected()">Print Selected Marksheets</button>
+
+<div id="marksheet">
+
+<div class="school">
+NEW MODEL PUBLIC SCHOOL<br>
+<span style="font-size:16px">Ujjain Madhya Pradesh</span>
 </div>
 
-<div class="card no-print">
-  <label>Select Style:</label>
-  <select id="styleSelect">
-    <option value="style1">Style 1</option>
-    <option value="style2">Style 2</option>
-    <option value="style3">Style 3</option>
-    <option value="style4">Style 4</option>
-    <option value="style5">Style 5</option>
-    <option value="style6">Style 6</option>
-    <option value="style7">Style 7</option>
-  </select>
+
+<div class="student">
+
+<div>
+
+Name : <span id="name"></span><br>
+Father : <span id="father"></span><br>
+Class : <span id="class"></span><br>
+Roll : <span id="roll"></span><br>
+Village : <span id="village"></span><br>
+Mobile : <span id="mobile"></span>
+
 </div>
 
-<div id="printArea"></div>
+<img id="photo" class="photo">
+
+</div>
+
+
+<table>
+
+<thead>
+<tr>
+<th>Exam</th>
+<th>Subject</th>
+<th>Marks</th>
+<th>Max</th>
+<th>Percent</th>
+</tr>
+</thead>
+
+<tbody id="resultTable"></tbody>
+
+</table>
+
+
+<div class="resultBox">
+
+Total : <span id="total"></span> / <span id="max"></span><br>
+
+Percentage : <span id="percent"></span>%<br>
+
+Grade : <span id="grade"></span><br>
+
+Result : <span id="status"></span><br>
+
+Class Rank : <span id="rank"></span><br>
+
+Topper : <span id="topper"></span>
+
+</div>
+
+
+<div class="sign">
+
+<div>Class Teacher Sign</div>
+<div>Principal Sign</div>
+
+</div>
+
+</div>
+
+<button class="printBtn" onclick="window.print()">Print Marksheet</button>
+
+</div>
+
 
 <script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-  authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-  projectId:"nmpsnagguradiya-b9b94"
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-let studentsData = [];
+let students=[];
+let subjects=[];
 
-// Load students based on class filter
-window.loadStudents = async function() {
-  const cls = document.getElementById('filterClass').value;
-  if(!cls) return alert("Select class");
-  const q = query(collection(db,"admissions"), where("class","==",cls));
-  const snap = await getDocs(q);
-  studentsData = snap.docs.map(d => ({id:d.id, ...d.data()}));
-  if(studentsData.length === 0) return alert("No students found in this class");
-  
-  let html = '';
-  studentsData.forEach((s,i) => {
-    html += `<div><input type="checkbox" id="student_${i}" value="${i}"> ${s.name} (Roll: ${s.roll})</div>`;
-  });
-  document.getElementById('studentList').innerHTML = html;
-  document.getElementById('studentListDiv').style.display = 'block';
+const examSnap=await getDocs(collection(db,"exam_sessions"));
+
+document.getElementById("examSelect").innerHTML=
+examSnap.docs.map(d=>`<option value="${d.id}">${d.data().examName}</option>`).join("");
+
+const subSnap=await getDocs(collection(db,"subjects"));
+subjects=subSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+
+window.loadStudents=async function(){
+
+const cls=document.getElementById("classSelect").value;
+
+const q=query(collection(db,"admissions"),where("class","==",cls));
+
+const snap=await getDocs(q);
+
+students=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+document.getElementById("studentSelect").innerHTML=
+students.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
+
 }
 
-// Print selected students marksheets
-window.printSelected = async function() {
-  const selectedIndexes = [];
-  studentsData.forEach((s,i) => {
-    if(document.getElementById(`student_${i}`).checked) selectedIndexes.push(i);
-  });
-  if(selectedIndexes.length === 0) return alert("Select students to print");
 
-  const style = document.getElementById('styleSelect').value;
-  let printHTML = '';
-  for(const idx of selectedIndexes){
-    const s = studentsData[idx];
+function grade(p){
 
-    // Get marksheet from timetable + subjects
-    const marksSnap = await getDocs(query(collection(db,"marks"), where("studentId","==",s.id)));
-    const marks = marksSnap.docs.map(d=>d.data());
+if(p>=90) return "A+";
+if(p>=75) return "A";
+if(p>=60) return "B";
+if(p>=45) return "C";
+if(p>=33) return "D";
+return "F";
 
-    // Total, percentage, grade
-    let totalObtained = 0, maxTotal = 0;
-    marks.forEach(m => { totalObtained += Number(m.obtained||0); maxTotal += Number(m.max||100); });
-    let percentage = ((totalObtained/maxTotal)*100).toFixed(2);
-    let grade = percentage>=90?"A+":percentage>=80?"A":percentage>=70?"B":percentage>=60?"C":percentage>=50?"D":"F";
-    let resultText = percentage>=33?"Pass":"Fail";
+}
 
-    // Build marksheet HTML
-    printHTML += `<div class="marksheet ${style}" style="font-family: 'Merriweather', serif; border:2px solid #004aad; padding:20px; margin-bottom:20px;">
-      <h2 style="text-align:center; color:#004aad; margin-bottom:10px;">YOUR SCHOOL NAME</h2>
-      <div style="display:flex; align-items:center; margin-bottom:10px;">
-        <img src="${s.photo}" alt="Photo" style="width:80px; height:80px; border-radius:50%; margin-right:20px;">
-        <div>
-          <p><b>Name:</b> ${s.name}</p>
-          <p><b>Father:</b> ${s.father}</p>
-          <p><b>Roll No:</b> ${s.roll}</p>
-          <p><b>Class:</b> ${s.class}</p>
-          <p><b>DOB:</b> ${s.dob}</p>
-          <p><b>City:</b> ${s.city}, ${s.state}</p>
-          <p><b>Category:</b> ${s.category}</p>
-        </div>
-      </div>
-      <table style="width:100%; border:1px solid #004aad; border-collapse: collapse; margin-top:10px;">
-        <thead style="background:#004aad; color:white;">
-          <tr><th>Subject</th><th>Obtained</th><th>Max</th></tr>
-        </thead>
-        <tbody>`;
-    marks.forEach(m=>{
-      printHTML += `<tr><td>${m.subjectName}</td><td>${m.obtained}</td><td>${m.max}</td></tr>`;
-    });
-    printHTML += `</tbody></table>
-      <p style="margin-top:10px;"><b>Total:</b> ${totalObtained}/${maxTotal} | <b>Percentage:</b> ${percentage}% | <b>Grade:</b> ${grade} | <b>Result:</b> ${resultText}</p>
-      <div style="display:flex; justify-content:space-between; margin-top:40px;">
-        <div style="text-align:center;">_________________<br>Class Teacher</div>
-        <div style="text-align:center;">_________________<br>Principal</div>
-      </div>
-    </div>`;
-  }
 
-  document.getElementById('printArea').innerHTML = printHTML;
-  window.print();
+window.generateResult=async function(){
+
+const studentId=document.getElementById("studentSelect").value;
+
+const exams=[...document.getElementById("examSelect").selectedOptions].map(o=>o.value);
+
+const student=students.find(s=>s.id==studentId);
+
+document.getElementById("name").innerText=student.name;
+document.getElementById("father").innerText=student.father;
+document.getElementById("class").innerText=student.class;
+document.getElementById("roll").innerText=student.roll;
+document.getElementById("village").innerText=student.village;
+document.getElementById("mobile").innerText=student.mobile;
+document.getElementById("photo").src=student.photo;
+
+let total=0;
+let max=0;
+
+const tbody=document.getElementById("resultTable");
+tbody.innerHTML="";
+
+for(const exam of exams){
+
+for(const sub of subjects){
+
+const id=`${studentId}_${exam}_${sub.id}`;
+
+const markDoc=await getDoc(doc(db,"marks",id));
+
+if(markDoc.exists()){
+
+const m=markDoc.data();
+
+const p=((m.marks/m.maxMarks)*100).toFixed(2);
+
+tbody.innerHTML+=`
+<tr>
+<td>${exam}</td>
+<td>${sub.name}</td>
+<td>${m.marks}</td>
+<td>${m.maxMarks}</td>
+<td>${p}%</td>
+</tr>
+`;
+
+total+=m.marks;
+max+=m.maxMarks;
+
+}
+
+}
+
+}
+
+const percent=((total/max)*100).toFixed(2);
+
+document.getElementById("total").innerText=total;
+document.getElementById("max").innerText=max;
+document.getElementById("percent").innerText=percent;
+document.getElementById("grade").innerText=grade(percent);
+document.getElementById("status").innerText=percent>=33?"PASS":"FAIL";
+
+document.getElementById("marksheet").style.display="block";
+
 }
 
 </script>
+
 </body>
 </html>
