@@ -2,174 +2,157 @@
 <html lang="hi">
 <head>
 <meta charset="UTF-8">
-<title>Print Result</title>
+<title>Marks Sheet - Print</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<!-- Google Fonts for professional look -->
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&family=Merriweather:wght@400;700&display=swap" rel="stylesheet">
 <style>
-body {font-family:Arial,sans-serif; background:#f2f2f2; margin:0; padding:0;}
-.container {padding:20px; max-width:1200px; margin:auto;}
-button, select {padding:10px; margin:5px; border:none; border-radius:5px; cursor:pointer;}
-.admitCards {margin-top:20px;}
-.marksheet {width:210mm; height:297mm; background:white; border:2px solid #004aad; margin:10px auto; padding:20px; box-sizing:border-box; page-break-after:always; position:relative;}
-.marksheet h2, .marksheet h3 {text-align:center; margin:5px; color:#004aad;}
-.marksheet img.photo {width:100px; height:120px; object-fit:cover; float:right; border:1px solid #ccc;}
-table {width:100%; border-collapse:collapse; margin-top:10px;}
-table th, table td {border:1px solid #ccc; padding:8px; text-align:center;}
-table th {background:#004aad; color:white;}
-.signs {margin-top:30px; display:flex; justify-content:space-between; padding:0 50px;}
-.signs div {text-align:center;}
-.guideline {margin-top:20px; font-style:italic; border-top:1px dashed #000; padding-top:5px;}
-.result {font-weight:bold; text-align:right; margin-top:10px;}
-
-/* Styles for different designs */
-.style1 {border-color:#004aad;}
-.style2 {border-color:#28a745;}
-.style3 {border-color:#dc3545;}
-.style4 {border-color:#ffc107;}
-.style5 {border-color:#6f42c1;}
-.style6 {border-color:#fd7e14;}
-.style7 {border-color:#20c997;}
+body { font-family: 'Roboto', sans-serif; margin:0; padding:0; background:#f2f2f2; }
+.container { max-width:1000px; margin:auto; padding:20px; }
+.card { background:white; padding:20px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1); margin-bottom:30px; }
+select, button { padding:10px; margin:5px; font-size:16px; }
+button { cursor:pointer; border:none; border-radius:5px; }
+table { width:100%; border-collapse: collapse; margin-top:10px; }
+th, td { border:1px solid #ccc; padding:8px; text-align:center; }
+th { font-weight:700; }
+#printArea { margin-top:20px; }
+@media print {
+  body { background:white; }
+  .no-print { display:none; }
+  .marksheet { page-break-after: always; width:100%; }
+}
 </style>
 </head>
 <body>
 <div class="container">
-<h1>Print Marksheet</h1>
 
-<select id="styleSelect">
-  <option value="style1">Style 1</option>
-  <option value="style2">Style 2</option>
-  <option value="style3">Style 3</option>
-  <option value="style4">Style 4</option>
-  <option value="style5">Style 5</option>
-  <option value="style6">Style 6</option>
-  <option value="style7">Style 7</option>
-</select>
+<h2>Marks Sheet Print System</h2>
 
-<select id="classSelect">
-  <option value="">Select Class</option>
-  <option>1</option><option>2</option><option>3</option><option>4</option>
-  <option>5</option><option>6</option><option>7</option><option>8</option>
-  <option>9</option><option>10</option>
-</select>
-
-<select id="examSelect">
-  <option value="">Select Exam</option>
-</select>
-
-<button onclick="loadStudents()">Load Students</button>
-<div id="studentList"></div>
-<button onclick="printMarksheet()">Print Selected Marksheet</button>
-
-<div id="admitCards" class="admitCards"></div>
+<div class="card no-print">
+  <label>Class Filter:</label>
+  <select id="filterClass">
+    <option value="">Select Class</option>
+    <option>Nursery</option><option>LKG</option><option>UKG</option>
+    <option>1</option><option>2</option><option>3</option><option>4</option>
+    <option>5</option><option>6</option><option>7</option><option>8</option>
+    <option>9</option><option>10</option>
+  </select>
+  <button onclick="loadStudents()">Load Students</button>
 </div>
+
+<div class="card no-print" id="studentListDiv" style="display:none;">
+  <h3>Select Students</h3>
+  <div id="studentList"></div>
+  <button onclick="printSelected()">Print Selected Marksheets</button>
+</div>
+
+<div class="card no-print">
+  <label>Select Style:</label>
+  <select id="styleSelect">
+    <option value="style1">Style 1</option>
+    <option value="style2">Style 2</option>
+    <option value="style3">Style 3</option>
+    <option value="style4">Style 4</option>
+    <option value="style5">Style 5</option>
+    <option value="style6">Style 6</option>
+    <option value="style7">Style 7</option>
+  </select>
+</div>
+
+<div id="printArea"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, query, where, getDocs, getDoc, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig={
+const firebaseConfig = {
   apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
   authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
   projectId:"nmpsnagguradiya-b9b94"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Load exams
-async function loadExams(){
-  const snap = await getDocs(collection(db,"exam_sessions"));
-  let html='<option value="">Select Exam</option>';
-  snap.forEach(d=>{ html+=`<option value="${d.id}">${d.data().examName}</option>`; });
-  document.getElementById("examSelect").innerHTML = html;
-}
-loadExams();
+let studentsData = [];
 
-// Load students by class
-window.loadStudents = async function(){
-  const cls = document.getElementById("classSelect").value;
+// Load students based on class filter
+window.loadStudents = async function() {
+  const cls = document.getElementById('filterClass').value;
   if(!cls) return alert("Select class");
-  const snap = await getDocs(query(collection(db,"admissions"), where("class","==",cls)));
-  let html="<h4>Select Students:</h4>";
-  snap.forEach(d=>{
-    const s = d.data();
-    html+=`<input type="checkbox" class="studentCheckbox" value="${d.id}"> ${s.name} | Roll: ${s.roll} | ${s.father}<br>`;
+  const q = query(collection(db,"admissions"), where("class","==",cls));
+  const snap = await getDocs(q);
+  studentsData = snap.docs.map(d => ({id:d.id, ...d.data()}));
+  if(studentsData.length === 0) return alert("No students found in this class");
+  
+  let html = '';
+  studentsData.forEach((s,i) => {
+    html += `<div><input type="checkbox" id="student_${i}" value="${i}"> ${s.name} (Roll: ${s.roll})</div>`;
   });
-  document.getElementById("studentList").innerHTML = html;
+  document.getElementById('studentList').innerHTML = html;
+  document.getElementById('studentListDiv').style.display = 'block';
 }
 
-// Get grade by percentage
-function getGrade(perc){
-  if(perc>=90) return 'A';
-  else if(perc>=75) return 'B';
-  else if(perc>=50) return 'C';
-  else return 'D';
-}
+// Print selected students marksheets
+window.printSelected = async function() {
+  const selectedIndexes = [];
+  studentsData.forEach((s,i) => {
+    if(document.getElementById(`student_${i}`).checked) selectedIndexes.push(i);
+  });
+  if(selectedIndexes.length === 0) return alert("Select students to print");
 
-// Print marksheet
-window.printMarksheet = async function(){
-  const selected = [...document.querySelectorAll(".studentCheckbox:checked")].map(e=>e.value);
-  const examId = document.getElementById("examSelect").value;
-  const style = document.getElementById("styleSelect").value;
-  if(selected.length==0) return alert("Select at least 1 student");
-  if(!examId) return alert("Select exam");
+  const style = document.getElementById('styleSelect').value;
+  let printHTML = '';
+  for(const idx of selectedIndexes){
+    const s = studentsData[idx];
 
-  let html="";
-  for(const studentId of selected){
-    const sDoc = await getDoc(doc(db,"admissions",studentId));
-    if(!sDoc.exists()) continue;
-    const s = sDoc.data();
+    // Get marksheet from timetable + subjects
+    const marksSnap = await getDocs(query(collection(db,"marks"), where("studentId","==",s.id)));
+    const marks = marksSnap.docs.map(d=>d.data());
 
-    // Load marks
-    const marksSnap = await getDocs(query(collection(db,"marks"), where("studentId","==",studentId), where("examId","==",examId)));
-    let total=0, maxTotal=0;
-    let marksTable="<tr><th>Subject</th><th>Marks Obtained</th><th>Max Marks</th></tr>";
-    for(const m of marksSnap.docs){
-      const data = m.data();
-      const subDoc = await getDoc(doc(db,"subjects",data.subjectId));
-      const subName = subDoc.exists()?subDoc.data().name:"";
-      const mark = data.mark || 0;
-      const max = data.maxMark || 100;
-      total += mark;
-      maxTotal += max;
-      marksTable+=`<tr><td>${subName}</td><td>${mark}</td><td>${max}</td></tr>`;
-    }
-    const perc = maxTotal?((total/maxTotal)*100).toFixed(2):0;
-    const result = perc>=33?"Pass":"Fail";
-    const grade = getGrade(perc);
+    // Total, percentage, grade
+    let totalObtained = 0, maxTotal = 0;
+    marks.forEach(m => { totalObtained += Number(m.obtained||0); maxTotal += Number(m.max||100); });
+    let percentage = ((totalObtained/maxTotal)*100).toFixed(2);
+    let grade = percentage>=90?"A+":percentage>=80?"A":percentage>=70?"B":percentage>=60?"C":percentage>=50?"D":"F";
+    let resultText = percentage>=33?"Pass":"Fail";
 
-    html+=`<div class="marksheet ${style}">
-      <h2>YOUR SCHOOL NAME</h2>
-      <h3>${s.class} Class - Exam Marksheet</h3>
-      <img class="photo" src="${s.photo}" alt="Photo">
-      <table>
-        <tr><td><b>Name</b></td><td>${s.name}</td></tr>
-        <tr><td><b>Father</b></td><td>${s.father}</td></tr>
-        <tr><td><b>Roll</b></td><td>${s.roll}</td></tr>
-        <tr><td><b>Class</b></td><td>${s.class}</td></tr>
-        <tr><td><b>DOB</b></td><td>${s.dob}</td></tr>
-        <tr><td><b>Aadhar</b></td><td>${s.adhar}</td></tr>
-        <tr><td><b>Category</b></td><td>${s.category}</td></tr>
-        <tr><td><b>City</b></td><td>${s.city}</td></tr>
-        <tr><td><b>District</b></td><td>${s.district}</td></tr>
-        <tr><td><b>Post</b></td><td>${s.post}</td></tr>
-        <tr><td><b>Scholer</b></td><td>${s.scholer}</td></tr>
-        <tr><td><b>SSSM</b></td><td>${s.sssm}</td></tr>
-        <tr><td><b>State</b></td><td>${s.state}</td></tr>
-        <tr><td><b>Village</b></td><td>${s.village}</td></tr>
-      </table>
-      <h3>Marks Obtained</h3>
-      <table>${marksTable}</table>
-      <div class="result">
-        <b>Total:</b> ${total} / ${maxTotal} | <b>Percentage:</b> ${perc}% | <b>Result:</b> ${result} | <b>Grade:</b> ${grade}
+    // Build marksheet HTML
+    printHTML += `<div class="marksheet ${style}" style="font-family: 'Merriweather', serif; border:2px solid #004aad; padding:20px; margin-bottom:20px;">
+      <h2 style="text-align:center; color:#004aad; margin-bottom:10px;">YOUR SCHOOL NAME</h2>
+      <div style="display:flex; align-items:center; margin-bottom:10px;">
+        <img src="${s.photo}" alt="Photo" style="width:80px; height:80px; border-radius:50%; margin-right:20px;">
+        <div>
+          <p><b>Name:</b> ${s.name}</p>
+          <p><b>Father:</b> ${s.father}</p>
+          <p><b>Roll No:</b> ${s.roll}</p>
+          <p><b>Class:</b> ${s.class}</p>
+          <p><b>DOB:</b> ${s.dob}</p>
+          <p><b>City:</b> ${s.city}, ${s.state}</p>
+          <p><b>Category:</b> ${s.category}</p>
+        </div>
       </div>
-      <div class="signs">
-        <div>Principal<br>Sign</div>
-        <div>Class Teacher<br>Sign</div>
+      <table style="width:100%; border:1px solid #004aad; border-collapse: collapse; margin-top:10px;">
+        <thead style="background:#004aad; color:white;">
+          <tr><th>Subject</th><th>Obtained</th><th>Max</th></tr>
+        </thead>
+        <tbody>`;
+    marks.forEach(m=>{
+      printHTML += `<tr><td>${m.subjectName}</td><td>${m.obtained}</td><td>${m.max}</td></tr>`;
+    });
+    printHTML += `</tbody></table>
+      <p style="margin-top:10px;"><b>Total:</b> ${totalObtained}/${maxTotal} | <b>Percentage:</b> ${percentage}% | <b>Grade:</b> ${grade} | <b>Result:</b> ${resultText}</p>
+      <div style="display:flex; justify-content:space-between; margin-top:40px;">
+        <div style="text-align:center;">_________________<br>Class Teacher</div>
+        <div style="text-align:center;">_________________<br>Principal</div>
       </div>
     </div>`;
   }
-  document.getElementById("admitCards").innerHTML = html;
+
+  document.getElementById('printArea').innerHTML = printHTML;
   window.print();
 }
+
 </script>
 </body>
 </html>
