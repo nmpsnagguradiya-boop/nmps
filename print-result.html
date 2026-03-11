@@ -34,7 +34,7 @@ background:white;
 padding:20px;
 border-radius:10px;
 margin-bottom:20px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1);
+box-shadow:0 3px 8px rgba(0,0,0,0.1);
 }
 
 select,button{
@@ -121,6 +121,7 @@ border:none;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -160,8 +161,13 @@ border:none;
 <div id="marksheet">
 
 <div class="school">
+
+<img src="school-logo.png" height="60"><br>
+
 NEW MODEL PUBLIC SCHOOL<br>
+
 <span style="font-size:16px">Ujjain Madhya Pradesh</span>
+
 </div>
 
 
@@ -186,13 +192,11 @@ Mobile : <span id="mobile"></span>
 <table>
 
 <thead>
-<tr>
-<th>Exam</th>
+
+<tr id="examHeader">
 <th>Subject</th>
-<th>Marks</th>
-<th>Max</th>
-<th>Percent</th>
 </tr>
+
 </thead>
 
 <tbody id="resultTable"></tbody>
@@ -247,11 +251,14 @@ const db=getFirestore(app);
 
 let students=[];
 let subjects=[];
+let exams=[];
 
 const examSnap=await getDocs(collection(db,"exam_sessions"));
 
+exams=examSnap.docs.map(d=>({id:d.id,name:d.data().examName}));
+
 document.getElementById("examSelect").innerHTML=
-examSnap.docs.map(d=>`<option value="${d.id}">${d.data().examName}</option>`).join("");
+exams.map(e=>`<option value="${e.id}">${e.name}</option>`).join("");
 
 const subSnap=await getDocs(collection(db,"subjects"));
 subjects=subSnap.docs.map(d=>({id:d.id,...d.data()}));
@@ -289,7 +296,7 @@ window.generateResult=async function(){
 
 const studentId=document.getElementById("studentSelect").value;
 
-const exams=[...document.getElementById("examSelect").selectedOptions].map(o=>o.value);
+const selectedExams=[...document.getElementById("examSelect").selectedOptions].map(o=>o.value);
 
 const student=students.find(s=>s.id==studentId);
 
@@ -301,42 +308,54 @@ document.getElementById("village").innerText=student.village;
 document.getElementById("mobile").innerText=student.mobile;
 document.getElementById("photo").src=student.photo;
 
+
+const header=document.getElementById("examHeader");
+
+header.innerHTML="<th>Subject</th>";
+
+selectedExams.forEach(id=>{
+const exam=exams.find(e=>e.id==id);
+header.innerHTML+=`<th>${exam.name}</th>`;
+});
+
+
 let total=0;
 let max=0;
 
 const tbody=document.getElementById("resultTable");
-tbody.innerHTML="";
 
-for(const exam of exams){
+tbody.innerHTML="";
 
 for(const sub of subjects){
 
-const id=`${studentId}_${exam}_${sub.id}`;
+let row=`<tr><td>${sub.name}</td>`;
 
-const markDoc=await getDoc(doc(db,"marks",id));
+for(const examId of selectedExams){
+
+const docId=`${studentId}_${examId}_${sub.id}`;
+
+const markDoc=await getDoc(doc(db,"marks",docId));
 
 if(markDoc.exists()){
 
 const m=markDoc.data();
 
-const p=((m.marks/m.maxMarks)*100).toFixed(2);
-
-tbody.innerHTML+=`
-<tr>
-<td>${exam}</td>
-<td>${sub.name}</td>
-<td>${m.marks}</td>
-<td>${m.maxMarks}</td>
-<td>${p}%</td>
-</tr>
-`;
+row+=`<td>${m.marks}</td>`;
 
 total+=m.marks;
 max+=m.maxMarks;
 
+}else{
+
+row+="<td>-</td>";
+
 }
 
 }
+
+row+="</tr>";
+
+tbody.innerHTML+=row;
 
 }
 
