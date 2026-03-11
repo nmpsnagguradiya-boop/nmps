@@ -3,7 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
-<title>Marks Entry & Bulk Edit</title>
+<title>Marks Entry & Bulk Edit with Max Marks</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {font-family:Arial; margin:0; background:#f2f2f2;}
@@ -46,6 +46,8 @@ input[type="number"]{width:60px;}
 <select id="selectSubject">
 <option value="">Select Subject</option>
 </select>
+
+<input type="number" id="maxMark" placeholder="Maximum Marks for this Subject" min="0">
 
 <button class="save" onclick="loadStudents()">Load Students</button>
 <button class="save" onclick="saveAllMarks()">Save All Marks</button>
@@ -128,14 +130,18 @@ async function renderMarksTable(){
   }
 }
 
-// Save all marks in bulk
+// Save all marks in bulk with maximum mark
 window.saveAllMarks = async function(){
+  const maxMark = parseInt(document.getElementById("maxMark").value);
+  if(isNaN(maxMark) || maxMark <= 0) return alert("Enter valid maximum marks");
+
   const inputs = document.querySelectorAll(".markInput");
   for(const input of inputs){
     const studentId = input.dataset.student;
-    const marks = input.value || 0;
+    let marks = parseInt(input.value) || 0;
+    if(marks > maxMark) marks = maxMark; // limit marks to max
     await setDoc(doc(db,"marks",`${studentId}_${selectedExam}_${selectedSubject}`),{
-      studentId, examId:selectedExam, subjectId:selectedSubject, marks
+      studentId, examId:selectedExam, subjectId:selectedSubject, marks, maxMarks:maxMark
     });
     input.style.backgroundColor = "#d4edda"; // green flash
     setTimeout(()=>{input.style.backgroundColor="";},500);
