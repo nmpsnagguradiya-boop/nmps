@@ -245,10 +245,8 @@ pdf.text("School Fees Receipt",20,20);
 
 pdf.text("Name : "+studentData.name,20,40);
 pdf.text("Father : "+studentData.father,20,50);
-pdf.text("Mother : "+(studentData.mother||""),20,60);
-pdf.text("Village : "+studentData.village,20,70);
-pdf.text("Mobile : "+studentData.mobile,20,80);
-pdf.text("Roll : "+studentData.roll,20,90);
+pdf.text("Village : "+studentData.village,20,60);
+pdf.text("Mobile : "+studentData.mobile,20,70);
 
 let fees=studentData.fees||0;
 let vehicle=studentData.vehicleFees||0;
@@ -257,16 +255,9 @@ let paid=studentData.paid||0;
 let total=fees+vehicle;
 let pending=total-paid;
 
-pdf.text("Total Fees : "+total,20,110);
-pdf.text("Paid : "+paid,20,120);
-pdf.text("Pending : "+pending,20,130);
-
-let y=150;
-
-history.forEach(h=>{
-pdf.text(h.date+" - "+h.amount,20,y);
-y+=10;
-});
+pdf.text("Total Fees : "+total,20,90);
+pdf.text("Paid : "+paid,20,100);
+pdf.text("Pending : "+pending,20,110);
 
 pdf.save("fees_receipt.pdf");
 
@@ -281,7 +272,6 @@ let phone=studentData.mobile.replace(/\D/g,'');
 let msg=
 "Fees Receipt%0A"+
 "Student : "+studentData.name+"%0A"+
-"Roll : "+studentData.roll+"%0A"+
 "Paid : ₹"+(studentData.paid||0);
 
 window.open("https://wa.me/91"+phone+"?text="+msg);
@@ -308,18 +298,62 @@ return;
 
 const { jsPDF }=window.jspdf;
 
-let pdf=new jsPDF();
+let pdf=new jsPDF({
+orientation:"landscape",
+unit:"mm",
+format:[85,54]
+});
 
-pdf.text("EXAM CARD",80,20);
+/* BORDER */
 
-pdf.text("School Name",20,40);
-pdf.text("Village Nag Guradiya",20,50);
+pdf.setDrawColor(0,0,0);
+pdf.rect(1,1,83,52);
 
-pdf.text("Name : "+studentData.name,20,80);
-pdf.text("Roll No : "+studentData.roll,20,90);
-pdf.text("Father : "+studentData.father,20,100);
-pdf.text("Village : "+studentData.village,20,110);
-pdf.text("Mobile : "+studentData.mobile,20,120);
+/* BLUE HEADER */
+
+pdf.setFillColor(0,74,173);
+pdf.rect(1,1,83,16,"F");
+
+pdf.setTextColor(255,255,255);
+pdf.setFontSize(10);
+pdf.setFont(undefined,"bold");
+
+pdf.text("YOUR SCHOOL NAME",42,8,{align:"center"});
+pdf.text("Village Nag Guradiya",42,13,{align:"center"});
+
+/* YELLOW BODY */
+
+pdf.setFillColor(255,204,0);
+pdf.rect(1,17,83,36,"F");
+
+/* PHOTO */
+
+if(studentData.photo){
+
+pdf.addImage(studentData.photo,"JPEG",4,20,18,22);
+
+}
+
+/* TEXT */
+
+pdf.setTextColor(0,0,0);
+pdf.setFontSize(8);
+pdf.setFont(undefined,"bold");
+
+pdf.text("Name :",25,24);
+pdf.text(studentData.name||"",40,24);
+
+pdf.text("Roll No :",25,30);
+pdf.text(studentData.roll||"",40,30);
+
+pdf.text("Father :",25,36);
+pdf.text(studentData.father||"",40,36);
+
+pdf.text("Village :",25,42);
+pdf.text(studentData.village||"",40,42);
+
+pdf.text("Mobile :",25,48);
+pdf.text(studentData.mobile||"",40,48);
 
 pdf.save("exam_card.pdf");
 
