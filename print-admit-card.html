@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Admit Card Generator</title>
+<style>
+body{font-family:Arial;background:#f2f2f2;margin:0;}
+header{background:#004aad;color:white;padding:15px;text-align:center;font-size:22px;}
+.container{padding:20px;max-width:1000px;margin:auto;}
+.card{background:white;padding:20px;border-radius:6px;margin-bottom:20px;}
+input,select,button,textarea{padding:8px;margin:5px;}
+button{background:#004aad;color:white;border:none;cursor:pointer;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{border:1px solid #ccc;padding:6px;text-align:center;}
+th{background:#004aad;color:white;}
+</style>
+</head>
+<body>
+<header>Admit Card Generator</header>
+<div class="container">
+
+<div class="card">
+<h3>Select Exam & Class</h3>
+<select id="classSelect">
+<option value="">Select Class</option>
+<option>1</option><option>2</option><option>3</option>
+<option>4</option><option>5</option><option>6</option>
+<option>7</option><option>8</option><option>9</option>
+<option>10</option>
+</select>
+<select id="examSelect">
+<option value="">Select Exam</option>
+</select>
+<textarea id="guidelines" placeholder="Enter Guidelines (Optional)" rows="3" style="width:100%;"></textarea>
+<br>
+<button onclick="generateAdmitCards()">Generate Admit Card</button>
+</div>
+
+<div class="card">
+<h3>Students List</h3>
+<table>
+<thead>
+<tr>
+<th>Select</th><th>Name</th><th>Father</th><th>Roll</th><th>Mobile</th>
+</tr>
+</thead>
+<tbody id="studentList"></tbody>
+</table>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94"
+};
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let students=[];
+let exams=[];
+
+async function loadExams(){
+const snap=await getDocs(collection(db,"exam_sessions"));
+let html='<option value="">Select Exam</option>';
+snap.forEach(d=>{
+let e=d.data();
+html+=`<option value="${d.id}">${e.examName} (${e.session})</option>`;
+});
+document.getElementById("examSelect").innerHTML=html;
+exams=snap.docs.map(d=>({id:d.id,...d.data()}));
+}
+loadExams();
+
+document.getElementById("classSelect").addEventListener("change",loadStudents);
+document.getElementById("examSelect").addEventListener("change",loadStudents);
+
+async function loadStudents(){
+let cls=document.getElementById("classSelect").value;
+let examId=document.getElementById("examSelect").value;
+if(!cls || !examId) return;
+
+const q=query(collection(db,"admissions"),where("class","==",cls));
+const snap=await getDocs(q);
+let html="";
+students=[];
+snap.forEach(d=>{
+let s=d.data();
+s.id=d.id;
+students.push(s);
+html+=`<tr>
+<td><input type="checkbox" value="${s.id}"></td>
+<td>${s.name}</td>
+<td>${s.father}</td>
+<td>${s.roll}</td>
+<td>${s.mobile}</td>
+</tr>`;
+});
+document.getElementById("studentList").innerHTML=html;
+}
+
+// Admit Card Generator
+window.generateAdmitCards=async function(){
+const selectedIds=Array.from(document.querySelectorAll("#studentList input:checked")).map(i=>i.value);
+if(selectedIds.length==0){alert("Select at least one student"); return;}
+
+const examId=document.getElementById("examSelect").value;
+if(!examId){alert("Select Exam"); return;}
+
+const guidelines=document.getElementById("guidelines").value;
+
+// Load Exam Subjects for timetable
+const qSubjects=query(collection(db,"exam_subjects"),where("examId","==",examId));
+const snapSubjects=await getDocs(qSubjects);
+let timetable=[];
+snapSubjects.forEach(d=>{
+timetable.push(d.data());
+});
+
+let content=""; // 2 per page
+for(let i=0;i<selectedIds.length;i++){
+const s=students.find(st=>st.id==selectedIds[i]);
+content+=`
+<div style="width:48%;display:inline-block;margin:1%;padding:10px;border:2px solid #004aad;background:#e6f0ff;vertical-align:top;">
+<h2 style="text-align:center;">School Name</h2>
+<p style="text-align:center;">Village Nag Guradiya, District Ujjain</p>
+<p><b>Name:</b> ${s.name}</p>
+<p><b>Father:</b> ${s.father}</p>
+<p><b>Roll:</b> ${s.roll}</p>
+<p><b>Mobile:</b> ${s.mobile}</p>
+<p><b>Class:</b> ${s.class}</p>
+<table style="width:100%;border:1px solid #000;border-collapse:collapse;">
+<tr style="background:#004aad;color:white;"><th>Subject</th><th>Date</th><th>Day</th><th>Time</th></tr>`;
+timetable.filter(t=>t.class==s.class).forEach(t=>{
+content+=`<tr><td>${t.subject}</td><td>${t.date}</td><td>${t.day}</td><td>${t.time}</td></tr>`;
+});
+content+=`</table>`;
+if(guidelines){content+=`<p><b>Guidelines:</b> ${guidelines}</p>`;}
+content+=`<p style="text-align:right;margin-top:30px;"><b>Principal Sign</b></p></div>`;
+if((i+1)%2==0) content+="<div style='page-break-after:always;'></div>";
+}
+
+const w=window.open("");
+w.document.write(`<html><head><title>Admit Cards</title></head><body>${content}</body></html>`);
+w.document.close();
+w.print();
+}
+</script>
+</body>
+</html>
