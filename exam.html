@@ -93,7 +93,7 @@ th {background:#004aad; color:white;}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -175,10 +175,10 @@ async function loadTimetablePreview(){
   let html="";
   for(const d of snap.docs){
     const data = d.data();
-    const examSnap = await getDocs(query(collection(db,"exam_sessions"), where("__name__","==",data.examId)));
-    const subjectSnap = await getDocs(query(collection(db,"subjects"), where("__name__","==",data.subjectId)));
-    let examName = examSnap.docs[0]?.data()?.examName || "";
-    let subjectName = subjectSnap.docs[0]?.data()?.name || "";
+    const examDoc = await getDoc(doc(db,"exam_sessions",data.examId));
+    const subjectDoc = await getDoc(doc(db,"subjects",data.subjectId));
+    let examName = examDoc.exists() ? examDoc.data().examName : "";
+    let subjectName = subjectDoc.exists() ? subjectDoc.data().name : "";
 
     html+=`<tr>
       <td>${examName}</td>
@@ -197,10 +197,9 @@ async function loadTimetablePreview(){
 // Edit Timetable
 window.editTimetable = async function(id){
   const docRef = doc(db,"timetable",id);
-  const docSnap = await getDocs(collection(db,"timetable"));
-  const tSnap = await getDocs(doc(db,"timetable",id));
-  const d = await (await getDocs(doc(db,"timetable",id))).docs?.[0]?.data();
-  if(!d) return alert("Not found");
+  const docSnap = await getDoc(docRef);
+  if(!docSnap.exists()) return alert("Not found");
+  const d = docSnap.data();
   document.getElementById("ttExam").value = d.examId;
   document.getElementById("ttSubject").value = d.subjectId;
   document.getElementById("ttClass").value = d.class;
@@ -221,4 +220,4 @@ window.deleteTimetable = async function(id){
 
 </script>
 </body>
-  </html>
+</html>
