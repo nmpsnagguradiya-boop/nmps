@@ -61,8 +61,6 @@ margin-top:20px;
 border-radius:6px;
 }
 
-/* RECEIPT DESIGN */
-
 .receipt{
 width:700px;
 background:white;
@@ -116,7 +114,6 @@ top:0;
 <div class="container">
 
 <select id="classFilter">
-
 <option value="">All Classes</option>
 <option>Nursery</option>
 <option>LKG</option>
@@ -131,17 +128,14 @@ top:0;
 <option>8</option>
 <option>9</option>
 <option>10</option>
-
 </select>
 
 <br>
 
 <input type="number" id="feesAmount" placeholder="School Fees">
-
 <button onclick="addFees()">Add Fees</button>
 
 <input type="number" id="vehicleFees" placeholder="Vehicle Fees">
-
 <button onclick="addVehicleFees()">Add Vehicle Fees</button>
 
 <button onclick="downloadExcel()">Download Excel Report</button>
@@ -149,7 +143,6 @@ top:0;
 <div class="report">
 
 <h3>Total Collection : ₹ <span id="collection">0</span></h3>
-
 <h3>Total Pending : ₹ <span id="pending">0</span></h3>
 
 </div>
@@ -159,7 +152,6 @@ top:0;
 <thead>
 
 <tr>
-
 <th>Select</th>
 <th>Name</th>
 <th>Father</th>
@@ -173,7 +165,6 @@ top:0;
 <th>Receipt</th>
 <th>History</th>
 <th>WhatsApp</th>
-
 </tr>
 
 </thead>
@@ -183,8 +174,6 @@ top:0;
 </table>
 
 </div>
-
-<!-- RECEIPT BOX -->
 
 <div id="receiptBox" class="receipt">
 
@@ -202,13 +191,11 @@ top:0;
 <tr><td>Village</td><td id="rvillage"></td></tr>
 <tr><td>Class</td><td id="rclass"></td></tr>
 <tr><td>Mobile</td><td id="rmobile"></td></tr>
-
 <tr><td>School Fees</td><td id="rfees"></td></tr>
 <tr><td>Vehicle Fees</td><td id="rvehicle"></td></tr>
 <tr><td>Total Fees</td><td id="rtotal"></td></tr>
 <tr><td>Paid Amount</td><td id="rpaid"></td></tr>
 <tr><td>Pending</td><td id="rpending"></td></tr>
-
 <tr><td>Date</td><td id="rdate"></td></tr>
 
 </table>
@@ -238,14 +225,10 @@ where
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId:"nmpsnagguradiya-b9b94",
-storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId:"811957568318",
-appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
+projectId:"nmpsnagguradiya-b9b94"
 };
 
 const app=initializeApp(firebaseConfig);
-
 const db=getFirestore(app);
 
 let students=[];
@@ -255,7 +238,6 @@ async function loadStudents(){
 const snap=await getDocs(collection(db,"admissions"));
 
 let html="";
-
 let totalCollection=0;
 let totalPending=0;
 
@@ -279,7 +261,6 @@ totalCollection+=paid;
 totalPending+=pending;
 
 html+=`
-
 <tr>
 
 <td><input type="checkbox" value="${s.id}"></td>
@@ -295,46 +276,156 @@ html+=`
 <td>${paid}</td>
 
 <td>
-
-<button class="deposit" onclick="depositFees('${s.id}')">
-Deposit
-</button>
-
+<button class="deposit" onclick="depositFees('${s.id}')">Deposit</button>
 </td>
 
 <td>
-<button onclick="showReceipt('${s.id}')">
-Print
-</button>
+<button onclick="showReceipt('${s.id}')">Print</button>
 </td>
 
 <td>
-<button class="history" onclick="viewHistory('${s.id}')">
-History
-</button>
+<button class="history" onclick="viewHistory('${s.id}')">History</button>
 </td>
 
 <td>
-<button class="whatsapp" onclick="sendWhatsApp('${s.id}')">
-WhatsApp
-</button>
+<button class="whatsapp" onclick="sendWhatsApp('${s.id}')">WhatsApp</button>
 </td>
 
 </tr>
-
 `;
 
 });
 
 document.getElementById("studentList").innerHTML=html;
-
 document.getElementById("collection").innerText=totalCollection;
-
 document.getElementById("pending").innerText=totalPending;
 
 }
 
-/* RECEIPT */
+window.addFees=async function(){
+
+let amount=parseInt(document.getElementById("feesAmount").value);
+
+let checked=document.querySelectorAll("#studentList input:checked");
+
+for(let c of checked){
+
+await updateDoc(doc(db,"admissions",c.value),{
+fees:amount
+});
+
+}
+
+alert("Fees Added");
+loadStudents();
+
+}
+
+window.addVehicleFees=async function(){
+
+let amount=parseInt(document.getElementById("vehicleFees").value);
+
+let checked=document.querySelectorAll("#studentList input:checked");
+
+for(let c of checked){
+
+await updateDoc(doc(db,"admissions",c.value),{
+vehicleFees:amount
+});
+
+}
+
+alert("Vehicle Fees Added");
+loadStudents();
+
+}
+
+window.depositFees=async function(id){
+
+let amount=prompt("Enter Deposit Amount");
+
+if(!amount) return;
+
+amount=parseInt(amount);
+
+let s=students.find(x=>x.id==id);
+
+let newPaid=(s.paid||0)+amount;
+
+await updateDoc(doc(db,"admissions",id),{
+paid:newPaid
+});
+
+await addDoc(collection(db,"fees_history"),{
+studentId:id,
+name:s.name,
+amount:amount,
+date:new Date().toLocaleDateString()
+});
+
+alert("Payment Deposited");
+loadStudents();
+
+}
+
+window.viewHistory=async function(id){
+
+let q=query(collection(db,"fees_history"),where("studentId","==",id));
+
+let snap=await getDocs(q);
+
+let text="Fees History\n\n";
+
+snap.forEach(d=>{
+let h=d.data();
+text+="Date : "+h.date+"\nAmount : "+h.amount+"\n\n";
+});
+
+alert(text);
+
+}
+
+window.sendWhatsApp=function(id){
+
+let s=students.find(x=>x.id==id);
+
+let msg=
+"Fees Receipt%0A"+
+"Student : "+s.name+"%0A"+
+"Class : "+s.class+"%0A"+
+"Paid : ₹"+(s.paid||0);
+
+let phone=s.mobile.replace(/\D/g,'');
+
+window.open("https://wa.me/91"+phone+"?text="+msg);
+
+}
+
+window.downloadExcel=function(){
+
+let csv="Name,Father,Village,Class,Mobile,Fees,Vehicle,Paid\n";
+
+students.forEach(s=>{
+
+csv+=
+(s.name||"")+","+
+(s.father||"")+","+
+(s.village||"")+","+
+(s.class||"")+","+
+(s.mobile||"")+","+
+(s.fees||0)+","+
+(s.vehicleFees||0)+","+
+(s.paid||0)+"\n";
+
+});
+
+let blob=new Blob([csv],{type:"text/csv"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="fees-report.csv";
+a.click();
+
+}
 
 window.showReceipt=function(id){
 
@@ -367,19 +458,13 @@ document.getElementById("rdate").innerText=new Date().toLocaleDateString()
 }
 
 window.printA4=function(){
-
 document.getElementById("receiptBox").classList.remove("thermal")
-
 window.print()
-
 }
 
 window.printThermal=function(){
-
 document.getElementById("receiptBox").classList.add("thermal")
-
 window.print()
-
 }
 
 loadStudents()
@@ -387,5 +472,4 @@ loadStudents()
 </script>
 
 </body>
-
-  </html>
+</html>
