@@ -3,7 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
-<title>Marks Entry & Edit</title>
+<title>Marks Entry & Bulk Edit</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body {font-family:Arial; margin:0; background:#f2f2f2;}
@@ -25,7 +25,7 @@ input[type="number"]{width:60px;}
 </head>
 
 <body>
-<header>Marks Entry & Edit</header>
+<header>Marks Entry & Bulk Edit</header>
 
 <div class="container">
 
@@ -38,7 +38,17 @@ input[type="number"]{width:60px;}
 <option>5</option><option>6</option><option>7</option><option>8</option>
 <option>9</option><option>10</option>
 </select>
+
+<select id="selectExam">
+<option value="">Select Exam</option>
+</select>
+
+<select id="selectSubject">
+<option value="">Select Subject</option>
+</select>
+
 <button class="save" onclick="loadStudents()">Load Students</button>
+<button class="save" onclick="saveAllMarks()">Save All Marks</button>
 </div>
 
 <div class="card">
@@ -46,7 +56,7 @@ input[type="number"]{width:60px;}
 <table>
 <thead>
 <tr>
-<th>Roll</th><th>Name</th><th>Father</th><th>Exam</th><th>Subject</th><th>Marks</th>
+<th>Roll</th><th>Name</th><th>Father</th><th>Marks</th>
 </tr>
 </thead>
 <tbody id="marksTable"></tbody>
@@ -70,22 +80,29 @@ const db = getFirestore(app);
 let subjects = [];
 let exams = [];
 let students = [];
+let selectedClass = "", selectedExam = "", selectedSubject = "";
 
 // Load all subjects and exams
 async function loadData(){
   const subSnap = await getDocs(collection(db,"subjects"));
   subjects = subSnap.docs.map(d=>({id:d.id,name:d.data().name}));
-
   const examSnap = await getDocs(collection(db,"exam_sessions"));
   exams = examSnap.docs.map(d=>({id:d.id,name:d.data().examName}));
+
+  // Populate exam and subject selects
+  document.getElementById("selectExam").innerHTML = '<option value="">Select Exam</option>' + exams.map(e=>`<option value="${e.id}">${e.name}</option>`).join("");
+  document.getElementById("selectSubject").innerHTML = '<option value="">Select Subject</option>' + subjects.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
 }
 await loadData();
 
 window.loadStudents = async function(){
-  const cls = document.getElementById("selectClass").value;
-  if(!cls) return alert("Select class");
-  
-  const snap = await getDocs(query(collection(db,"admissions"), where("class","==",cls)));
+  selectedClass = document.getElementById("selectClass").value;
+  selectedExam = document.getElementById("selectExam").value;
+  selectedSubject = document.getElementById("selectSubject").value;
+
+  if(!selectedClass || !selectedExam || !selectedSubject) return alert("Select class, exam, and subject");
+
+  const snap = await getDocs(query(collection(db,"admissions"), where("class","==",selectedClass)));
   students = snap.docs.map(d=>({id:d.id, ...d.data()}));
 
   renderMarksTable();
@@ -96,42 +113,36 @@ async function renderMarksTable(){
   tbody.innerHTML = "";
 
   for(const student of students){
-    for(const exam of exams){
-      for(const subject of subjects){
-        // Check if marks already exist
-        const markDocId = `${student.id}_${exam.id}_${subject.id}`;
-        const markDoc = await getDoc(doc(db,"marks",markDocId));
-        const marks = markDoc.exists() ? markDoc.data().marks : "";
+    const markDocId = `${student.id}_${selectedExam}_${selectedSubject}`;
+    const markDoc = await getDoc(doc(db,"marks",markDocId));
+    const marks = markDoc.exists() ? markDoc.data().marks : "";
 
-        const tr = document.createElement("tr");
-        tr.innerHTML = `
-          <td>${student.roll}</td>
-          <td>${student.name}</td>
-          <td>${student.father}</td>
-          <td>${exam.name}</td>
-          <td>${subject.name}</td>
-          <td><input type="number" min="0" max="100" value="${marks}" data-student="${student.id}" data-exam="${exam.id}" data-subject="${subject.id}" onblur="saveMark(this)"></td>
-        `;
-        tbody.appendChild(tr);
-      }
-    }
+    const tr = document.createElement("tr");
+    tr.innerHTML = `
+      <td>${student.roll}</td>
+      <td>${student.name}</td>
+      <td>${student.father}</td>
+      <td><input type="number" min="0" max="100" value="${marks}" data-student="${student.id}" class="markInput"></td>
+    `;
+    tbody.appendChild(tr);
   }
 }
 
-// Save single mark instantly on blur
-window.saveMark = async function(input){
-  const marks = input.value || 0;
-  const studentId = input.dataset.student;
-  const examId = input.dataset.exam;
-  const subjectId = input.dataset.subject;
-
-  await setDoc(doc(db,"marks",`${studentId}_${examId}_${subjectId}`), {
-    studentId, examId, subjectId, marks
-  });
-  input.style.backgroundColor = "#d4edda"; // green flash
-  setTimeout(()=>{input.style.backgroundColor="";},500);
+// Save all marks in bulk
+window.saveAllMarks = async function(){
+  const inputs = document.querySelectorAll(".markInput");
+  for(const input of inputs){
+    const studentId = input.dataset.student;
+    const marks = input.value || 0;
+    await setDoc(doc(db,"marks",`${studentId}_${selectedExam}_${selectedSubject}`),{
+      studentId, examId:selectedExam, subjectId:selectedSubject, marks
+    });
+    input.style.backgroundColor = "#d4edda"; // green flash
+    setTimeout(()=>{input.style.backgroundColor="";},500);
+  }
+  alert("All marks saved successfully!");
 }
 
 </script>
 </body>
-</html>
+  </html>
