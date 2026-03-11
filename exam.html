@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Exam Management</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
+
+.container{
+padding:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:6px;
+margin-bottom:20px;
+}
+
+input,select,button{
+padding:8px;
+margin:5px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+}
+
+th{
+background:#004aad;
+color:white;
+padding:8px;
+}
+
+td{
+padding:8px;
+border:1px solid #ccc;
+text-align:center;
+}
+
+.edit{
+background:#ffc107;
+border:none;
+padding:6px 10px;
+}
+
+.delete{
+background:#dc3545;
+color:white;
+border:none;
+padding:6px 10px;
+}
+
+.save{
+background:#28a745;
+color:white;
+border:none;
+padding:8px 15px;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>Exam Management</header>
+
+<div class="container">
+
+<div class="card">
+
+<h3>Create / Edit Exam</h3>
+
+<input type="text" id="session" placeholder="Session (2024-25)">
+
+<input type="text" id="examName" placeholder="Exam Name">
+
+<input type="text" id="subject" placeholder="Subject">
+
+<select id="class">
+
+<option value="">Select Class</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+
+</select>
+
+<br>
+
+<input type="number" id="min" placeholder="Minimum Marks">
+
+<input type="number" id="max" placeholder="Maximum Marks">
+
+<select id="type">
+
+<option value="">Exam Type</option>
+<option>Written</option>
+<option>Oral</option>
+
+</select>
+
+<br>
+
+<button class="save" onclick="saveExam()">Save Exam</button>
+
+</div>
+
+<div class="card">
+
+<h3>Exam List</h3>
+
+<table>
+
+<thead>
+
+<tr>
+<th>Session</th>
+<th>Exam</th>
+<th>Subject</th>
+<th>Class</th>
+<th>Min</th>
+<th>Max</th>
+<th>Type</th>
+<th>Edit</th>
+<th>Delete</th>
+</tr>
+
+</thead>
+
+<tbody id="examList"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+getDocs,
+doc,
+deleteDoc,
+updateDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94"
+};
+
+const app=initializeApp(firebaseConfig);
+
+const db=getFirestore(app);
+
+let editId=null;
+
+async function loadExams(){
+
+const snap=await getDocs(collection(db,"exams"));
+
+let html="";
+
+snap.forEach(d=>{
+
+let e=d.data();
+
+html+=`
+
+<tr>
+
+<td>${e.session}</td>
+<td>${e.examName}</td>
+<td>${e.subject}</td>
+<td>${e.class}</td>
+<td>${e.min}</td>
+<td>${e.max}</td>
+<td>${e.type}</td>
+
+<td>
+<button class="edit" onclick="editExam('${d.id}')">Edit</button>
+</td>
+
+<td>
+<button class="delete" onclick="deleteExam('${d.id}')">Delete</button>
+</td>
+
+</tr>
+
+`;
+
+});
+
+document.getElementById("examList").innerHTML=html;
+
+}
+
+window.saveExam=async function(){
+
+let data={
+
+session:document.getElementById("session").value,
+examName:document.getElementById("examName").value,
+subject:document.getElementById("subject").value,
+class:document.getElementById("class").value,
+min:document.getElementById("min").value,
+max:document.getElementById("max").value,
+type:document.getElementById("type").value
+
+}
+
+if(editId){
+
+await updateDoc(doc(db,"exams",editId),data)
+
+editId=null
+
+}else{
+
+await addDoc(collection(db,"exams"),data)
+
+}
+
+clearForm()
+
+loadExams()
+
+}
+
+window.editExam=async function(id){
+
+const snap=await getDocs(collection(db,"exams"))
+
+snap.forEach(d=>{
+
+if(d.id==id){
+
+let e=d.data()
+
+document.getElementById("session").value=e.session
+document.getElementById("examName").value=e.examName
+document.getElementById("subject").value=e.subject
+document.getElementById("class").value=e.class
+document.getElementById("min").value=e.min
+document.getElementById("max").value=e.max
+document.getElementById("type").value=e.type
+
+editId=id
+
+}
+
+})
+
+}
+
+window.deleteExam=async function(id){
+
+if(confirm("Delete this exam?")){
+
+await deleteDoc(doc(db,"exams",id))
+
+loadExams()
+
+}
+
+}
+
+function clearForm(){
+
+document.getElementById("session").value=""
+document.getElementById("examName").value=""
+document.getElementById("subject").value=""
+document.getElementById("class").value=""
+document.getElementById("min").value=""
+document.getElementById("max").value=""
+document.getElementById("type").value=""
+
+}
+
+loadExams()
+
+</script>
+
+</body>
+
+</html>
