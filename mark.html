@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Enter Marks</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<style>
+body {font-family: Arial; margin:0; background:#f2f2f2;}
+header {background:#004aad; color:white; padding:15px; text-align:center; font-size:22px;}
+.container {padding:20px; max-width:1000px; margin:auto;}
+.card {background:white; padding:20px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+select,input,button {padding:10px; margin:5px; width:100%; max-width:300px;}
+button {cursor:pointer; border:none; border-radius:5px;}
+.save {background:#004aad;color:white;padding:10px;}
+.edit {background:#ffc107;color:white;padding:10px;}
+table {width:100%; border-collapse:collapse; margin-top:10px;}
+th, td {border:1px solid #ccc; padding:8px; text-align:center;}
+th {background:#004aad; color:white;}
+input[type=number] {width:80px;}
+@media (max-width:768px){
+  table, th, td {font-size:12px;}
+  select,input,button {max-width:100%;}
+}
+</style>
+</head>
+<body>
+
+<header>Marks Entry</header>
+
+<div class="container">
+
+<!-- Select Exam, Class, Subject -->
+<div class="card">
+<h3>Select Exam, Class & Subject</h3>
+<select id="examSelect"></select>
+<select id="classSelect">
+<option value="">Select Class</option>
+<option>Nursery</option><option>LKG</option><option>UKG</option>
+<option>1</option><option>2</option><option>3</option><option>4</option>
+<option>5</option><option>6</option><option>7</option><option>8</option>
+<option>9</option><option>10</option>
+</select>
+<select id="subjectSelect"><option value="">Select Subject</option></select>
+<button class="save" onclick="loadStudents()">Load Students</button>
+</div>
+
+<!-- Student Marks Table -->
+<div class="card">
+<h3>Enter Marks</h3>
+<table>
+<thead>
+<tr>
+<th>Roll</th><th>Student Name</th><th>Father's Name</th><th>Marks</th><th>Save</th>
+</tr>
+</thead>
+<tbody id="studentsTable"></tbody>
+</table>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, collection, getDocs, doc, setDoc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+  apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+  authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+  projectId:"nmpsnagguradiya-b9b94"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Load Exams & Subjects
+async function loadData(){
+  const examsSnap = await getDocs(collection(db,"exam_sessions"));
+  let examHTML='<option value="">Select Exam</option>';
+  examsSnap.forEach(d=>{ examHTML+=`<option value="${d.id}">${d.data().examName}</option>`; });
+  document.getElementById("examSelect").innerHTML = examHTML;
+
+  const subsnap = await getDocs(collection(db,"subjects"));
+  let subHTML='<option value="">Select Subject</option>';
+  subsnap.forEach(d=>{ subHTML+=`<option value="${d.id}">${d.data().name}</option>`; });
+  document.getElementById("subjectSelect").innerHTML = subHTML;
+}
+loadData();
+
+// Load Students
+async function loadStudents(){
+  const cls = document.getElementById("classSelect").value;
+  if(!cls) return alert("Select class");
+  const studentsSnap = await getDocs(query(collection(db,"admissions"), where("class","==",cls)));
+  let html="";
+  for(const d of studentsSnap.docs){
+    const s = d.data();
+    const markDoc = await getDoc(doc(db,"marks",`${d.id}_${document.getElementById("examSelect").value}_${document.getElementById("subjectSelect").value}`));
+    const markValue = markDoc.exists() ? markDoc.data().marks : "";
+    html += `<tr>
+      <td>${s.roll}</td>
+      <td>${s.name}</td>
+      <td>${s.father}</td>
+      <td><input type="number" id="mark_${d.id}" value="${markValue}" min="0"></td>
+      <td><button class="save" onclick="saveMark('${d.id}')">Save</button></td>
+    </tr>`;
+  }
+  document.getElementById("studentsTable").innerHTML = html;
+}
+
+// Save Marks
+window.saveMark = async function(studentId){
+  const examId = document.getElementById("examSelect").value;
+  const subjectId = document.getElementById("subjectSelect").value;
+  const marks = document.getElementById(`mark_${studentId}`).value;
+  if(!examId || !subjectId) return alert("Select Exam & Subject");
+  if(marks==="") return alert("Enter marks");
+
+  await setDoc(doc(db,"marks",`${studentId}_${examId}_${subjectId}`), {
+    studentId, examId, subjectId, marks
+  });
+  alert("Marks saved");
+}
+</script>
+
+</body>
+</html>
