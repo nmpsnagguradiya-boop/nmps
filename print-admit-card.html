@@ -8,6 +8,7 @@
 body {font-family:Arial, sans-serif; background:#f2f2f2; margin:0; padding:0;}
 header {background:#004aad; color:white; text-align:center; padding:15px; font-size:22px;}
 .container {max-width:1000px; margin:auto; padding:20px;}
+.card {background:white; padding:20px; margin-bottom:20px; border-radius:8px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
 .admit-card {border:2px solid #004aad; padding:10px; margin:10px; width:48%; display:inline-block; vertical-align:top; box-sizing:border-box; page-break-inside:avoid;}
 .admit-card img {width:80px; height:100px; object-fit:cover; float:right;}
 .admit-card h3 {margin:5px 0;}
@@ -18,6 +19,8 @@ th, td {padding:6px; text-align:center;}
 button {padding:8px 12px; margin:5px; border:none; border-radius:5px; cursor:pointer;}
 .save {background:#004aad;color:white;}
 .print {background:#28a745;color:white;}
+#studentsList {max-height:150px; overflow-y:auto; border:1px solid #ccc; padding:5px;}
+.studentItem {display:block; margin:3px 0;}
 @media (max-width:768px){
   .admit-card {width:100%; margin:5px 0;}
   img {float:none; display:block; margin:auto;}
@@ -28,8 +31,9 @@ button {padding:8px 12px; margin:5px; border:none; border-radius:5px; cursor:poi
 <header>Print Admit Cards</header>
 <div class="container">
 
-<!-- Exam/Class Select -->
+<!-- Class & Exam Select -->
 <div class="card">
+<h3>Select Class & Exam</h3>
 <select id="selectClass"><option value="">Select Class</option>
 <option>Nursery</option><option>LKG</option><option>UKG</option>
 <option>1</option><option>2</option><option>3</option><option>4</option>
@@ -38,13 +42,20 @@ button {padding:8px 12px; margin:5px; border:none; border-radius:5px; cursor:poi
 </select>
 
 <select id="selectExam"><option value="">Select Exam</option></select>
-<button class="save" onclick="loadAdmitCards()">Load Admit Cards</button>
+<button class="save" onclick="loadStudents()">Load Students</button>
 </div>
 
 <!-- Guideline -->
 <div class="card">
 <input type="text" id="guidelineInput" placeholder="Enter guideline for admit card">
 <button class="save" onclick="saveGuideline()">Save Guideline</button>
+</div>
+
+<!-- Student Selection -->
+<div class="card">
+<h3>Students List</h3>
+<div id="studentsList"></div>
+<button class="save" onclick="generateAdmitCards()">Generate Selected Admit Cards</button>
 </div>
 
 <!-- Admit Cards -->
@@ -54,7 +65,7 @@ button {padding:8px 12px; margin:5px; border:none; border-radius:5px; cursor:poi
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, addDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
   apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -83,30 +94,44 @@ window.saveGuideline = async function(){
   alert("Guideline saved");
 }
 
-// Load Admit Cards
-window.loadAdmitCards = async function(){
+// Load students for selected class
+window.loadStudents = async function(){
+  const cls = document.getElementById("selectClass").value;
+  if(!cls) return alert("Select class");
+  const studentSnap = await getDocs(collection(db,"admissions"));
+  const students = studentSnap.docs.filter(d=>d.data().class===cls);
+  let html="";
+  students.forEach(s=>{
+    html += `<label class="studentItem">
+      <input type="checkbox" class="studentCheckbox" value="${s.id}"> ${s.data().name} (Roll: ${s.data().roll})
+    </label>`;
+  });
+  document.getElementById("studentsList").innerHTML = html;
+}
+
+// Generate admit cards for selected students
+window.generateAdmitCards = async function(){
   const cls = document.getElementById("selectClass").value;
   const examId = document.getElementById("selectExam").value;
   if(!cls || !examId) return alert("Select class and exam");
 
-  // Get students
-  const studentSnap = await getDocs(collection(db,"admissions"));
-  const students = studentSnap.docs.filter(d=>d.data().class===cls);
+  const selectedIds = Array.from(document.querySelectorAll(".studentCheckbox:checked")).map(cb=>cb.value);
+  if(selectedIds.length===0) return alert("Select at least one student");
 
-  // Get timetable subjects for class and exam
+  // Get timetable for class & exam
   const ttSnap = await getDocs(collection(db,"timetable"));
-  const timetable = ttSnap.docs
-    .filter(d=>d.data().class===cls && d.data().examId===examId)
-    .map(d=>d.data());
+  const timetable = ttSnap.docs.filter(d=>d.data().class===cls && d.data().examId===examId).map(d=>d.data());
 
-  // Get saved guideline
+  // Get guideline
   const guideDoc = await getDoc(doc(db,"admit_guidelines","guideline"));
   guidelineText = guideDoc.exists() ? guideDoc.data().text : "";
 
-  // Build admit cards
-  let html = "";
-  for(let i=0;i<students.length;i++){
-    const s = students[i].data();
+  let html="";
+  for(let i=0;i<selectedIds.length;i++){
+    const sDoc = await getDoc(doc(db,"admissions",selectedIds[i]));
+    if(!sDoc.exists()) continue;
+    const s = sDoc.data();
+
     html += `<div class="admit-card">
       <img src="${s.photo || ''}" alt="Photo">
       <h3>YOUR SCHOOL NAME</h3>
@@ -130,8 +155,7 @@ window.loadAdmitCards = async function(){
       <div class="guideline">${guidelineText}</div>
     </div>`;
 
-    // 2 per row
-    if((i+1)%2===0) html += '<div style="clear:both"></div>';
+    if((i+1)%2===0) html+='<div style="clear:both"></div>';
   }
 
   document.getElementById("admitCardsContainer").innerHTML = html;
