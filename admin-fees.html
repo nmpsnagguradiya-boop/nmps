@@ -1,30 +1,76 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta charset="UTF-8">
-<title>Fees Receipt</title>
+<title>School Fees Management</title>
 
 <style>
 
 body{
 font-family:Arial;
+margin:0;
 background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
+
+.container{
 padding:20px;
+}
+
+select,input,button{
+padding:8px;
+margin:5px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+margin-top:20px;
+}
+
+th{
+background:#004aad;
+color:white;
+padding:8px;
+}
+
+td{
+padding:8px;
+border:1px solid #ccc;
 text-align:center;
 }
 
-/* RECEIPT BOX */
+.deposit{background:#28a745;color:white;border:none}
+.history{background:#ffc107;border:none}
+.whatsapp{background:#25D366;color:white;border:none}
 
-.receipt{
+.report{
 background:white;
-padding:20px;
-width:800px;
-margin:auto;
-border:2px solid black;
+padding:15px;
+margin-top:20px;
+border-radius:6px;
 }
 
-/* SCHOOL HEADER */
+/* RECEIPT DESIGN */
+
+.receipt{
+width:700px;
+background:white;
+padding:20px;
+margin:auto;
+border:2px solid black;
+display:none;
+}
 
 .school{
 font-size:22px;
@@ -33,49 +79,28 @@ font-weight:bold;
 
 .address{
 font-size:14px;
-margin-bottom:20px;
+margin-bottom:15px;
 }
-
-/* TABLE */
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:20px;
-}
-
-td{
-border:1px solid #000;
-padding:8px;
-text-align:left;
-}
-
-/* BUTTONS */
-
-button{
-padding:10px 15px;
-margin:10px;
-font-weight:bold;
-cursor:pointer;
-}
-
-/* THERMAL STYLE */
 
 .thermal{
 width:300px;
 font-size:12px;
 }
 
-/* PRINT */
-
 @media print{
 
-button{
-display:none;
+body *{
+visibility:hidden;
 }
 
-body{
-background:white;
+#receiptBox,#receiptBox *{
+visibility:visible;
+}
+
+#receiptBox{
+position:absolute;
+left:0;
+top:0;
 }
 
 }
@@ -86,92 +111,129 @@ background:white;
 
 <body>
 
-<button onclick="printA4()">Print A4 Receipt</button>
+<header>School Fees Management</header>
 
-<button onclick="printThermal()">Print Thermal Receipt</button>
+<div class="container">
 
-<div id="receiptBox" class="receipt">
+<select id="classFilter">
 
-<div class="school" id="schoolName">YOUR SCHOOL NAME</div>
+<option value="">All Classes</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
 
-<div class="address" id="schoolAddress">
-Village Nag Guradiya, District Ujjain
+</select>
+
+<br>
+
+<input type="number" id="feesAmount" placeholder="School Fees">
+
+<button onclick="addFees()">Add Fees</button>
+
+<input type="number" id="vehicleFees" placeholder="Vehicle Fees">
+
+<button onclick="addVehicleFees()">Add Vehicle Fees</button>
+
+<button onclick="downloadExcel()">Download Excel Report</button>
+
+<div class="report">
+
+<h3>Total Collection : ₹ <span id="collection">0</span></h3>
+
+<h3>Total Pending : ₹ <span id="pending">0</span></h3>
+
 </div>
-
-<h3>Fees Receipt</h3>
-
-<p><b>Receipt No :</b> <span id="receiptNo"></span></p>
 
 <table>
 
-<tr>
-<td>Student Name</td>
-<td id="name"></td>
-</tr>
+<thead>
 
 <tr>
-<td>Father Name</td>
-<td id="father"></td>
+
+<th>Select</th>
+<th>Name</th>
+<th>Father</th>
+<th>Village</th>
+<th>Class</th>
+<th>Mobile</th>
+<th>Fees</th>
+<th>Vehicle</th>
+<th>Paid</th>
+<th>Deposit</th>
+<th>Receipt</th>
+<th>History</th>
+<th>WhatsApp</th>
+
 </tr>
 
-<tr>
-<td>Village</td>
-<td id="village"></td>
-</tr>
+</thead>
 
-<tr>
-<td>Class</td>
-<td id="class"></td>
-</tr>
-
-<tr>
-<td>Mobile</td>
-<td id="mobile"></td>
-</tr>
-
-<tr>
-<td>School Fees</td>
-<td id="fees"></td>
-</tr>
-
-<tr>
-<td>Vehicle Fees</td>
-<td id="vehicle"></td>
-</tr>
-
-<tr>
-<td>Total Fees</td>
-<td id="total"></td>
-</tr>
-
-<tr>
-<td>Paid Amount</td>
-<td id="paid"></td>
-</tr>
-
-<tr>
-<td>Pending</td>
-<td id="pending"></td>
-</tr>
-
-<tr>
-<td>Date</td>
-<td id="date"></td>
-</tr>
+<tbody id="studentList"></tbody>
 
 </table>
 
 </div>
 
+<!-- RECEIPT BOX -->
+
+<div id="receiptBox" class="receipt">
+
+<div class="school">YOUR SCHOOL NAME</div>
+<div class="address">Village Nag Guradiya, District Ujjain</div>
+
+<h3>Fees Receipt</h3>
+
+<p><b>Receipt No :</b> <span id="rno"></span></p>
+
+<table>
+
+<tr><td>Student Name</td><td id="rname"></td></tr>
+<tr><td>Father Name</td><td id="rfather"></td></tr>
+<tr><td>Village</td><td id="rvillage"></td></tr>
+<tr><td>Class</td><td id="rclass"></td></tr>
+<tr><td>Mobile</td><td id="rmobile"></td></tr>
+
+<tr><td>School Fees</td><td id="rfees"></td></tr>
+<tr><td>Vehicle Fees</td><td id="rvehicle"></td></tr>
+<tr><td>Total Fees</td><td id="rtotal"></td></tr>
+<tr><td>Paid Amount</td><td id="rpaid"></td></tr>
+<tr><td>Pending</td><td id="rpending"></td></tr>
+
+<tr><td>Date</td><td id="rdate"></td></tr>
+
+</table>
+
+<br>
+
+<button onclick="printA4()">Print A4</button>
+<button onclick="printThermal()">Thermal Print</button>
+
+</div>
+
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
 getFirestore,
+collection,
+getDocs,
 doc,
-getDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
+updateDoc,
+addDoc,
+query,
+where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -180,31 +242,103 @@ projectId:"nmpsnagguradiya-b9b94",
 storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
 messagingSenderId:"811957568318",
 appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+
+const app=initializeApp(firebaseConfig);
+
+const db=getFirestore(app);
+
+let students=[];
+
+async function loadStudents(){
+
+const snap=await getDocs(collection(db,"admissions"));
+
+let html="";
+
+let totalCollection=0;
+let totalPending=0;
+
+students=[];
+
+snap.forEach(docSnap=>{
+
+let s=docSnap.data();
+s.id=docSnap.id;
+
+students.push(s);
+
+let fees=s.fees||0;
+let vehicle=s.vehicleFees||0;
+let paid=s.paid||0;
+
+let total=fees+vehicle;
+let pending=total-paid;
+
+totalCollection+=paid;
+totalPending+=pending;
+
+html+=`
+
+<tr>
+
+<td><input type="checkbox" value="${s.id}"></td>
+
+<td>${s.name||''}</td>
+<td>${s.father||''}</td>
+<td>${s.village||''}</td>
+<td>${s.class||''}</td>
+<td>${s.mobile||''}</td>
+
+<td>${fees}</td>
+<td>${vehicle}</td>
+<td>${paid}</td>
+
+<td>
+
+<button class="deposit" onclick="depositFees('${s.id}')">
+Deposit
+</button>
+
+</td>
+
+<td>
+<button onclick="showReceipt('${s.id}')">
+Print
+</button>
+</td>
+
+<td>
+<button class="history" onclick="viewHistory('${s.id}')">
+History
+</button>
+</td>
+
+<td>
+<button class="whatsapp" onclick="sendWhatsApp('${s.id}')">
+WhatsApp
+</button>
+</td>
+
+</tr>
+
+`;
+
+});
+
+document.getElementById("studentList").innerHTML=html;
+
+document.getElementById("collection").innerText=totalCollection;
+
+document.getElementById("pending").innerText=totalPending;
+
 }
 
-const app=initializeApp(firebaseConfig)
+/* RECEIPT */
 
-const db=getFirestore(app)
+window.showReceipt=function(id){
 
-/* GET STUDENT ID FROM URL */
-
-const params=new URLSearchParams(window.location.search)
-
-const id=params.get("id")
-
-/* AUTO RECEIPT NUMBER */
-
-let receiptNumber="RC-"+Date.now()
-
-document.getElementById("receiptNo").innerText=receiptNumber
-
-/* LOAD STUDENT */
-
-async function loadStudent(){
-
-let snap=await getDoc(doc(db,"admissions",id))
-
-let s=snap.data()
+let s=students.find(x=>x.id==id)
 
 let fees=s.fees||0
 let vehicle=s.vehicleFees||0
@@ -212,25 +346,25 @@ let total=fees+vehicle
 let paid=s.paid||0
 let pending=total-paid
 
-document.getElementById("name").innerText=s.name
-document.getElementById("father").innerText=s.father
-document.getElementById("village").innerText=s.village
-document.getElementById("class").innerText=s.class
-document.getElementById("mobile").innerText=s.mobile
+document.getElementById("receiptBox").style.display="block"
 
-document.getElementById("fees").innerText=fees
-document.getElementById("vehicle").innerText=vehicle
-document.getElementById("total").innerText=total
-document.getElementById("paid").innerText=paid
-document.getElementById("pending").innerText=pending
+document.getElementById("rno").innerText="RC-"+Date.now()
 
-document.getElementById("date").innerText=new Date().toLocaleDateString()
+document.getElementById("rname").innerText=s.name
+document.getElementById("rfather").innerText=s.father
+document.getElementById("rvillage").innerText=s.village
+document.getElementById("rclass").innerText=s.class
+document.getElementById("rmobile").innerText=s.mobile
+
+document.getElementById("rfees").innerText=fees
+document.getElementById("rvehicle").innerText=vehicle
+document.getElementById("rtotal").innerText=total
+document.getElementById("rpaid").innerText=paid
+document.getElementById("rpending").innerText=pending
+
+document.getElementById("rdate").innerText=new Date().toLocaleDateString()
 
 }
-
-loadStudent()
-
-/* PRINT FUNCTIONS */
 
 window.printA4=function(){
 
@@ -248,8 +382,10 @@ window.print()
 
 }
 
+loadStudents()
+
 </script>
 
 </body>
 
-</html>
+  </html>
