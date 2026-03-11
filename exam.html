@@ -3,7 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
-<title>Exam Management & Admit Card</title>
+<title>Exam & Timetable Management</title>
 <style>
 body {font-family:Arial; margin:0; background:#f2f2f2;}
 header {background:#004aad; color:white; padding:15px; text-align:center; font-size:22px;}
@@ -21,11 +21,11 @@ th {background:#004aad; color:white;}
 </head>
 
 <body>
-<header>Exam Management System</header>
+<header>Exam & Timetable Management</header>
 
 <div class="container">
 
-<!-- Session & Exam Create/Edit -->
+<!-- Session & Exam -->
 <div class="card">
 <h3>Session & Exam Management</h3>
 <select id="sessionSelect"></select>
@@ -39,50 +39,39 @@ th {background:#004aad; color:white;}
 <button class="delete" onclick="deleteExam()">Delete Exam</button>
 </div>
 
-<!-- Subject Create/Edit -->
+<!-- Subject Management -->
 <div class="card">
 <h3>Subject Management</h3>
-<select id="sessionSubject"></select>
-<select id="examSubject"></select>
 <input type="text" id="subjectInput" placeholder="Subject Name">
-<select id="classSelect">
-<option value="">Select Class</option>
+<button class="save" onclick="saveSubject()">Save/Update Subject</button>
+<select id="subjectList"></select>
+<button class="delete" onclick="deleteSubject()">Delete Subject</button>
+</div>
+
+<!-- Timetable / Admit Card -->
+<div class="card">
+<h3>Class-wise Timetable / Admit Card</h3>
+<select id="ttSession"></select>
+<select id="ttExam"></select>
+<select id="ttSubject"></select>
+<select id="ttClass"><option value="">Select Class</option>
 <option>Nursery</option><option>LKG</option><option>UKG</option>
 <option>1</option><option>2</option><option>3</option><option>4</option>
 <option>5</option><option>6</option><option>7</option><option>8</option>
 <option>9</option><option>10</option>
 </select>
-<input type="number" id="maxMarks" placeholder="Maximum Marks">
-<select id="examType"><option value="">Exam Type</option><option>Written</option><option>Oral</option></select>
-<input type="date" id="examDate">
-<select id="examDay">
-<option value="">Select Day</option>
+<input type="date" id="ttDate">
+<select id="ttDay"><option value="">Select Day</option>
 <option>Monday</option><option>Tuesday</option><option>Wednesday</option>
 <option>Thursday</option><option>Friday</option><option>Saturday</option>
 </select>
-<input type="time" id="examTime">
-<select id="examStatus"><option value="Pending">Pending</option><option value="Completed">Completed</option></select>
+<input type="time" id="ttTime">
+<button class="save" onclick="saveTimetable()">Save/Update Timetable</button>
 <br>
-<button class="save" onclick="saveSubject()">Save/Update Subject</button>
-</div>
-
-<!-- Admit Card Generation -->
-<div class="card">
-<h3>Generate Admit Card</h3>
-<select id="admitSession"></select>
-<select id="admitExam"></select>
-<select id="admitClass"><option value="">Select Class</option>
-<option>Nursery</option><option>LKG</option><option>UKG</option>
-<option>1</option><option>2</option><option>3</option><option>4</option>
-<option>5</option><option>6</option><option>7</option><option>8</option>
-<option>9</option><option>10</option>
-</select>
-<select id="admitStudent"><option value="">Select Student</option></select>
 <button class="admit" onclick="generateAdmitCard()">Generate Admit Card</button>
 </div>
 
 <div id="printArea"></div>
-
 </div>
 
 <script type="module">
@@ -97,46 +86,51 @@ const firebaseConfig={
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let editSessionId=null, editExamId=null, editSubjectId=null;
+let editSessionId=null, editExamId=null, editSubjectId=null, editTTId=null;
 
-// Load Sessions & Exams
-async function loadSessionsExams(){
+// Load Sessions & Exams & Subjects
+async function loadData(){
   const snap = await getDocs(collection(db,"exam_sessions"));
   let sessionHTML='<option value="">Select Session</option>';
   let examHTML='<option value="">Select Exam</option>';
   snap.forEach(d=>{
-    let data=d.data();
+    const data=d.data();
     sessionHTML+=`<option value="${d.id}">${data.session}</option>`;
     examHTML+=`<option value="${d.id}">${data.examName}</option>`;
   });
-  document.getElementById("sessionSelect").innerHTML = sessionHTML;
-  document.getElementById("examSelect").innerHTML = examHTML;
-  document.getElementById("sessionSubject").innerHTML = sessionHTML;
-  document.getElementById("examSubject").innerHTML = examHTML;
-  document.getElementById("admitSession").innerHTML = sessionHTML;
-  document.getElementById("admitExam").innerHTML = examHTML;
-}
-loadSessionsExams();
+  document.getElementById("sessionSelect").innerHTML=sessionHTML;
+  document.getElementById("examSelect").innerHTML=examHTML;
+  document.getElementById("ttSession").innerHTML=sessionHTML;
+  document.getElementById("ttExam").innerHTML=examHTML;
 
-// Session Functions
+  // Subjects
+  const subsnap = await getDocs(collection(db,"subjects"));
+  let subHTML='<option value="">Select Subject</option>';
+  subsnap.forEach(d=>{ subHTML+=`<option value="${d.id}">${d.data().name}</option>`; });
+  document.getElementById("subjectList").innerHTML = subHTML;
+  document.getElementById("ttSubject").innerHTML = subHTML;
+}
+loadData();
+
+// Session
 window.saveSession = async function(){
   let session=document.getElementById("sessionInput").value;
   if(!session) return alert("Enter session");
   if(editSessionId){
     await updateDoc(doc(db,"exam_sessions",editSessionId), {session});
     editSessionId=null;
-  } else { await addDoc(collection(db,"exam_sessions"), {session, examName:""}); }
+  } else{ await addDoc(collection(db,"exam_sessions"), {session, examName:""}); }
   document.getElementById("sessionInput").value="";
-  loadSessionsExams();
+  loadData();
   alert("Session saved");
 }
 window.deleteSession = async function(){
   let id=document.getElementById("sessionSelect").value;
   if(!id) return alert("Select session");
-  if(confirm("Delete session?")){ await deleteDoc(doc(db,"exam_sessions",id)); loadSessionsExams(); alert("Deleted"); }
+  if(confirm("Delete session?")){ await deleteDoc(doc(db,"exam_sessions",id)); loadData(); alert("Deleted"); }
 }
 
-// Exam Functions
+// Exam
 window.saveExam = async function(){
   let exam=document.getElementById("examInput").value;
   let sessionId=document.getElementById("sessionSelect").value;
@@ -144,96 +138,70 @@ window.saveExam = async function(){
   if(editExamId){ await updateDoc(doc(db,"exam_sessions",editExamId), {examName:exam}); editExamId=null;}
   else{ await addDoc(collection(db,"exam_sessions"), {session:"", examName:exam}); }
   document.getElementById("examInput").value="";
-  loadSessionsExams();
+  loadData();
   alert("Exam saved");
 }
 window.deleteExam = async function(){
   let id=document.getElementById("examSelect").value;
   if(!id) return alert("Select exam");
-  if(confirm("Delete exam?")){ await deleteDoc(doc(db,"exam_sessions",id)); loadSessionsExams(); alert("Deleted"); }
+  if(confirm("Delete exam?")){ await deleteDoc(doc(db,"exam_sessions",id)); loadData(); alert("Deleted"); }
 }
 
-// Subject Functions
+// Subject
 window.saveSubject = async function(){
-  let sessionId = document.getElementById("sessionSubject").value;
-  let examId = document.getElementById("examSubject").value;
-  let subject = document.getElementById("subjectInput").value;
-  let cls = document.getElementById("classSelect").value;
-  let max = document.getElementById("maxMarks").value;
-  let type = document.getElementById("examType").value;
-  let date = document.getElementById("examDate").value;
-  let day = document.getElementById("examDay").value;
-  let time = document.getElementById("examTime").value;
-  let status = document.getElementById("examStatus").value;
-  if(!sessionId || !examId || !subject || !cls) return alert("Fill all required fields");
-
-  const sessionName = document.getElementById("sessionSubject").selectedOptions[0].text;
-  const examName = document.getElementById("examSubject").selectedOptions[0].text;
-
-  if(editSubjectId){
-    await updateDoc(doc(db,"exam_subjects",editSubjectId), {sessionId, sessionName, examId, examName, subject, class:cls, max, type, date, day, time, status});
-    editSubjectId=null;
-  } else{
-    await addDoc(collection(db,"exam_subjects"), {sessionId, sessionName, examId, examName, subject, class:cls, max, type, date, day, time, status});
-  }
-  alert("Subject saved");
+  let name=document.getElementById("subjectInput").value;
+  if(!name) return alert("Enter subject name");
+  if(editSubjectId){ await updateDoc(doc(db,"subjects",editSubjectId), {name}); editSubjectId=null;}
+  else{ await addDoc(collection(db,"subjects"), {name}); }
   document.getElementById("subjectInput").value="";
+  loadData();
+  alert("Subject saved");
+}
+window.deleteSubject = async function(){
+  let id=document.getElementById("subjectList").value;
+  if(!id) return alert("Select subject");
+  if(confirm("Delete subject?")){ await deleteDoc(doc(db,"subjects",id)); loadData(); alert("Deleted"); }
 }
 
-// Admit Card Functions
-document.getElementById("admitClass").addEventListener("change", async ()=>{
-  let cls=document.getElementById("admitClass").value;
-  if(!cls) return;
-  const snap = await getDocs(query(collection(db,"admissions"), where("class","==",cls)));
-  let html='<option value="">Select Student</option>';
-  snap.forEach(d=>{ let s=d.data(); html+=`<option value="${d.id}">${s.name} (${s.roll})</option>`; });
-  document.getElementById("admitStudent").innerHTML = html;
-});
+// Timetable
+window.saveTimetable = async function(){
+  const sessionId = document.getElementById("ttSession").value;
+  const examId = document.getElementById("ttExam").value;
+  const subjectId = document.getElementById("ttSubject").value;
+  const cls = document.getElementById("ttClass").value;
+  const date = document.getElementById("ttDate").value;
+  const day = document.getElementById("ttDay").value;
+  const time = document.getElementById("ttTime").value;
+  if(!sessionId || !examId || !subjectId || !cls || !date || !day || !time) return alert("Fill all fields");
 
+  await addDoc(collection(db,"timetable"), {sessionId, examId, subjectId, class:cls, date, day, time});
+  alert("Timetable saved");
+}
+
+// Admit Card
 window.generateAdmitCard = async function(){
-  const sessionId=document.getElementById("admitSession").value;
-  const examId=document.getElementById("admitExam").value;
-  const cls=document.getElementById("admitClass").value;
-  const studentId=document.getElementById("admitStudent").value;
+  const sessionId = document.getElementById("ttSession").value;
+  const examId = document.getElementById("ttExam").value;
+  const cls = document.getElementById("ttClass").value;
+  if(!sessionId || !examId || !cls) return alert("Select session, exam and class");
 
-  if(!sessionId || !examId || !cls) return alert("Select session, exam, class");
-
-  let studentsSnap;
-  if(studentId){
-    studentsSnap=[await getDocs(query(collection(db,"admissions"), where("__name__","==",studentId)))];
-  } else { studentsSnap = await getDocs(query(collection(db,"admissions"), where("class","==",cls))); }
-
+  const studentsSnap = await getDocs(query(collection(db,"admissions"), where("class","==",cls)));
   let printHTML="";
-  let count=0;
-  for(const docSnap of studentsSnap.docs || studentsSnap){
+  for(const docSnap of studentsSnap.docs){
     const s = docSnap.data();
-    const subjectsSnap = await getDocs(query(collection(db,"exam_subjects"), where("examId","==",examId), where("class","==",cls)));
+    const subsSnap = await getDocs(query(collection(db,"timetable"), where("examId","==",examId), where("class","==",cls)));
     let table="<tr><th>Subject</th><th>Date</th><th>Day</th><th>Time</th></tr>";
-    subjectsSnap.forEach(sub=>{ let subData=sub.data(); table+=`<tr><td>${subData.subject}</td><td>${subData.date}</td><td>${subData.day}</td><td>${subData.time}</td></tr>`; });
-
-    printHTML += `
-    <div class="admit-card">
-      <h2>YOUR SCHOOL NAME</h2>
-      <h4>Village Nag Guradiya, District Ujjain</h4>
-      <h3>Admit Card</h3>
-      <p><b>Name:</b> ${s.name}</p>
-      <p><b>Father:</b> ${s.father}</p>
-      <p><b>Roll No:</b> ${s.roll}</p>
-      <p><b>Class:</b> ${s.class}</p>
-      <p><b>Session:</b> ${document.getElementById("admitSession").selectedOptions[0].text}</p>
-      <p><b>Exam:</b> ${document.getElementById("admitExam").selectedOptions[0].text}</p>
+    subsSnap.forEach(sub=>{ let sd=sub.data(); table+=`<tr><td>${sd.subjectId}</td><td>${sd.date}</td><td>${sd.day}</td><td>${sd.time}</td></tr>`; });
+    printHTML += `<div style="border:2px solid #004aad;padding:10px;margin:10px;">
+      <h3>YOUR SCHOOL NAME</h3>
+      <p><b>Name:</b> ${s.name} | <b>Father:</b> ${s.father} | <b>Roll:</b> ${s.roll} | <b>Class:</b> ${s.class}</p>
       <table>${table}</table>
-      <div class="guidelines">Bring Admit Card & Stationery on exam day</div>
-      <div class="principal">Principal</div>
-    </div>
-    `;
-    count++;
-    if(count%2==0) printHTML+="<div style='page-break-after:always;'></div>";
+      <div style="margin-top:10px;">Principal</div>
+    </div>`;
   }
   document.getElementById("printArea").innerHTML = printHTML;
   window.print();
 }
-
 </script>
 </body>
 </html>
