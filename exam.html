@@ -70,6 +70,26 @@ th {background:#004aad; color:white;}
 <button class="admit" onclick="generateAdmitCard()">Generate Admit Card</button>
 </div>
 
+<!-- Filter & Timetable Display -->
+<div class="card">
+<h3>Timetable Preview</h3>
+<select id="filterClass" onchange="loadTimetablePreview()">
+<option value="">Select Class</option>
+<option>Nursery</option><option>LKG</option><option>UKG</option>
+<option>1</option><option>2</option><option>3</option><option>4</option>
+<option>5</option><option>6</option><option>7</option><option>8</option>
+<option>9</option><option>10</option>
+</select>
+<table>
+<thead>
+<tr>
+<th>Exam</th><th>Subject</th><th>Class</th><th>Date</th><th>Day</th><th>Time</th>
+</tr>
+</thead>
+<tbody id="timetablePreview"></tbody>
+</table>
+</div>
+
 <div id="printArea"></div>
 
 <script type="module">
@@ -99,6 +119,8 @@ async function loadData(){
   subsnap.forEach(d=>{ subHTML+=`<option value="${d.id}">${d.data().name}</option>`; });
   document.getElementById("subjectList").innerHTML = subHTML;
   document.getElementById("ttSubject").innerHTML = subHTML;
+
+  loadTimetablePreview();
 }
 loadData();
 
@@ -144,6 +166,25 @@ window.saveTimetable = async function(){
 
   await addDoc(collection(db,"timetable"), {examId, subjectId, class:cls, date, day, time});
   document.getElementById("ttStatus").innerText=`Timetable created for class ${cls}`;
+  loadTimetablePreview();
+}
+
+// Timetable Preview
+async function loadTimetablePreview(){
+  const cls = document.getElementById("filterClass").value;
+  let q = collection(db,"timetable");
+  if(cls) q = query(q, where("class","==",cls));
+  const snap = await getDocs(q);
+  let html="";
+  for(const d of snap.docs){
+    const data = d.data();
+    const examSnap = await getDocs(query(collection(db,"exam_sessions"), where("__name__","==",data.examId)));
+    const subjectSnap = await getDocs(query(collection(db,"subjects"), where("__name__","==",data.subjectId)));
+    let examName = examSnap.docs[0]?.data()?.examName || "";
+    let subjectName = subjectSnap.docs[0]?.data()?.name || "";
+    html+=`<tr><td>${examName}</td><td>${subjectName}</td><td>${data.class}</td><td>${data.date}</td><td>${data.day}</td><td>${data.time}</td></tr>`;
+  }
+  document.getElementById("timetablePreview").innerHTML = html;
 }
 
 // Admit Card
@@ -171,4 +212,4 @@ window.generateAdmitCard = async function(){
 }
 </script>
 </body>
-  </html>
+</html>
