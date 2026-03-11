@@ -104,12 +104,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 let editExamId=null, editSubjectId=null;
+let editTimetableId=null;
 
 // Load Exams & Subjects
 async function loadData(){
-  const snap = await getDocs(collection(db,"exam_sessions"));
+  const examsSnap = await getDocs(collection(db,"exam_sessions"));
   let examHTML='<option value="">Select Exam</option>';
-  snap.forEach(d=>{ examHTML+=`<option value="${d.id}">${d.data().examName}</option>`; });
+  examsSnap.forEach(d=>{ examHTML+=`<option value="${d.id}">${d.data().examName}</option>`; });
   document.getElementById("examSelect").innerHTML = examHTML;
   document.getElementById("ttExam").innerHTML = examHTML;
 
@@ -123,30 +124,38 @@ loadData();
 
 // Exam
 window.saveExam = async function(){
-  let name=document.getElementById("examInput").value;
+  const name=document.getElementById("examInput").value;
   if(!name) return alert("Enter exam name");
-  if(editExamId){ await updateDoc(doc(db,"exam_sessions",editExamId), {examName:name}); editExamId=null;}
-  else{ await addDoc(collection(db,"exam_sessions"), {examName:name}); }
+  if(editExamId){
+    await updateDoc(doc(db,"exam_sessions",editExamId), {examName:name});
+    editExamId=null;
+  } else {
+    await addDoc(collection(db,"exam_sessions"), {examName:name});
+  }
   document.getElementById("examInput").value="";
   loadData(); alert("Exam saved");
 }
 window.deleteExam = async function(){
-  let id=document.getElementById("examSelect").value;
+  const id=document.getElementById("examSelect").value;
   if(!id) return alert("Select exam");
   if(confirm("Delete exam?")){ await deleteDoc(doc(db,"exam_sessions",id)); loadData(); alert("Deleted"); }
 }
 
 // Subject
 window.saveSubject = async function(){
-  let name=document.getElementById("subjectInput").value;
+  const name=document.getElementById("subjectInput").value;
   if(!name) return alert("Enter subject name");
-  if(editSubjectId){ await updateDoc(doc(db,"subjects",editSubjectId), {name}); editSubjectId=null;}
-  else{ await addDoc(collection(db,"subjects"), {name}); }
+  if(editSubjectId){
+    await updateDoc(doc(db,"subjects",editSubjectId), {name});
+    editSubjectId=null;
+  } else {
+    await addDoc(collection(db,"subjects"), {name}); 
+  }
   document.getElementById("subjectInput").value="";
   loadData(); alert("Subject saved");
 }
 window.deleteSubject = async function(){
-  let id=document.getElementById("subjectList").value;
+  const id=document.getElementById("subjectList").value;
   if(!id) return alert("Select subject");
   if(confirm("Delete subject?")){ await deleteDoc(doc(db,"subjects",id)); loadData(); alert("Deleted"); }
 }
@@ -161,8 +170,14 @@ window.saveTimetable = async function(){
   const time=document.getElementById("ttTime").value;
   if(!examId||!subjectId||!cls||!date||!day||!time) return alert("Fill all fields");
 
-  await addDoc(collection(db,"timetable"), {examId, subjectId, class:cls, date, day, time});
-  document.getElementById("ttStatus").innerText=`Timetable created for class ${cls}`;
+  if(editTimetableId){
+    await updateDoc(doc(db,"timetable",editTimetableId), {examId, subjectId, class:cls, date, day, time});
+    editTimetableId=null;
+  } else {
+    await addDoc(collection(db,"timetable"), {examId, subjectId, class:cls, date, day, time});
+  }
+
+  document.getElementById("ttStatus").innerText=`Timetable saved for class ${cls}`;
   loadTimetablePreview();
 }
 
@@ -177,8 +192,8 @@ async function loadTimetablePreview(){
     const data = d.data();
     const examDoc = await getDoc(doc(db,"exam_sessions",data.examId));
     const subjectDoc = await getDoc(doc(db,"subjects",data.subjectId));
-    let examName = examDoc.exists() ? examDoc.data().examName : "";
-    let subjectName = subjectDoc.exists() ? subjectDoc.data().name : "";
+    const examName = examDoc.exists() ? examDoc.data().examName : "";
+    const subjectName = subjectDoc.exists() ? subjectDoc.data().name : "";
 
     html+=`<tr>
       <td>${examName}</td>
@@ -196,8 +211,7 @@ async function loadTimetablePreview(){
 
 // Edit Timetable
 window.editTimetable = async function(id){
-  const docRef = doc(db,"timetable",id);
-  const docSnap = await getDoc(docRef);
+  const docSnap = await getDoc(doc(db,"timetable",id));
   if(!docSnap.exists()) return alert("Not found");
   const d = docSnap.data();
   document.getElementById("ttExam").value = d.examId;
@@ -206,8 +220,7 @@ window.editTimetable = async function(id){
   document.getElementById("ttDate").value = d.date;
   document.getElementById("ttDay").value = d.day;
   document.getElementById("ttTime").value = d.time;
-  // Delete old entry before saving updated
-  await deleteDoc(doc(db,"timetable",id));
+  editTimetableId = id; // edit mode
 }
 
 // Delete Timetable
@@ -220,4 +233,4 @@ window.deleteTimetable = async function(id){
 
 </script>
 </body>
-</html>
+  </html>
