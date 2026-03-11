@@ -14,7 +14,7 @@ select,input,button {padding:10px; margin:5px; width:100%; max-width:300px;}
 button {cursor:pointer; border:none; border-radius:5px;}
 .save {background:#004aad;color:white;padding:10px;}
 .delete {background:#dc3545;color:white;padding:10px;}
-.admit {background:#28a745;color:white;padding:10px; margin-top:10px;}
+.edit {background:#ffc107;color:white;padding:10px;}
 table {width:100%; border-collapse:collapse; margin-top:10px;}
 th, td {border:1px solid #ccc; padding:8px; text-align:center;}
 th {background:#004aad; color:white;}
@@ -67,30 +67,29 @@ th {background:#004aad; color:white;}
 <input type="time" id="ttTime">
 <button class="save" onclick="saveTimetable()">Save/Update Timetable</button>
 <p id="ttStatus" style="margin-top:10px; color:green; font-weight:bold;"></p>
-<button class="admit" onclick="generateAdmitCard()">Generate Admit Card</button>
+<button class="save" onclick="loadTimetablePreview()">Load Timetable</button>
 </div>
 
-<!-- Filter & Timetable Display -->
+<!-- Timetable Preview -->
 <div class="card">
 <h3>Timetable Preview</h3>
-<select id="filterClass" onchange="loadTimetablePreview()">
+<select id="filterClass">
 <option value="">Select Class</option>
 <option>Nursery</option><option>LKG</option><option>UKG</option>
 <option>1</option><option>2</option><option>3</option><option>4</option>
 <option>5</option><option>6</option><option>7</option><option>8</option>
 <option>9</option><option>10</option>
 </select>
+<button class="save" onclick="loadTimetablePreview()">Filter</button>
 <table>
 <thead>
 <tr>
-<th>Exam</th><th>Subject</th><th>Class</th><th>Date</th><th>Day</th><th>Time</th>
+<th>Exam</th><th>Subject</th><th>Class</th><th>Date</th><th>Day</th><th>Time</th><th>Edit</th><th>Delete</th>
 </tr>
 </thead>
 <tbody id="timetablePreview"></tbody>
 </table>
 </div>
-
-<div id="printArea"></div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -119,8 +118,6 @@ async function loadData(){
   subsnap.forEach(d=>{ subHTML+=`<option value="${d.id}">${d.data().name}</option>`; });
   document.getElementById("subjectList").innerHTML = subHTML;
   document.getElementById("ttSubject").innerHTML = subHTML;
-
-  loadTimetablePreview();
 }
 loadData();
 
@@ -182,34 +179,46 @@ async function loadTimetablePreview(){
     const subjectSnap = await getDocs(query(collection(db,"subjects"), where("__name__","==",data.subjectId)));
     let examName = examSnap.docs[0]?.data()?.examName || "";
     let subjectName = subjectSnap.docs[0]?.data()?.name || "";
-    html+=`<tr><td>${examName}</td><td>${subjectName}</td><td>${data.class}</td><td>${data.date}</td><td>${data.day}</td><td>${data.time}</td></tr>`;
+
+    html+=`<tr>
+      <td>${examName}</td>
+      <td>${subjectName}</td>
+      <td>${data.class}</td>
+      <td>${data.date}</td>
+      <td>${data.day}</td>
+      <td>${data.time}</td>
+      <td><button class="edit" onclick="editTimetable('${d.id}')">Edit</button></td>
+      <td><button class="delete" onclick="deleteTimetable('${d.id}')">Delete</button></td>
+    </tr>`;
   }
   document.getElementById("timetablePreview").innerHTML = html;
 }
 
-// Admit Card
-window.generateAdmitCard = async function(){
-  const examId=document.getElementById("ttExam").value;
-  const cls=document.getElementById("ttClass").value;
-  if(!examId||!cls) return alert("Select exam and class");
-
-  const studentsSnap = await getDocs(query(collection(db,"admissions"), where("class","==",cls)));
-  let printHTML="";
-  for(const docSnap of studentsSnap.docs){
-    const s = docSnap.data();
-    const subsSnap = await getDocs(query(collection(db,"timetable"), where("examId","==",examId), where("class","==",cls)));
-    let table="<tr><th>Subject</th><th>Date</th><th>Day</th><th>Time</th></tr>";
-    subsSnap.forEach(sub=>{ let sd=sub.data(); table+=`<tr><td>${sd.subjectId}</td><td>${sd.date}</td><td>${sd.day}</td><td>${sd.time}</td></tr>`; });
-    printHTML += `<div style="border:2px solid #004aad;padding:10px;margin:10px; page-break-inside:avoid;">
-      <h3>YOUR SCHOOL NAME</h3>
-      <p><b>Name:</b> ${s.name} | <b>Father:</b> ${s.father} | <b>Roll:</b> ${s.roll} | <b>Class:</b> ${s.class}</p>
-      <table>${table}</table>
-      <div style="margin-top:10px;">Principal</div>
-    </div>`;
-  }
-  document.getElementById("printArea").innerHTML = printHTML;
-  window.print();
+// Edit Timetable
+window.editTimetable = async function(id){
+  const docRef = doc(db,"timetable",id);
+  const docSnap = await getDocs(collection(db,"timetable"));
+  const tSnap = await getDocs(doc(db,"timetable",id));
+  const d = await (await getDocs(doc(db,"timetable",id))).docs?.[0]?.data();
+  if(!d) return alert("Not found");
+  document.getElementById("ttExam").value = d.examId;
+  document.getElementById("ttSubject").value = d.subjectId;
+  document.getElementById("ttClass").value = d.class;
+  document.getElementById("ttDate").value = d.date;
+  document.getElementById("ttDay").value = d.day;
+  document.getElementById("ttTime").value = d.time;
+  // Delete old entry before saving updated
+  await deleteDoc(doc(db,"timetable",id));
 }
+
+// Delete Timetable
+window.deleteTimetable = async function(id){
+  if(confirm("Delete this timetable entry?")){
+    await deleteDoc(doc(db,"timetable",id));
+    loadTimetablePreview();
+  }
+}
+
 </script>
 </body>
-</html>
+  </html>
