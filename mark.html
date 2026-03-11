@@ -1,154 +1,437 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 <meta charset="UTF-8">
-<title>Marks Entry & Bulk Edit with Max Marks</title>
+<title>Marks Management PRO</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-body {font-family:Arial; margin:0; background:#f2f2f2;}
-header {background:#004aad; color:white; padding:15px; text-align:center; font-size:22px;}
-.container {padding:20px; max-width:1200px; margin:auto;}
-.card {background:white; padding:20px; border-radius:8px; margin-bottom:20px; box-shadow:0 2px 5px rgba(0,0,0,0.1);}
-select,input,button {padding:10px; margin:5px; width:100%; max-width:300px;}
-button {cursor:pointer; border:none; border-radius:5px;}
-.save {background:#004aad;color:white;padding:10px;}
-table {width:100%; border-collapse:collapse; margin-top:10px;}
-th, td {border:1px solid #ccc; padding:8px; text-align:center;}
-th {background:#004aad; color:white;}
-input[type="number"]{width:60px;}
-@media (max-width:768px){
-  table, th, td {font-size:12px;}
-  select,input,button {max-width:100%;}
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f4f8;
 }
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+font-weight:bold;
+}
+
+.container{
+padding:20px;
+max-width:1200px;
+margin:auto;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+box-shadow:0 3px 8px rgba(0,0,0,0.1);
+}
+
+select,input,button{
+padding:10px;
+margin:5px;
+width:100%;
+max-width:250px;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+button{
+cursor:pointer;
+border:none;
+font-weight:bold;
+}
+
+.load{background:#28a745;color:white;}
+.save{background:#004aad;color:white;}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
+
+th,td{
+border:1px solid #ddd;
+padding:8px;
+text-align:center;
+}
+
+th{
+background:#004aad;
+color:white;
+}
+
+input[type="number"]{
+width:70px;
+text-align:center;
+}
+
+.success{
+background:#d4edda;
+}
+
+@media(max-width:768px){
+table,th,td{font-size:12px;}
+select,input,button{max-width:100%;}
+}
+
 </style>
 </head>
 
 <body>
-<header>Marks Entry & Bulk Edit</header>
+
+<header>Marks Entry System PRO MAX</header>
 
 <div class="container">
 
 <div class="card">
-<h3>Marks Management</h3>
-<select id="selectClass">
+
+<h3>Select Details</h3>
+
+<select id="classSelect">
 <option value="">Select Class</option>
-<option>Nursery</option><option>LKG</option><option>UKG</option>
-<option>1</option><option>2</option><option>3</option><option>4</option>
-<option>5</option><option>6</option><option>7</option><option>8</option>
-<option>9</option><option>10</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
 </select>
 
-<select id="selectExam">
+<select id="examSelect">
 <option value="">Select Exam</option>
 </select>
 
-<select id="selectSubject">
+<select id="subjectSelect">
 <option value="">Select Subject</option>
 </select>
 
-<input type="number" id="maxMark" placeholder="Maximum Marks for this Subject" min="0">
+<input type="number" id="maxMarks" placeholder="Maximum Marks">
 
-<button class="save" onclick="loadStudents()">Load Students</button>
-<button class="save" onclick="saveAllMarks()">Save All Marks</button>
+<br>
+
+<button class="load" onclick="loadStudents()">Load Students</button>
+<button class="save" onclick="saveMarks()">Save All Marks</button>
+
 </div>
 
 <div class="card">
+
 <h3>Student Marks</h3>
+
 <table>
+
 <thead>
 <tr>
-<th>Roll</th><th>Name</th><th>Father</th><th>Marks</th>
+<th>Roll</th>
+<th>Name</th>
+<th>Father</th>
+<th>Marks</th>
+<th>Percentage</th>
+<th>Grade</th>
+<th>Result</th>
+<th>Rank</th>
 </tr>
 </thead>
+
 <tbody id="marksTable"></tbody>
+
 </table>
+
 </div>
 
 </div>
+
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, setDoc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+getFirestore,
+collection,
+getDocs,
+doc,
+getDoc,
+setDoc,
+query,
+where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-  authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-  projectId: "nmpsnagguradiya-b9b94"
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let subjects = [];
-let exams = [];
-let students = [];
-let selectedClass = "", selectedExam = "", selectedSubject = "";
+let students=[];
+let exams=[];
+let subjects=[];
 
-// Load all subjects and exams
-async function loadData(){
-  const subSnap = await getDocs(collection(db,"subjects"));
-  subjects = subSnap.docs.map(d=>({id:d.id,name:d.data().name}));
-  const examSnap = await getDocs(collection(db,"exam_sessions"));
-  exams = examSnap.docs.map(d=>({id:d.id,name:d.data().examName}));
+let selectedClass="";
+let selectedExam="";
+let selectedSubject="";
 
-  // Populate exam and subject selects
-  document.getElementById("selectExam").innerHTML = '<option value="">Select Exam</option>' + exams.map(e=>`<option value="${e.id}">${e.name}</option>`).join("");
-  document.getElementById("selectSubject").innerHTML = '<option value="">Select Subject</option>' + subjects.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
-}
-await loadData();
 
-window.loadStudents = async function(){
-  selectedClass = document.getElementById("selectClass").value;
-  selectedExam = document.getElementById("selectExam").value;
-  selectedSubject = document.getElementById("selectSubject").value;
+// GRADE SYSTEM
+function getGrade(p){
 
-  if(!selectedClass || !selectedExam || !selectedSubject) return alert("Select class, exam, and subject");
+if(p>=90) return "A+";
+if(p>=75) return "A";
+if(p>=60) return "B";
+if(p>=45) return "C";
+if(p>=33) return "D";
 
-  const snap = await getDocs(query(collection(db,"admissions"), where("class","==",selectedClass)));
-  students = snap.docs.map(d=>({id:d.id, ...d.data()}));
+return "F";
 
-  renderMarksTable();
 }
 
-async function renderMarksTable(){
-  const tbody = document.getElementById("marksTable");
-  tbody.innerHTML = "";
+// PASS FAIL
+function getResult(p){
 
-  for(const student of students){
-    const markDocId = `${student.id}_${selectedExam}_${selectedSubject}`;
-    const markDoc = await getDoc(doc(db,"marks",markDocId));
-    const marks = markDoc.exists() ? markDoc.data().marks : "";
+if(p>=33) return "PASS";
 
-    const tr = document.createElement("tr");
-    tr.innerHTML = `
-      <td>${student.roll}</td>
-      <td>${student.name}</td>
-      <td>${student.father}</td>
-      <td><input type="number" min="0" max="100" value="${marks}" data-student="${student.id}" class="markInput"></td>
-    `;
-    tbody.appendChild(tr);
-  }
+return "FAIL";
+
 }
 
-// Save all marks in bulk with maximum mark
-window.saveAllMarks = async function(){
-  const maxMark = parseInt(document.getElementById("maxMark").value);
-  if(isNaN(maxMark) || maxMark <= 0) return alert("Enter valid maximum marks");
 
-  const inputs = document.querySelectorAll(".markInput");
-  for(const input of inputs){
-    const studentId = input.dataset.student;
-    let marks = parseInt(input.value) || 0;
-    if(marks > maxMark) marks = maxMark; // limit marks to max
-    await setDoc(doc(db,"marks",`${studentId}_${selectedExam}_${selectedSubject}`),{
-      studentId, examId:selectedExam, subjectId:selectedSubject, marks, maxMarks:maxMark
-    });
-    input.style.backgroundColor = "#d4edda"; // green flash
-    setTimeout(()=>{input.style.backgroundColor="";},500);
-  }
-  alert("All marks saved successfully!");
+// LOAD EXAMS
+async function loadExams(){
+
+const snap=await getDocs(collection(db,"exam_sessions"));
+
+exams=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+document.getElementById("examSelect").innerHTML=
+'<option value="">Select Exam</option>'+
+exams.map(e=>`<option value="${e.id}">${e.examName}</option>`).join("");
+
+}
+
+
+// LOAD SUBJECTS
+async function loadSubjects(){
+
+const snap=await getDocs(collection(db,"subjects"));
+
+subjects=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+document.getElementById("subjectSelect").innerHTML=
+'<option value="">Select Subject</option>'+
+subjects.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
+
+}
+
+await loadExams();
+await loadSubjects();
+
+
+// SUBJECT SELECT → AUTO MAX MARKS
+document.getElementById("subjectSelect").addEventListener("change",async()=>{
+
+const subjectId=document.getElementById("subjectSelect").value;
+
+const docSnap=await getDoc(doc(db,"subjects",subjectId));
+
+if(docSnap.exists()){
+
+document.getElementById("maxMarks").value=docSnap.data().maxMarks || "";
+
+}
+
+});
+
+
+// LOAD STUDENTS
+window.loadStudents=async function(){
+
+selectedClass=document.getElementById("classSelect").value;
+selectedExam=document.getElementById("examSelect").value;
+selectedSubject=document.getElementById("subjectSelect").value;
+
+if(!selectedClass||!selectedExam||!selectedSubject){
+
+alert("Select Class, Exam and Subject");
+
+return;
+
+}
+
+const q=query(collection(db,"admissions"),where("class","==",selectedClass));
+
+const snap=await getDocs(q);
+
+students=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+renderTable();
+
+}
+
+
+// RENDER TABLE
+async function renderTable(){
+
+const tbody=document.getElementById("marksTable");
+
+tbody.innerHTML="";
+
+for(const s of students){
+
+const docId=`${s.id}_${selectedExam}_${selectedSubject}`;
+
+const markDoc=await getDoc(doc(db,"marks",docId));
+
+const marks=markDoc.exists()?markDoc.data().marks:"";
+
+const tr=document.createElement("tr");
+
+tr.innerHTML=`
+
+<td>${s.roll||""}</td>
+<td>${s.name}</td>
+<td>${s.father||""}</td>
+
+<td>
+<input type="number" class="markInput"
+data-id="${s.id}"
+value="${marks}" min="0">
+</td>
+
+<td class="percent"></td>
+<td class="grade"></td>
+<td class="result"></td>
+<td class="rank"></td>
+
+`;
+
+tbody.appendChild(tr);
+
+}
+
+}
+
+
+// SAVE MARKS
+window.saveMarks=async function(){
+
+const maxMarks=parseInt(document.getElementById("maxMarks").value);
+
+if(!maxMarks){
+
+alert("Enter Maximum Marks");
+
+return;
+
+}
+
+const inputs=document.querySelectorAll(".markInput");
+
+let results=[];
+
+for(const input of inputs){
+
+const studentId=input.dataset.id;
+
+let marks=parseInt(input.value)||0;
+
+if(marks>maxMarks) marks=maxMarks;
+
+const percent=((marks/maxMarks)*100).toFixed(2);
+
+const grade=getGrade(percent);
+
+const result=getResult(percent);
+
+results.push({
+studentId,
+marks,
+percent,
+grade,
+result
+});
+
+await setDoc(doc(db,"marks",`${studentId}_${selectedExam}_${selectedSubject}`),{
+
+studentId,
+examId:selectedExam,
+subjectId:selectedSubject,
+marks,
+maxMarks,
+percentage:percent,
+grade,
+result,
+class:selectedClass
+
+});
+
+input.classList.add("success");
+
+setTimeout(()=>input.classList.remove("success"),500);
+
+}
+
+
+// TOPPER + RANK
+results.sort((a,b)=>b.marks-a.marks);
+
+results.forEach((r,i)=>{
+
+r.rank=i+1;
+
+});
+
+
+updateTable(results);
+
+alert("Marks Saved Successfully");
+
+}
+
+
+// UPDATE TABLE
+function updateTable(results){
+
+const rows=document.querySelectorAll("#marksTable tr");
+
+rows.forEach((row,i)=>{
+
+const r=results[i];
+
+row.querySelector(".percent").innerText=r.percent+"%";
+
+row.querySelector(".grade").innerText=r.grade;
+
+row.querySelector(".result").innerText=r.result;
+
+row.querySelector(".rank").innerText=r.rank;
+
+});
+
 }
 
 </script>
+
 </body>
   </html>
