@@ -2,155 +2,140 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Print Admit Card</title>
+<title>Print Admit Cards</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{font-family:Arial; background:#f2f2f2; margin:0; padding:0;}
-header{background:#004aad; color:white; padding:15px; text-align:center; font-size:22px;}
-.container{padding:20px; max-width:900px; margin:auto;}
-select,button{padding:8px; margin:5px;}
-button{background:#004aad; color:white; border:none; cursor:pointer;}
-.admitCardContainer{display:flex; flex-wrap:wrap; justify-content:space-between;}
-.admitCard{width:48%; border:2px solid #004aad; background:#e6f0ff; margin-bottom:15px; padding:15px; box-sizing:border-box;}
-.schoolHeader{background:#004aad; color:white; padding:5px; text-align:center; margin-bottom:10px; font-weight:bold;}
-.studentPhoto{width:80px; height:80px; border:1px solid #000; margin-bottom:10px;}
-.timetable, .guidelines{font-size:12px; margin-top:10px;}
-table{width:100%; border-collapse:collapse; font-size:12px; margin-top:5px;}
-table, th, td{border:1px solid #000;}
-th, td{padding:4px; text-align:center;}
-.principal{margin-top:20px; text-align:right; font-weight:bold;}
-@media print{
-  body *{visibility:hidden;}
-  #printSection, #printSection *{visibility:visible;}
-  #printSection{position:absolute; top:0; left:0; width:100%;}
+body {font-family:Arial, sans-serif; background:#f2f2f2; margin:0; padding:0;}
+header {background:#004aad; color:white; text-align:center; padding:15px; font-size:22px;}
+.container {max-width:1000px; margin:auto; padding:20px;}
+.admit-card {border:2px solid #004aad; padding:10px; margin:10px; width:48%; display:inline-block; vertical-align:top; box-sizing:border-box; page-break-inside:avoid;}
+.admit-card img {width:80px; height:100px; object-fit:cover; float:right;}
+.admit-card h3 {margin:5px 0;}
+.admit-card table {width:100%; border-collapse:collapse; margin-top:10px;}
+.admit-card table, th, td {border:1px solid #ccc;}
+th, td {padding:6px; text-align:center;}
+.guideline {margin-top:10px; font-size:14px; color:#333;}
+button {padding:8px 12px; margin:5px; border:none; border-radius:5px; cursor:pointer;}
+.save {background:#004aad;color:white;}
+.print {background:#28a745;color:white;}
+@media (max-width:768px){
+  .admit-card {width:100%; margin:5px 0;}
+  img {float:none; display:block; margin:auto;}
 }
 </style>
 </head>
 <body>
-
-<header>Print Admit Card</header>
+<header>Print Admit Cards</header>
 <div class="container">
-  <div>
-    <label>Select Session:</label>
-    <select id="sessionSelect"></select>
-    <label>Select Exam:</label>
-    <select id="examSelect"></select>
-    <label>Select Class:</label>
-    <select id="classSelect">
-      <option value="">Select Class</option>
-      <option>Nursery</option>
-      <option>LKG</option>
-      <option>UKG</option>
-      <option>1</option>
-      <option>2</option>
-      <option>3</option>
-      <option>4</option>
-      <option>5</option>
-      <option>6</option>
-      <option>7</option>
-      <option>8</option>
-      <option>9</option>
-      <option>10</option>
-    </select>
-    <label>Select Student:</label>
-    <select id="studentSelect"><option value="">Select Student</option></select>
-    <br>
-    <button onclick="generateAdmitCard()">Generate Admit Card</button>
-  </div>
 
-  <div id="printSection" class="admitCardContainer"></div>
+<!-- Exam/Class Select -->
+<div class="card">
+<select id="selectClass"><option value="">Select Class</option>
+<option>Nursery</option><option>LKG</option><option>UKG</option>
+<option>1</option><option>2</option><option>3</option><option>4</option>
+<option>5</option><option>6</option><option>7</option><option>8</option>
+<option>9</option><option>10</option>
+</select>
+
+<select id="selectExam"><option value="">Select Exam</option></select>
+<button class="save" onclick="loadAdmitCards()">Load Admit Cards</button>
+</div>
+
+<!-- Guideline -->
+<div class="card">
+<input type="text" id="guidelineInput" placeholder="Enter guideline for admit card">
+<button class="save" onclick="saveGuideline()">Save Guideline</button>
+</div>
+
+<!-- Admit Cards -->
+<div id="admitCardsContainer"></div>
+<button class="print" onclick="window.print()">Print Admit Cards</button>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, addDoc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
+const firebaseConfig={
   apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
   authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
   projectId:"nmpsnagguradiya-b9b94"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let sessions=[], exams=[], students=[];
+let guidelineText = "";
 
-async function loadSessionsExams(){
-  // Load Sessions
-  const snapSessions = await getDocs(collection(db,"exam_sessions"));
-  let htmlSession = '<option value="">Select Session</option>';
-  snapSessions.forEach(d=>{let e=d.data(); htmlSession+=`<option value="${d.id}">${e.session}</option>`;});
-  document.getElementById("sessionSelect").innerHTML = htmlSession;
+// Load exams into dropdown
+async function loadExams(){
+  const snap = await getDocs(collection(db,"exam_sessions"));
+  let html='<option value="">Select Exam</option>';
+  snap.forEach(d=>{ html+=`<option value="${d.id}">${d.data().examName}</option>`; });
+  document.getElementById("selectExam").innerHTML = html;
+}
+loadExams();
 
-  // Load Exams
-  const snapExams = await getDocs(collection(db,"exam_sessions"));
-  let htmlExam = '<option value="">Select Exam</option>';
-  snapExams.forEach(d=>{let e=d.data(); htmlExam+=`<option value="${d.id}">${e.examName}</option>`;});
-  document.getElementById("examSelect").innerHTML = htmlExam;
+// Save guideline
+window.saveGuideline = async function(){
+  guidelineText = document.getElementById("guidelineInput").value;
+  if(!guidelineText) return alert("Enter guideline");
+  await setDoc(doc(db,"admit_guidelines","guideline"), {text: guidelineText});
+  alert("Guideline saved");
 }
 
-document.getElementById("classSelect").addEventListener("change", async function(){
-  let cls = this.value;
-  let studentSel = document.getElementById("studentSelect");
-  studentSel.innerHTML = "<option value=''>Select Student</option>";
-  if(cls=="") return;
-  const q = query(collection(db,"admissions"), where("class","==",cls));
-  const snap = await getDocs(q);
-  if(snap.empty){
-    alert("No students found in this class");
-    return;
+// Load Admit Cards
+window.loadAdmitCards = async function(){
+  const cls = document.getElementById("selectClass").value;
+  const examId = document.getElementById("selectExam").value;
+  if(!cls || !examId) return alert("Select class and exam");
+
+  // Get students
+  const studentSnap = await getDocs(collection(db,"admissions"));
+  const students = studentSnap.docs.filter(d=>d.data().class===cls);
+
+  // Get timetable subjects for class and exam
+  const ttSnap = await getDocs(collection(db,"timetable"));
+  const timetable = ttSnap.docs
+    .filter(d=>d.data().class===cls && d.data().examId===examId)
+    .map(d=>d.data());
+
+  // Get saved guideline
+  const guideDoc = await getDoc(doc(db,"admit_guidelines","guideline"));
+  guidelineText = guideDoc.exists() ? guideDoc.data().text : "";
+
+  // Build admit cards
+  let html = "";
+  for(let i=0;i<students.length;i++){
+    const s = students[i].data();
+    html += `<div class="admit-card">
+      <img src="${s.photo || ''}" alt="Photo">
+      <h3>YOUR SCHOOL NAME</h3>
+      <p><b>Name:</b> ${s.name}</p>
+      <p><b>Father:</b> ${s.father}</p>
+      <p><b>Roll:</b> ${s.roll}</p>
+      <p><b>Class:</b> ${s.class}</p>
+      <table>
+        <tr><th>Subject</th><th>Date</th><th>Day</th><th>Time</th></tr>`;
+
+    timetable.forEach(tt=>{
+      html += `<tr>
+        <td>${tt.subjectId}</td>
+        <td>${tt.date}</td>
+        <td>${tt.day}</td>
+        <td>${tt.time}</td>
+      </tr>`;
+    });
+
+    html += `</table>
+      <div class="guideline">${guidelineText}</div>
+    </div>`;
+
+    // 2 per row
+    if((i+1)%2===0) html += '<div style="clear:both"></div>';
   }
-  snap.forEach(d=>{
-    let s = d.data();
-    students.push({id:d.id,...s});
-    let name = s.name || "";
-    studentSel.innerHTML += `<option value="${d.id}">${name}</option>`;
-  });
-});
 
-window.generateAdmitCard = async function(){
-  let studentId = document.getElementById("studentSelect").value;
-  if(!studentId){alert("Select a student"); return;}
-  const student = students.find(s=>s.id==studentId);
-  const examId = document.getElementById("examSelect").value;
-  const sessionId = document.getElementById("sessionSelect").value;
-  if(!examId || !sessionId){alert("Select Session & Exam"); return;}
-
-  const q = query(collection(db,"exam_subjects"), where("class","==",student.class), where("sessionId","==",sessionId), where("examId","==",examId));
-  const snap = await getDocs(q);
-  let timetable = "";
-  snap.forEach(d=>{
-    let s = d.data();
-    timetable += `<tr><td>${s.subject}</td><td>${s.date}</td><td>${s.day}</td><td>${s.time}</td></tr>`;
-  });
-
-  let printDiv = document.getElementById("printSection");
-  printDiv.innerHTML = `
-    <div class="admitCard">
-      <div class="schoolHeader">YOUR SCHOOL NAME</div>
-      <p><b>Session:</b> ${document.getElementById("sessionSelect").selectedOptions[0].text}</p>
-      <p><b>Exam:</b> ${document.getElementById("examSelect").selectedOptions[0].text}</p>
-      <img src="${student.photo||''}" class="studentPhoto" alt="Photo">
-      <p><b>Name:</b> ${student.name}</p>
-      <p><b>Father:</b> ${student.father}</p>
-      <p><b>Mother:</b> ${student.mother||''}</p>
-      <p><b>Roll No:</b> ${student.roll}</p>
-      <p><b>Class:</b> ${student.class}</p>
-      <p><b>Mobile:</b> ${student.mobile}</p>
-      <h4>Timetable</h4>
-      <table><tr><th>Subject</th><th>Date</th><th>Day</th><th>Time</th></tr>${timetable}</table>
-      <div class="guidelines"><b>Guidelines:</b> Follow all exam rules and reach school 15 minutes early.</div>
-      <div class="principal">Principal Sign</div>
-    </div>
-  `;
-
-  // Duplicate for 2 cards per page
-  printDiv.innerHTML += printDiv.innerHTML;
-  window.print();
+  document.getElementById("admitCardsContainer").innerHTML = html;
 }
-
-loadSessionsExams();
 </script>
-
 </body>
 </html>
