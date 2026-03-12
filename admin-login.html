@@ -1,15 +1,14 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>Admin Dashboard</title>
 
-<title>School ERP</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-
-*{box-sizing:border-box}
 
 body{
 font-family:Arial;
@@ -17,110 +16,130 @@ margin:0;
 background:#f2f2f2;
 }
 
-/* HEADER */
-
 header{
 background:#004aad;
 color:white;
 padding:10px;
 display:flex;
 align-items:center;
-gap:10px;
+justify-content:center;
+gap:15px;
 flex-wrap:wrap;
 }
 
-header img{
-width:50px;
-height:50px;
+#schoolLogo{
+width:60px;
+height:60px;
+border-radius:50%;
 object-fit:cover;
-border-radius:6px;
 background:white;
 }
 
-.schoolText{
-font-size:18px;
+#schoolName{
+font-size:22px;
+font-weight:bold;
 }
 
-/* CONTAINER */
+#schoolAddress{
+font-size:14px;
+}
 
 .container{
-max-width:1100px;
-margin:auto;
 padding:15px;
 }
 
-/* CARD */
+.grid{
+
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:15px;
+
+}
 
 .card{
+
 background:white;
 padding:20px;
 border-radius:10px;
-margin-bottom:20px;
-box-shadow:0 2px 8px rgba(0,0,0,0.1);
+text-align:center;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+
 }
 
-/* FORM */
+.count{
 
-input,textarea,button{
-width:100%;
-padding:10px;
-margin-top:8px;
-border-radius:6px;
-border:1px solid #ccc;
+font-size:28px;
+font-weight:bold;
+color:#004aad;
+
+}
+
+.label{
+
+margin-top:5px;
+
+}
+
+.buttons{
+
+margin-top:30px;
+
+display:grid;
+
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+
+gap:15px;
+
 }
 
 button{
-background:#004aad;
-color:white;
+
+padding:15px;
+
 border:none;
+
+background:#004aad;
+
+color:white;
+
+font-size:16px;
+
+border-radius:8px;
+
 cursor:pointer;
-}
-
-/* GRID */
-
-.row{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:10px;
-}
-
-.permissions{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:5px;
-}
-
-.menu a{
-display:block;
-padding:12px;
-background:#eee;
-margin-bottom:6px;
-text-decoration:none;
-color:black;
-border-radius:6px;
-}
-
-/* MOBILE */
-
-@media(max-width:700px){
-
-.row{
-grid-template-columns:1fr;
-}
-
-.permissions{
-grid-template-columns:1fr;
-}
-
-header{
-flex-direction:column;
-align-items:flex-start;
-}
 
 }
 
-#adminPanel,#teacherPanel{
+button:hover{
+background:#003080;
+}
+
+/* popup */
+
+#profileBox{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
 display:none;
+align-items:center;
+justify-content:center;
+}
+
+.profileForm{
+background:white;
+padding:20px;
+border-radius:10px;
+width:90%;
+max-width:400px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:8px 0;
 }
 
 </style>
@@ -133,271 +152,240 @@ display:none;
 
 <img id="schoolLogo">
 
-<div class="schoolText">
-
-<div id="schoolName">School ERP</div>
-<div id="schoolAddress"></div>
-
+<div>
+<div id="schoolName">School Name</div>
+<div id="schoolAddress">School Address</div>
 </div>
 
 </header>
 
 <div class="container">
 
-<!-- LOGIN -->
+<div class="grid">
 
-<div class="card" id="loginBox">
+<div class="card">
+<div class="count" id="students">0</div>
+<div class="label">Total Students</div>
+</div>
 
-<h3>Login</h3>
+<div class="card">
+<div class="count" id="teachers">0</div>
+<div class="label">Total Teachers</div>
+</div>
 
-<input id="emailInput" placeholder="Email">
+<div class="card">
+<div class="count" id="complaints">0</div>
+<div class="label">Total Complaints</div>
+</div>
 
-<input id="passwordInput" type="password" placeholder="Password">
+<div class="card">
+<div class="count" id="admissions">0</div>
+<div class="label">Total Admissions</div>
+</div>
 
-<button onclick="login()">Login</button>
+<div class="card">
+<div class="count" id="results">0</div>
+<div class="label">Total Results</div>
+</div>
 
 </div>
 
-<!-- ADMIN PANEL -->
+<div class="buttons">
 
-<div id="adminPanel">
+<button onclick="location.href='admin_admissions.html'">
+Admission Management
+</button>
 
-<div class="card">
+<button onclick="location.href='admin_teachers.html'">
+Teacher Management
+</button>
+
+<button onclick="location.href='admin_results.html'">
+Result Management
+</button>
+
+<button onclick="location.href='admin_complaints.html'">
+Complaint Management
+</button>
+
+<button onclick="location.href='admin_study.html'">
+Study Material
+</button>
+
+<button onclick="location.href='admin.html'">
+Notice & Gallery
+</button>
+
+<button onclick="location.href='all-students.html'">
+All Students
+</button>
+
+<button onclick="location.href='admin-teacher.html'">
+Create Teacher / Permission
+</button>
+
+<button onclick="openProfile()">
+Add / Edit School Profile
+</button>
+
+</div>
+
+</div>
+
+
+<!-- School Profile Popup -->
+
+<div id="profileBox">
+
+<div class="profileForm">
 
 <h3>School Profile</h3>
 
-<div class="row">
+<input id="pname" placeholder="School Name">
 
-<input id="schoolNameInput" placeholder="School Name">
+<input id="paddress" placeholder="Address">
 
-<input id="schoolIdInput" placeholder="School ID">
+<input type="file" id="plogo">
 
-</div>
+<button onclick="saveProfile()">Save</button>
 
-<textarea id="schoolAddressInput" placeholder="School Address"></textarea>
-
-<input type="file" id="logoFile">
-
-<button onclick="uploadLogo()">Upload Logo</button>
-
-<button onclick="saveSchool()">Save Profile</button>
-
-</div>
-
-<div class="card">
-
-<h3>Create Teacher</h3>
-
-<input id="tname" placeholder="Teacher Name">
-
-<input id="temail" placeholder="Teacher Email">
-
-<input id="tpass" placeholder="Password">
-
-<h4>Page Permissions</h4>
-
-<div class="permissions">
-
-<label><input type="checkbox" value="admission.html"> Admission</label>
-<label><input type="checkbox" value="students.html"> Students</label>
-<label><input type="checkbox" value="subjects.html"> Subjects</label>
-<label><input type="checkbox" value="exam.html"> Exams</label>
-<label><input type="checkbox" value="marks-entry.html"> Marks Entry</label>
-<label><input type="checkbox" value="result.html"> Result</label>
-<label><input type="checkbox" value="marksheet.html"> Marksheet</label>
-
-</div>
-
-<button onclick="createTeacher()">Create Teacher</button>
+<button onclick="closeProfile()">Close</button>
 
 </div>
 
 </div>
 
-<!-- TEACHER PANEL -->
-
-<div id="teacherPanel" class="card">
-
-<h3>Teacher Dashboard</h3>
-
-<div id="teacherMenu" class="menu"></div>
-
-</div>
-
-</div>
 
 <script type="module">
 
-import { initializeApp } 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,getDocs,doc,setDoc,getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import { 
-getAuth,
-signInWithEmailAndPassword,
-createUserWithEmailAndPassword
-} 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
 
-import { 
-getFirestore,
-doc,
-setDoc,
-getDoc
-} 
-from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 
-const firebaseConfig={
-apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId:"nmpsnagguradiya-b9b94",
-storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId:"811957568318",
-appId:"1:811957568318:web:7058de9ba52df9d6bae26f",
-measurementId:"G-V4J8BP2LCN"
+/* COUNT DATA */
+
+async function countData(collectionName,id){
+
+const snap = await getDocs(collection(db,collectionName));
+
+document.getElementById(id).innerText = snap.size;
+
 }
 
-const app=initializeApp(firebaseConfig)
-const auth=getAuth(app)
-const db=getFirestore(app)
+countData("students","students");
+countData("teachers","teachers");
+countData("complaints","complaints");
+countData("admissions","admissions");
+countData("results","results");
 
-const imgbbKey="21000d5a5d14fcef4b6af4d13647da5a8"
 
+/* SCHOOL PROFILE */
 
-/* LOAD SCHOOL */
+async function loadProfile(){
 
-async function loadSchool(){
+const ref=doc(db,"school","profile");
 
-const snap=await getDoc(doc(db,"school_profile","profile"))
+const snap=await getDoc(ref);
 
 if(snap.exists()){
 
-const d=snap.data()
+const d=snap.data();
 
-schoolName.innerText=d.schoolName
-schoolAddress.innerText=d.schoolAddress
-schoolLogo.src=d.logo
+document.getElementById("schoolName").innerText=d.name;
 
-}
+document.getElementById("schoolAddress").innerText=d.address;
 
-}
-
-loadSchool()
-
-
-/* LOGIN */
-
-window.login=async function(){
-
-const email=emailInput.value
-const pass=passwordInput.value
-
-try{
-
-const user=await signInWithEmailAndPassword(auth,email,pass)
-
-const admin=await getDoc(doc(db,"admins",user.user.uid))
-
-if(admin.exists()){
-
-loginBox.style.display="none"
-adminPanel.style.display="block"
-return
-
-}
-
-const teacher=await getDoc(doc(db,"teachers",user.user.uid))
-
-if(teacher.exists()){
-
-loginBox.style.display="none"
-teacherPanel.style.display="block"
-
-const pages=teacher.data().pages
-
-pages.forEach(p=>{
-teacherMenu.innerHTML+=`<a href="${p}">${p}</a>`
-})
-
-}
-
-}catch(e){
-
-alert(e.message)
+document.getElementById("schoolLogo").src=d.logo;
 
 }
 
 }
 
+loadProfile();
 
-/* LOGO UPLOAD */
 
-window.uploadLogo=async function(){
+window.openProfile=function(){
 
-const file=logoFile.files[0]
+document.getElementById("profileBox").style.display="flex";
 
-const fd=new FormData()
-fd.append("image",file)
+}
 
-const res=await fetch(
-`https://api.imgbb.com/1/upload?key=${imgbbKey}`,
-{method:"POST",body:fd}
-)
+window.closeProfile=function(){
 
-const data=await res.json()
-
-schoolLogo.src=data.data.url
+document.getElementById("profileBox").style.display="none";
 
 }
 
 
-/* SAVE SCHOOL */
+/* IMAGE UPLOAD IMGBB */
 
-window.saveSchool=async function(){
+async function uploadImg(file){
 
-await setDoc(doc(db,"school_profile","profile"),{
+const key="21000d5a5d14fcef4b6af4d13647da5a8";
 
-schoolName:schoolNameInput.value,
-schoolAddress:schoolAddressInput.value,
-schoolId:schoolIdInput.value,
-logo:schoolLogo.src
+const fd=new FormData();
 
-})
+fd.append("image",file);
 
-alert("School Profile Saved")
+const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{
+method:"POST",
+body:fd
+});
 
-loadSchool()
+const data=await res.json();
+
+return data.data.url;
 
 }
 
 
-/* CREATE TEACHER */
+/* SAVE PROFILE */
 
-window.createTeacher=async function(){
+window.saveProfile=async function(){
 
-const name=tname.value
-const email=temail.value
-const pass=tpass.value
+const name=document.getElementById("pname").value;
 
-const checks=document.querySelectorAll(".permissions input:checked")
+const address=document.getElementById("paddress").value;
 
-const pages=[...checks].map(c=>c.value)
+const file=document.getElementById("plogo").files[0];
 
-const user=await createUserWithEmailAndPassword(auth,email,pass)
+let logo="";
 
-await setDoc(doc(db,"teachers",user.user.uid),{
+if(file){
 
-name:name,
-email:email,
-pages:pages
+logo=await uploadImg(file);
 
-})
+}
 
-alert("Teacher Created")
+await setDoc(doc(db,"school","profile"),{
+
+name,
+address,
+logo
+
+});
+
+alert("Profile Saved");
+
+closeProfile();
+
+loadProfile();
 
 }
 
 </script>
 
 </body>
-  </html>
+</html>
