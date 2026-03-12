@@ -26,6 +26,7 @@ button:hover{background:#003080;}
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -38,8 +39,18 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth = getAuth(app);
+
+// Redirect if not logged in as admin
+onAuthStateChanged(auth,user=>{
+    if(!user){
+        alert("Please login first as admin");
+        location.href="login.html";
+    }
+});
 
 async function uploadImg(file){
+    if(!file) return "";
     const key="21000d5a5d14fcef4b6af4d13647da5a8";
     const fd = new FormData();
     fd.append("image",file);
@@ -49,17 +60,21 @@ async function uploadImg(file){
 }
 
 window.saveProfile = async function(){
-    let logo="";
+    const name=document.getElementById("pname").value.trim();
+    const address=document.getElementById("paddress").value.trim();
+    const schoolId=document.getElementById("pschoolid").value.trim();
+    const dise=document.getElementById("pdise").value.trim();
     const file=document.getElementById("plogo").files[0];
+    let logo="";
     if(file) logo=await uploadImg(file);
+
+    if(!name || !address) return alert("Name and Address required");
+
     await setDoc(doc(db,"school","profile"),{
-        name: document.getElementById("pname").value,
-        address: document.getElementById("paddress").value,
-        schoolId: document.getElementById("pschoolid").value,
-        dise: document.getElementById("pdise").value,
-        logo
+        name,address,schoolId,dise,logo
     },{merge:true});
-    alert("Profile Saved!");
+
+    alert("Profile Saved Successfully!");
     location.href="admin-dashboard.html";
 }
 
