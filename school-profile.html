@@ -51,10 +51,10 @@ const db = getFirestore(app);
 const slogo = document.getElementById("slogo");
 const logoPreview = document.getElementById("logoPreview");
 
-// Current admin schoolId (from login)
+// Current school ID from login
 const currentSchoolId = localStorage.getItem("schoolId") || "school_001";
 
-// Show preview on file select
+// Show local preview
 slogo.addEventListener("change", ()=>{
     const file = slogo.files[0];
     if(file){ 
@@ -63,18 +63,19 @@ slogo.addEventListener("change", ()=>{
     }
 });
 
-// Imgbb Upload
+// Function to upload image to Imgbb
 async function uploadImg(file){
     if(!file) return "";
-    const key = "21000d5a5d14fcef4b6af4d13647da5a8";
+    const key = "21000d5a5d14fcef4b6af4d13647da5a8"; // Your Imgbb API Key
     const fd = new FormData();
     fd.append("image", file);
-    try {
+    try{
         const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {method:"POST", body:fd});
         const data = await res.json();
-        return data?.data?.url || "";
-    } catch(err){
-        console.error("Image upload failed:", err);
+        if(data && data.data && data.data.url) return data.data.url;
+        throw new Error("Invalid response from Imgbb");
+    } catch(e){
+        console.error("Logo upload failed:", e);
         return "";
     }
 }
@@ -93,19 +94,16 @@ async function loadProfile(){
             document.getElementById("sdise").value = d.dise || "";
             document.getElementById("srecognition").value = d.recognition || "";
             document.getElementById("ssession").value = d.session || "";
-            if(d.logo){ 
-                logoPreview.src = d.logo; 
-                logoPreview.style.display="block"; 
-            }
+            if(d.logo){ logoPreview.src = d.logo; logoPreview.style.display="block"; }
         }
-    } catch(e) {
+    } catch(e){
         console.error("Error loading profile:", e);
     }
 }
 
 loadProfile();
 
-// Save / Update
+// Save / Update profile
 document.getElementById("saveBtn").addEventListener("click", async ()=>{
     const name = document.getElementById("sname").value.trim();
     const email = document.getElementById("semail").value.trim();
@@ -149,7 +147,7 @@ document.getElementById("saveBtn").addEventListener("click", async ()=>{
         alert("Profile saved successfully!");
     } catch(e){
         console.error("Error saving profile:", e);
-        alert("Error saving profile, please check console");
+        alert("Error saving profile, check console for details");
     }
 });
 </script>
