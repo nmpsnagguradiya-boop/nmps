@@ -75,18 +75,6 @@ padding:8px;
 text-align:center;
 }
 
-.search{
-margin-top:20px;
-padding:10px;
-width:100%;
-border-radius:5px;
-border:1px solid #ccc;
-}
-
-.printbtn{
-background:green;
-}
-
 </style>
 
 </head>
@@ -102,8 +90,8 @@ background:green;
 <input type="text" id="name" placeholder="Student Name" required>
 <input type="text" id="father" placeholder="Father Name" required>
 <input type="text" id="mobile" placeholder="Mobile Number" required>
-<input type="text" id="village" placeholder="Village" required>
-<input type="text" id="city" placeholder="Village / City">
+<input type="text" id="village" placeholder="Village">
+<input type="text" id="city" placeholder="City">
 <input type="text" id="post" placeholder="Post">
 <input type="text" id="district" placeholder="District">
 <input type="text" id="state" placeholder="State">
@@ -121,7 +109,6 @@ background:green;
 
 <select id="class">
 
-<option>Select Class</option>
 <option>Nursery</option>
 <option>LKG</option>
 <option>UKG</option>
@@ -147,8 +134,6 @@ background:green;
 <label>Student Photo</label>
 <input type="file" id="photo">
 
-<img id="preview" width="80">
-
 <label>Document Upload</label>
 <input type="file" id="document">
 
@@ -158,38 +143,11 @@ background:green;
 
 </form>
 
-<input type="text" id="searchStudent" class="search" placeholder="Search Student">
-
-<select id="classFilter">
-
-<option value="">All Classes</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-<option>6</option>
-<option>7</option>
-<option>8</option>
-<option>9</option>
-<option>10</option>
-<option>11</option>
-<option>12</option>
-
-</select>
-
-<button onclick="exportExcel()">Export Excel</button>
-<input type="file" id="importExcel">
-
 <h3>Total Students : <span id="total">0</span></h3>
 
 <table>
 
 <thead>
-
 <tr>
 <th>Name</th>
 <th>Class</th>
@@ -197,7 +155,6 @@ background:green;
 <th>Photo</th>
 <th>Action</th>
 </tr>
-
 </thead>
 
 <tbody id="studentList"></tbody>
@@ -211,12 +168,10 @@ background:green;
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore,collection,addDoc,getDocs,deleteDoc,doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-
+const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
 projectId:"nmpsnagguradiya-b9b94"
-
 };
 
 const app=initializeApp(firebaseConfig);
@@ -239,55 +194,38 @@ return data.data.url;
 
 }
 
-document.getElementById("form").addEventListener("submit",async function(e){
+const form=document.getElementById("form");
+
+form.addEventListener("submit",async function(e){
 
 e.preventDefault();
 
-const photo=document.getElementById("photo").files[0];
-const documentFile=document.getElementById("document").files[0];
+const name=document.getElementById("name").value;
+const father=document.getElementById("father").value;
+const mobile=document.getElementById("mobile").value;
+const className=document.getElementById("class").value;
+
+const photoFile=document.getElementById("photo").files[0];
 
 let photoURL="";
-let docURL="";
 
-if(photo){
-photoURL=await uploadImgBB(photo);
-}
-
-if(documentFile){
-docURL=await uploadImgBB(documentFile);
+if(photoFile){
+photoURL=await uploadImgBB(photoFile);
 }
 
 await addDoc(collection(db,"admissions"),{
 
 schoolId:schoolId,
 
-name:name.value,
-father:father.value,
-mobile:mobile.value,
-village:village.value,
-city:city.value,
-post:post.value,
-district:district.value,
-state:state.value,
-national:national.value,
-sssm:sssm.value,
-family:family.value,
-apar:apar.value,
-adhar:adhar.value,
-caste:caste.value,
-category:category.value,
-roll:roll.value,
-scholer:scholer.value,
-admissionDate:admissionDate.value,
-class:class.value,
-dob:dob.value,
-message:message.value,
-photo:photoURL,
-document:docURL
+name:name,
+father:father,
+mobile:mobile,
+class:className,
+photo:photoURL
 
 });
 
-msg.innerText="Admission Submitted Successfully";
+document.getElementById("msg").innerText="Admission Submitted Successfully";
 
 form.reset();
 
@@ -315,17 +253,12 @@ html+=`
 <tr>
 
 <td>${data.name}</td>
-
 <td>${data.class}</td>
-
 <td>${data.mobile}</td>
-
-<td><img src="${data.photo}" width="50"></td>
+<td><img src="${data.photo || ""}" width="40"></td>
 
 <td>
-
 <button onclick="deleteStudent('${docSnap.id}')">Delete</button>
-
 </td>
 
 </tr>
@@ -334,8 +267,8 @@ html+=`
 
 });
 
-studentList.innerHTML=html;
-total.innerText=count;
+document.getElementById("studentList").innerHTML=html;
+document.getElementById("total").innerText=count;
 
 }
 
@@ -350,31 +283,6 @@ await deleteDoc(doc(db,"admissions",id));
 loadStudents();
 
 }
-
-}
-
-window.exportExcel = async function(){
-
-const snap = await getDocs(collection(db,"admissions"));
-
-let data=[];
-
-snap.forEach(d=>{
-
-const s=d.data();
-
-if(s.schoolId!==schoolId) return;
-
-data.push(s);
-
-});
-
-const ws = XLSX.utils.json_to_sheet(data);
-const wb = XLSX.utils.book_new();
-
-XLSX.utils.book_append_sheet(wb,ws,"Students");
-
-XLSX.writeFile(wb,"students.xlsx");
 
 }
 
