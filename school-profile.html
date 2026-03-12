@@ -25,7 +25,7 @@ img.preview{width:100px;height:100px;object-fit:cover;margin-top:5px;border-radi
 <input id="sdise" placeholder="DISE Code" required>
 <input id="srecognition" placeholder="Recognition / Manyata ID">
 <label>School Logo</label>
-<input type="file" id="slogo">
+<input type="file" id="slogo" accept="image/*">
 <img id="logoPreview" class="preview">
 <label>Current Session / Academic Year</label>
 <input id="ssession" placeholder="Ex: 2026-2027">
@@ -51,10 +51,10 @@ const db = getFirestore(app);
 const slogo = document.getElementById("slogo");
 const logoPreview = document.getElementById("logoPreview");
 
-// Current admin schoolId (replace with login)
+// Current admin schoolId (from login)
 const currentSchoolId = localStorage.getItem("schoolId") || "school_001";
 
-// Show preview
+// Show preview on file select
 slogo.addEventListener("change", ()=>{
     const file = slogo.files[0];
     if(file){ 
@@ -63,7 +63,7 @@ slogo.addEventListener("change", ()=>{
     }
 });
 
-// Imgbb Upload (fail-safe)
+// Imgbb Upload
 async function uploadImg(file){
     if(!file) return "";
     const key = "21000d5a5d14fcef4b6af4d13647da5a8";
@@ -93,7 +93,10 @@ async function loadProfile(){
             document.getElementById("sdise").value = d.dise || "";
             document.getElementById("srecognition").value = d.recognition || "";
             document.getElementById("ssession").value = d.session || "";
-            if(d.logo){ logoPreview.src = d.logo; logoPreview.style.display="block"; }
+            if(d.logo){ 
+                logoPreview.src = d.logo; 
+                logoPreview.style.display="block"; 
+            }
         }
     } catch(e) {
         console.error("Error loading profile:", e);
@@ -125,7 +128,8 @@ document.getElementById("saveBtn").addEventListener("click", async ()=>{
             if(!logoUrl) console.warn("Logo upload failed, saving without logo");
         }
 
-        await setDoc(doc(db,"schools",currentSchoolId),{
+        const schoolRef = doc(db,"schools",currentSchoolId);
+        await setDoc(schoolRef,{
             name,
             adminEmail: email,
             adminPassword: password,
@@ -135,6 +139,12 @@ document.getElementById("saveBtn").addEventListener("click", async ()=>{
             session: session || "",
             ...(logoUrl ? {logo: logoUrl} : {})
         },{merge:true});
+
+        // Show saved logo immediately
+        if(logoUrl){
+            logoPreview.src = logoUrl;
+            logoPreview.style.display="block";
+        }
 
         alert("Profile saved successfully!");
     } catch(e){
