@@ -5,6 +5,8 @@
 <meta charset="UTF-8">
 <title>All Students</title>
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
 <style>
 
 body{
@@ -73,15 +75,21 @@ margin:2px;
 .edit{background:#ffc107;}
 .delete{background:red;color:white;}
 .view{background:#004aad;color:white;}
-.photo{background:#28a745;color:white;}
 .print{background:#17a2b8;color:white;}
 .promote{background:#6f42c1;color:white;}
 
-.stats{
-margin-top:20px;
+.popup{
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
 background:white;
-padding:15px;
-border-radius:6px;
+padding:20px;
+border-radius:8px;
+box-shadow:0 0 10px rgba(0,0,0,0.3);
+display:none;
+max-width:400px;
+width:90%;
 }
 
 </style>
@@ -96,13 +104,8 @@ border-radius:6px;
 
 <button class="topbtn" onclick="addStudent()">+ Add New Student</button>
 
-<input type="text" id="search" class="search" placeholder="Search Student">
-
-<select id="classFilter">
-<option value="">All Classes</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
+<select id="classFilter" onchange="exportClass()">
+<option value="">Export All Classes</option>
 <option>1</option>
 <option>2</option>
 <option>3</option>
@@ -117,10 +120,9 @@ border-radius:6px;
 <option>12</option>
 </select>
 
-<div class="stats">
+<input type="file" id="importExcel">
+
 <h3>Total Students : <span id="total">0</span></h3>
-<div id="classStats"></div>
-</div>
 
 <table>
 
@@ -140,18 +142,17 @@ border-radius:6px;
 
 </div>
 
+<div class="popup" id="popup"></div>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,deleteDoc,doc,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,collection,getDocs,deleteDoc,doc,updateDoc,addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId:"nmpsnagguradiya-b9b94",
-storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId:"811957568318",
-appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
+projectId:"nmpsnagguradiya-b9b94"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -167,7 +168,6 @@ const querySnapshot=await getDocs(collection(db,"admissions"));
 
 let html="";
 let count=0;
-let classCount={};
 
 students=[];
 
@@ -182,12 +182,6 @@ data.id=docSnap.id;
 students.push(data);
 
 count++;
-
-if(!classCount[data.class]){
-classCount[data.class]=0;
-}
-
-classCount[data.class]++;
 
 html+=`
 
@@ -204,13 +198,11 @@ html+=`
 
 <button class="edit" onclick="editStudent('${data.id}')">Edit</button>
 
-<button class="photo" onclick="uploadPhoto('${data.id}')">Photo</button>
-
 <button class="promote" onclick="promoteStudent('${data.id}')">Promote</button>
 
 <button class="delete" onclick="deleteStudent('${data.id}')">Delete</button>
 
-<button class="print" onclick="openPrintForm('${data.id}')">Print Form</button>
+<button class="print" onclick="openPrintForm('${data.id}')">Print</button>
 
 </td>
 
@@ -223,51 +215,143 @@ html+=`
 document.getElementById("studentList").innerHTML=html;
 document.getElementById("total").innerText=count;
 
-let statsHTML="";
-
-for(let c in classCount){
-statsHTML+=`Class ${c} : ${classCount[c]} Students <br>`;
 }
 
-document.getElementById("classStats").innerHTML=statsHTML;
-
-}
-
-window.addStudent=function(){
-window.location.href="admission.html";
-}
-
-window.promoteStudent=async function(id){
+window.viewStudent=function(id){
 
 let s=students.find(x=>x.id==id);
 
-let nextClass=parseInt(s.class)+1;
+document.getElementById("popup").style.display="block";
 
-if(nextClass>12){
-alert("Already in highest class");
-return;
+document.getElementById("popup").innerHTML=`
+
+<h3>${s.name}</h3>
+
+<p>Father : ${s.father}</p>
+<p>Mobile : ${s.mobile}</p>
+<p>Class : ${s.class}</p>
+<p>Aadhar : ${s.adhar || ""}</p>
+
+<img src="${s.photo}" width="80">
+
+<br><br>
+
+<button onclick="closePopup()">Close</button>
+
+`;
+
 }
 
+window.closePopup=function(){
+document.getElementById("popup").style.display="none";
+}
+
+window.editStudent=async function(id){
+
+let s=students.find(x=>x.id==id);
+
+let newName=prompt("Edit Name",s.name);
+
+if(!newName) return;
+
 await updateDoc(doc(db,"admissions",id),{
-class:String(nextClass)
+name:newName
 });
 
 loadStudents();
 
 }
 
-window.openPrintForm=function(id){
-window.location.href="print-form.html?id="+id;
+window.promoteStudent=async function(id){
+
+let s=students.find(x=>x.id==id);
+
+let next=parseInt(s.class)+1;
+
+if(next>12){
+alert("Already highest class");
+return;
+}
+
+await updateDoc(doc(db,"admissions",id),{
+class:String(next)
+});
+
+loadStudents();
+
 }
 
 window.deleteStudent=async function(id){
 
 if(confirm("Delete Student?")){
+
 await deleteDoc(doc(db,"admissions",id));
+
 loadStudents();
+
 }
 
 }
+
+window.openPrintForm=function(id){
+
+window.location.href="print-form.html?id="+id;
+
+}
+
+window.exportClass=function(){
+
+let selected=document.getElementById("classFilter").value;
+
+let data=[];
+
+students.forEach(s=>{
+
+if(selected=="" || s.class==selected){
+data.push(s);
+}
+
+});
+
+const ws=XLSX.utils.json_to_sheet(data);
+
+const wb=XLSX.utils.book_new();
+
+XLSX.utils.book_append_sheet(wb,ws,"Students");
+
+XLSX.writeFile(wb,"students.xlsx");
+
+}
+
+document.getElementById("importExcel").addEventListener("change",function(e){
+
+const reader=new FileReader();
+
+reader.onload=async function(evt){
+
+const data=new Uint8Array(evt.target.result);
+
+const workbook=XLSX.read(data,{type:'array'});
+
+const sheet=workbook.Sheets[workbook.SheetNames[0]];
+
+const json=XLSX.utils.sheet_to_json(sheet);
+
+for(let s of json){
+
+s.schoolId=schoolId;
+
+await addDoc(collection(db,"admissions"),s);
+
+}
+
+loadStudents();
+
+}
+
+reader.readAsArrayBuffer(e.target.files[0]);
+
+});
 
 loadStudents();
 
