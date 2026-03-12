@@ -3,7 +3,8 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Ultra Result System</title>
+<title>Print Marksheet</title>
+
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -14,34 +15,22 @@ margin:0;
 background:#f2f2f2;
 }
 
-header{
-background:#004aad;
-color:white;
-padding:15px;
-text-align:center;
-font-size:22px;
-font-weight:bold;
-}
-
 .container{
-padding:20px;
-max-width:1200px;
+max-width:1000px;
 margin:auto;
+padding:20px;
 }
 
 .card{
 background:white;
 padding:20px;
 border-radius:10px;
-margin-bottom:20px;
 box-shadow:0 3px 10px rgba(0,0,0,0.1);
 }
 
 select,button{
 padding:10px;
 margin:5px;
-width:100%;
-max-width:260px;
 }
 
 button{
@@ -51,63 +40,85 @@ border:none;
 cursor:pointer;
 }
 
+/* marksheet */
+
 #marksheet{
+
 display:none;
 background:white;
-padding:25px;
-border:5px solid #004aad;
+padding:20px;
+border:6px solid #004aad;
+margin-top:20px;
+
 }
 
-/* styles */
-
-.style1{border-color:#004aad;background:#eef3ff;}
-.style2{border-color:#4caf50;background:#e8f5e9;}
-.style3{border-color:#e91e63;background:#fce4ec;}
-.style4{border-color:#ff9800;background:#fff3e0;}
-.style5{border-color:#9c27b0;background:#f3e5f5;}
-.style6{border-color:#009688;background:#e0f2f1;}
-.style7{border-color:#2196f3;background:#e3f2fd;}
-.style8{border:6px solid #c62828;background:white;}
-.style9{border:12px double #00838f;background:#f1f8f9;}
-
 .school{
+
 text-align:center;
-font-size:26px;
+font-size:24px;
 font-weight:bold;
 color:#004aad;
+
+}
+
+.student{
+
+display:flex;
+justify-content:space-between;
+margin-top:20px;
+
+}
+
+.photo{
+
+width:120px;
+height:140px;
+border:2px solid black;
+object-fit:cover;
+
 }
 
 table{
+
 width:100%;
 border-collapse:collapse;
 margin-top:15px;
+
 }
 
 th,td{
+
 border:1px solid #ccc;
 padding:8px;
 text-align:center;
+
 }
 
 th{
+
 background:#fbc02d;
+
 }
 
-.resultBox{
+.result{
+
 margin-top:20px;
-font-weight:bold;
 font-size:18px;
+font-weight:bold;
+
 }
 
 .sign{
-margin-top:40px;
+
 display:flex;
 justify-content:space-between;
+margin-top:40px;
+
 }
 
 @media print{
 
-header,.card,.printBtn{
+button,select{
 display:none;
 }
 
@@ -122,8 +133,6 @@ border:none;
 </head>
 
 <body>
-
-<header>Ultra Result System</header>
 
 <div class="container">
 
@@ -146,101 +155,126 @@ border:none;
 <option>10</option>
 </select>
 
-<select id="examSelect" multiple style="height:120px;"></select>
-
 <select id="studentSelect"></select>
 
-<select id="styleSelect" onchange="changeStyle()">
-<option value="style1">Style 1</option>
-<option value="style2">Style 2</option>
-<option value="style3">Style 3</option>
-<option value="style4">Style 4</option>
-<option value="style5">Style 5</option>
-<option value="style6">Style 6</option>
-<option value="style7">Style 7</option>
-<option value="style8">CBSE Style</option>
-<option value="style9">Certificate Style</option>
-</select>
+<select id="examSelect" multiple style="height:120px;"></select>
 
 <br>
 
 <button onclick="loadStudents()">Load Students</button>
+
 <button onclick="generateResult()">Generate Result</button>
 
+<button onclick="printMarksheet()">Print</button>
+
 </div>
 
-<div id="marksheet" class="style1">
+
+<div id="marksheet">
 
 <div class="school">
+
 NEW MODEL PUBLIC SCHOOL<br>
-<span style="font-size:16px">Ujjain Madhya Pradesh</span>
+
+<span style="font-size:14px">
+
+Ujjain Madhya Pradesh
+
+</span>
+
 </div>
 
-<table>
 
-<tr>
-<th>Name</th>
-<td id="name"></td>
-<th>Roll</th>
-<td id="roll"></td>
-</tr>
+<div class="student">
 
-<tr>
-<th>Father</th>
-<td id="father"></td>
-<th>Class</th>
-<td id="class"></td>
-</tr>
+<div>
 
-<tr>
-<th>DOB</th>
-<td id="dob"></td>
-<th>Village</th>
-<td id="village"></td>
-</tr>
+Name : <span id="name"></span><br>
 
-<tr>
-<th>District</th>
-<td id="district"></td>
-<th>State</th>
-<td id="state"></td>
-</tr>
+Father : <span id="father"></span><br>
 
-</table>
+Class : <span id="class"></span><br>
+
+Roll : <span id="roll"></span><br>
+
+DOB : <span id="dob"></span><br>
+
+Village : <span id="village"></span><br>
+
+District : <span id="district"></span><br>
+
+State : <span id="state"></span><br>
+
+</div>
+
+<img id="photo" class="photo">
+
+</div>
+
 
 <table>
 
 <thead id="tableHead"></thead>
+
 <tbody id="resultTable"></tbody>
 
 </table>
 
-<div class="resultBox">
+
+<div class="result">
 
 Total : <span id="total"></span><br>
+
 Percentage : <span id="percent"></span>%<br>
+
 Grade : <span id="grade"></span><br>
+
 Result : <span id="status"></span>
 
 </div>
 
+
+<h3>Grade System</h3>
+
+<table>
+
+<tr>
+<th>Marks</th>
+<th>Grade</th>
+</tr>
+
+<tr><td>91-100</td><td>A1</td></tr>
+<tr><td>81-90</td><td>A2</td></tr>
+<tr><td>71-80</td><td>B1</td></tr>
+<tr><td>61-70</td><td>B2</td></tr>
+<tr><td>51-60</td><td>C1</td></tr>
+<tr><td>41-50</td><td>C2</td></tr>
+<tr><td>33-40</td><td>D</td></tr>
+<tr><td>0-32</td><td>Fail</td></tr>
+
+</table>
+
+
 <div class="sign">
+
 <div>Class Teacher</div>
+
 <div>Principal</div>
-</div>
 
 </div>
 
-<button class="printBtn" onclick="window.print()">Print Marksheet</button>
+</div>
 
 </div>
 
 
 <script type="module">
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
 import {
+
 getFirestore,
 collection,
 getDocs,
@@ -248,126 +282,188 @@ doc,
 getDoc,
 query,
 where
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+}
+
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
 const firebaseConfig={
+
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
 projectId:"nmpsnagguradiya-b9b94"
+
 };
 
+
 const app=initializeApp(firebaseConfig);
+
 const db=getFirestore(app);
+
 
 let students=[];
 let subjects=[];
 let exams=[];
 
-/* EXAMS LOAD */
+
+/* load exams */
 
 const examSnap=await getDocs(collection(db,"exam_sessions"));
 
 exams=examSnap.docs.map(d=>({
+
 id:d.id,
 name:d.data().examName
+
 }));
 
+
 document.getElementById("examSelect").innerHTML=
+
 exams.map(e=>`<option value="${e.id}">${e.name}</option>`).join("");
 
-/* SUBJECT LOAD */
+
+
+/* load subjects */
 
 const subSnap=await getDocs(collection(db,"subjects"));
 
 subjects=subSnap.docs.map(d=>({
+
 id:d.id,
 name:d.data().name
+
 }));
 
-/* STUDENT LOAD */
+
 
 window.loadStudents=async function(){
 
 const cls=document.getElementById("classSelect").value;
 
 const q=query(
+
 collection(db,"admissions"),
 where("class","==",cls)
+
 );
+
 
 const snap=await getDocs(q);
 
+
 students=snap.docs.map(d=>({
+
 id:d.id,
 ...d.data()
+
 }));
 
+
 document.getElementById("studentSelect").innerHTML=
-students.map(s=>`<option value="${s.id}">
+
+students.map(s=>`
+
+<option value="${s.id}">
+
 ${s.name} (Roll ${s.roll})
-</option>`).join("");
 
-}
+</option>
 
-/* GRADE */
+`).join("");
+
+};
+
+
 
 function grade(p){
 
 if(p>=90)return"A+";
+
 if(p>=75)return"A";
+
 if(p>=60)return"B";
+
 if(p>=45)return"C";
+
 if(p>=33)return"D";
+
 return"F";
 
 }
 
-/* RESULT */
+
 
 window.generateResult=async function(){
 
 const studentId=document.getElementById("studentSelect").value;
 
 const examsSelected=[...document.getElementById("examSelect").selectedOptions]
+
 .map(o=>o.value);
+
 
 const student=students.find(s=>s.id==studentId);
 
-document.getElementById("name").innerText=student.name;
-document.getElementById("father").innerText=student.father;
-document.getElementById("class").innerText=student.class;
-document.getElementById("roll").innerText=student.roll;
-document.getElementById("dob").innerText=student.dob;
-document.getElementById("village").innerText=student.village;
-document.getElementById("district").innerText=student.district;
-document.getElementById("state").innerText=student.state;
+
+/* student details */
+
+name.innerText=student.name;
+
+father.innerText=student.father;
+
+class.innerText=student.class;
+
+roll.innerText=student.roll;
+
+dob.innerText=student.dob;
+
+village.innerText=student.village;
+
+district.innerText=student.district;
+
+state.innerText=student.state;
+
+photo.src=student.photo;
+
+
 
 let total=0;
+
 let max=0;
 
-const head=document.getElementById("tableHead");
-const body=document.getElementById("resultTable");
 
-head.innerHTML="<tr><th>Subject</th>";
+/* header */
+
+tableHead.innerHTML="<tr><th>Subject</th>";
 
 examsSelected.forEach(e=>{
-const name=exams.find(x=>x.id==e).name;
-head.innerHTML+=`<th>${name}</th>`;
+
+const ex=exams.find(x=>x.id==e).name;
+
+tableHead.innerHTML+=`<th>${ex}</th>`;
+
 });
 
-head.innerHTML+="</tr>";
+tableHead.innerHTML+="</tr>";
 
-body.innerHTML="";
+
+
+resultTable.innerHTML="";
+
 
 for(const sub of subjects){
 
 let row=`<tr><td>${sub.name}</td>`;
+
 
 for(const exam of examsSelected){
 
 const id=`${studentId}_${exam}_${sub.id}`;
 
 const markDoc=await getDoc(doc(db,"marks",id));
+
 
 if(markDoc.exists()){
 
@@ -376,9 +472,12 @@ const m=markDoc.data();
 row+=`<td>${m.marks}</td>`;
 
 total+=m.marks;
+
 max+=m.maxMarks;
 
-}else{
+}
+
+else{
 
 row+="<td>-</td>";
 
@@ -386,30 +485,40 @@ row+="<td>-</td>";
 
 }
 
+
 row+="</tr>";
 
-body.innerHTML+=row;
+resultTable.innerHTML+=row;
 
 }
+
+
 
 const percent=((total/max)*100).toFixed(2);
 
-document.getElementById("total").innerText=total;
-document.getElementById("percent").innerText=percent;
-document.getElementById("grade").innerText=grade(percent);
-document.getElementById("status").innerText=percent>=33?"PASS":"FAIL";
 
-document.getElementById("marksheet").style.display="block";
+total.innerText=total;
 
-}
+percent.innerText=percent;
 
-window.changeStyle=function(){
+grade.innerText=grade(percent);
 
-const s=document.getElementById("styleSelect").value;
+status.innerText=percent>=33?"PASS":"FAIL";
 
-document.getElementById("marksheet").className=s;
 
-}
+marksheet.style.display="block";
+
+};
+
+
+
+window.printMarksheet=function(){
+
+marksheet.style.display="block";
+
+window.print();
+
+};
 
 </script>
 
