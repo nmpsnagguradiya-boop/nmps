@@ -2,7 +2,9 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admin Admissions</title>
+<title>Admission Admin Panel</title>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
 
@@ -24,10 +26,25 @@ font-size:22px;
 padding:20px;
 }
 
+.topbar{
+margin-bottom:15px;
+}
+
+.topbtn{
+background:#004aad;
+color:white;
+padding:8px 14px;
+border:none;
+border-radius:5px;
+cursor:pointer;
+margin-right:10px;
+}
+
 .dashboard{
 display:flex;
 gap:20px;
 margin-bottom:20px;
+flex-wrap:wrap;
 }
 
 .box{
@@ -46,6 +63,7 @@ margin-bottom:15px;
 input,select{
 padding:8px;
 margin-right:10px;
+margin-top:5px;
 }
 
 table{
@@ -76,6 +94,7 @@ cursor:pointer;
 .reject{background:orange;color:white;}
 .delete{background:red;color:white;}
 .print{background:#004aad;color:white;}
+.photo{background:#6f42c1;color:white;}
 
 </style>
 
@@ -86,6 +105,14 @@ cursor:pointer;
 <header>Admission Admin Panel</header>
 
 <div class="container">
+
+<div class="topbar">
+
+<button class="topbtn" onclick="window.location.href='admission.html'">Add Student</button>
+
+<button class="topbtn" onclick="window.location.href='all-students.html'">All Students</button>
+
+</div>
 
 <div class="dashboard">
 
@@ -111,11 +138,51 @@ Pending
 <input type="text" id="search" placeholder="Search Name / Mobile">
 
 <select id="filter">
-<option value="all">All</option>
+<option value="all">All Status</option>
 <option value="Pending">Pending</option>
 <option value="Approved">Approved</option>
 <option value="Rejected">Rejected</option>
 </select>
+
+<select id="classFilter">
+<option value="all">All Classes</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+<option>11</option>
+<option>12</option>
+</select>
+
+<select id="classImport">
+<option value="">Select Class For Import</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+<option>11</option>
+<option>12</option>
+</select>
+
+<input type="file" id="excelImport">
 
 </div>
 
@@ -145,19 +212,18 @@ Pending
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,updateDoc,deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,collection,getDocs,doc,updateDoc,deleteDoc,addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId: "nmpsnagguradiya-b9b94",
-storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId: "811957568318",
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+projectId: "nmpsnagguradiya-b9b94"
 };
 
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
+
+const schoolId = localStorage.getItem("schoolId") || "school_001";
 
 let admissions=[];
 
@@ -165,13 +231,16 @@ loadAdmissions();
 
 async function loadAdmissions(){
 
-const snapshot=await getDocs(collection(db,"admissions"));
+admissions=[];
 
-const table=document.getElementById("list");
+const snapshot=await getDocs(collection(db,"admissions"));
 
 snapshot.forEach(docSnap=>{
 
 const data=docSnap.data();
+
+if(data.schoolId!==schoolId) return;
+
 data.id=docSnap.id;
 
 admissions.push(data);
@@ -187,6 +256,7 @@ function renderTable(){
 
 const search=document.getElementById("search").value.toLowerCase();
 const filter=document.getElementById("filter").value;
+const classFilter=document.getElementById("classFilter").value;
 
 const table=document.getElementById("list");
 table.innerHTML="";
@@ -196,6 +266,8 @@ admissions.forEach(data=>{
 if(search && !data.name.toLowerCase().includes(search) && !data.mobile.includes(search)) return;
 
 if(filter!="all" && (data.status||"Pending")!=filter) return;
+
+if(classFilter!="all" && data.class!=classFilter) return;
 
 table.innerHTML+=`
 
@@ -209,15 +281,17 @@ table.innerHTML+=`
 <td>${data.village}</td>
 <td>${data.class}</td>
 
-<td><img src="${data.photo}"></td>
+<td><img src="${data.photo||""}"></td>
 
 <td>
-<a href="${data.document}" target="_blank">Download</a>
+<a href="${data.document||"#"}" target="_blank">Download</a>
 </td>
 
 <td>${data.status||"Pending"}</td>
 
 <td>
+
+<button class="photo" onclick="uploadPhoto('${data.id}')">Photo</button>
 
 <button class="approve" onclick="approve('${data.id}')">Approve</button>
 
@@ -258,7 +332,7 @@ status:"Approved",
 studentId:studentId
 });
 
-location.reload();
+loadAdmissions();
 
 }
 
@@ -268,7 +342,7 @@ await updateDoc(doc(db,"admissions",id),{
 status:"Rejected"
 });
 
-location.reload();
+loadAdmissions();
 
 }
 
@@ -278,7 +352,7 @@ if(confirm("Delete admission?")){
 
 await deleteDoc(doc(db,"admissions",id));
 
-location.reload();
+loadAdmissions();
 
 }
 
@@ -302,9 +376,6 @@ w.document.write(`
 w.print();
 
 }
-
-document.getElementById("search").addEventListener("keyup",renderTable);
-document.getElementById("filter").addEventListener("change",renderTable);
 
 </script>
 
