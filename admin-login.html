@@ -27,6 +27,7 @@ background:white;
 display:flex;
 align-items:center;
 justify-content:center;
+z-index:10;
 }
 
 .loginCard{
@@ -52,8 +53,7 @@ color:white;
 padding:10px;
 display:flex;
 align-items:center;
-justify-content:center;
-gap:15px;
+justify-content:space-between;
 flex-wrap:wrap;
 }
 
@@ -73,6 +73,17 @@ font-weight:bold;
 #schoolAddress{
 font-size:14px;
 }
+
+.logout{
+background:red;
+padding:8px 15px;
+border:none;
+color:white;
+border-radius:6px;
+cursor:pointer;
+}
+
+/* CONTAINER */
 
 .container{
 padding:15px;
@@ -171,14 +182,18 @@ max-width:400px;
 
 <header>
 
+<div style="display:flex;align-items:center;gap:10px">
+
 <img id="schoolLogo">
 
 <div>
-
 <div id="schoolName">School Name</div>
 <div id="schoolAddress">School Address</div>
+</div>
 
 </div>
+
+<button class="logout" onclick="logout()">Logout</button>
 
 </header>
 
@@ -216,45 +231,23 @@ Total Results
 
 <div class="buttons" id="buttonsArea">
 
-<button onclick="location.href='admin_admissions.html'">
-Admission Management
-</button>
+<button>Admission Management</button>
 
-<button onclick="location.href='admin_teachers.html'">
-Teacher Management
-</button>
+<button>Result Management</button>
 
-<button onclick="location.href='admin_results.html'">
-Result Management
-</button>
+<button>Exam Management</button>
 
-<button onclick="location.href='academy.html'">
-Exam Management
-</button>
+<button>Complaint Management</button>
 
-<button onclick="location.href='admin_complaints.html'">
-Complaint Management
-</button>
+<button>Study Material</button>
 
-<button onclick="location.href='admin_study.html'">
-Study Material
-</button>
+<button>Notice & Gallery</button>
 
-<button onclick="location.href='admin.html'">
-Notice & Gallery
-</button>
+<button>All Students</button>
 
-<button onclick="location.href='all-students.html'">
-All Students
-</button>
+<button>All Print</button>
 
-<button onclick="location.href='print.html'">
-All Print
-</button>
-
-<button onclick="location.href='admin-teacher.html'">
-Create Teacher / Permission
-</button>
+<button>Fees Management</button>
 
 <button onclick="openProfile()">
 Add / Edit School Profile
@@ -292,7 +285,7 @@ Add / Edit School Profile
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-import { 
+import {
 getFirestore,
 collection,
 getDocs,
@@ -304,7 +297,8 @@ getDoc
 import {
 getAuth,
 signInWithEmailAndPassword,
-onAuthStateChanged
+onAuthStateChanged,
+signOut
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -325,8 +319,8 @@ const auth=getAuth(app);
 
 window.login=async function(){
 
-const email=document.getElementById("email").value;
-const pass=document.getElementById("password").value;
+const email=email.value;
+const pass=password.value;
 
 try{
 
@@ -341,21 +335,24 @@ alert(e.message)
 }
 
 
+/* LOGOUT */
+
+window.logout=async function(){
+
+await signOut(auth);
+
+location.reload();
+
+}
+
+
 /* ROLE CHECK */
 
 onAuthStateChanged(auth,async user=>{
 
 if(!user)return;
 
-document.getElementById("loginBox").style.display="none";
-
-const admin=await getDoc(doc(db,"admins",user.uid));
-
-if(admin.exists()){
-
-console.log("Admin Login")
-
-}else{
+loginBox.style.display="none";
 
 const teacher=await getDoc(doc(db,"teachers",user.uid));
 
@@ -367,15 +364,13 @@ const allowed=data.pages||[];
 
 document.querySelectorAll("#buttonsArea button").forEach(btn=>{
 
-if(!allowed.includes(btn.innerText)){
+if(!allowed.includes(btn.innerText) && btn.innerText!="Add / Edit School Profile"){
 
 btn.style.display="none";
 
 }
 
 });
-
-}
 
 }
 
@@ -409,9 +404,9 @@ if(snap.exists()){
 
 const d=snap.data();
 
-schoolName.innerText=d.name;
-schoolAddress.innerText=d.address;
-schoolLogo.src=d.logo;
+schoolName.innerText=d.name||"";
+schoolAddress.innerText=d.address||"";
+schoolLogo.src=d.logo||"";
 
 }
 
