@@ -7,7 +7,7 @@
 <style>
 body{font-family:Arial;margin:0;background:#f2f2f2;}
 .container{max-width:600px;margin:30px auto;padding:20px;background:white;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
-input,button{width:100%;padding:10px;margin:8px 0;}
+input,button,select{width:100%;padding:10px;margin:8px 0;}
 button{border:none;background:#004aad;color:white;font-size:16px;border-radius:8px;cursor:pointer;}
 button:hover{background:#003080;}
 img.preview{width:100px;height:100px;object-fit:cover;margin-top:5px;border-radius:10px;display:none;}
@@ -23,12 +23,12 @@ img.preview{width:100px;height:100px;object-fit:cover;margin-top:5px;border-radi
 <input id="spass" placeholder="Admin Password" required>
 <input id="saddress" placeholder="Address" required>
 <input id="sdise" placeholder="DISE Code" required>
+<input id="srecognition" placeholder="Recognition / Manyata ID">
 <label>School Logo</label>
 <input type="file" id="slogo">
 <img id="logoPreview" class="preview">
-<label>Recognition / Manyata ID</label>
-<input type="file" id="smanyata">
-<img id="manyataPreview" class="preview">
+<label>Current Session / Academic Year</label>
+<input id="ssession" placeholder="Ex: 2026-2027">
 <button onclick="saveSchoolProfile()">Save Profile</button>
 </div>
 
@@ -53,18 +53,12 @@ const db = getFirestore(app);
 const currentSchoolId = localStorage.getItem("schoolId") || "school_001";
 
 const slogo = document.getElementById("slogo");
-const smanyata = document.getElementById("smanyata");
 const logoPreview = document.getElementById("logoPreview");
-const manyataPreview = document.getElementById("manyataPreview");
 
-// Preview images
+// Preview logo
 slogo.addEventListener("change", ()=>{
     const file = slogo.files[0];
     if(file){ logoPreview.src = URL.createObjectURL(file); logoPreview.style.display="block"; }
-});
-smanyata.addEventListener("change", ()=>{
-    const file = smanyata.files[0];
-    if(file){ manyataPreview.src = URL.createObjectURL(file); manyataPreview.style.display="block"; }
 });
 
 // Upload to Imgbb
@@ -87,8 +81,9 @@ async function uploadImg(file){
         document.getElementById("spass").value = d.adminPassword || "";
         document.getElementById("saddress").value = d.address || "";
         document.getElementById("sdise").value = d.dise || "";
+        document.getElementById("srecognition").value = d.recognition || "";
+        document.getElementById("ssession").value = d.session || "";
         if(d.logo){ logoPreview.src=d.logo; logoPreview.style.display="block"; }
-        if(d.manyata){ manyataPreview.src=d.manyata; manyataPreview.style.display="block"; }
     }
 })();
 
@@ -99,23 +94,27 @@ async function saveSchoolProfile(){
     const password = document.getElementById("spass").value.trim();
     const address = document.getElementById("saddress").value.trim();
     const dise = document.getElementById("sdise").value.trim();
+    const recognition = document.getElementById("srecognition").value.trim();
+    const session = document.getElementById("ssession").value.trim();
     const logoFile = slogo.files[0];
-    const manyataFile = smanyata.files[0];
 
-    if(!name||!email||!password||!address||!dise){ alert("Fill all fields"); return; }
+    if(!name||!email||!password||!address||!dise){ alert("Please fill all required fields"); return; }
 
-    let logoUrl="", manyataUrl="";
+    let logoUrl = "";
     if(logoFile) logoUrl = await uploadImg(logoFile);
-    if(manyataFile) manyataUrl = await uploadImg(manyataFile);
 
     await setDoc(doc(db,"schools",currentSchoolId),{
-        name, adminEmail:email, adminPassword:password,
-        address, dise,
-        logo: logoUrl || undefined,
-        manyata: manyataUrl || undefined
+        name,
+        adminEmail:email,
+        adminPassword:password,
+        address,
+        dise,
+        recognition: recognition || "",
+        session: session || "",
+        logo: logoUrl || undefined
     },{merge:true});
 
-    alert("School Profile Updated!");
+    alert("School Profile Saved / Updated Successfully!");
 }
 </script>
 </body>
