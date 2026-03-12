@@ -74,6 +74,7 @@ header{background:#004aad;color:white;padding:10px;display:flex;align-items:cent
 <button onclick="location.href='admin-fees.html'"><i class="fas fa-money-bill"></i> Fees Management</button>
 <button onclick="location.href='admin_complaints.html'"><i class="fas fa-comment-dots"></i> Complaint Management</button>
 <button onclick="location.href='admin_study.html'"><i class="fas fa-folder-open"></i> Study Material</button>
+<button onclick="location.href='admin-event.html'"><i class="fas fa-calendar-alt"></i> Event Management</button>
 <button onclick="location.href='admin.html'"><i class="fas fa-bullhorn"></i> Notice & Gallery</button>
 <button onclick="location.href='all-students.html'"><i class="fas fa-users"></i> All Students</button>
 <button onclick="location.href='print.html'"><i class="fas fa-print"></i> All Print</button>
@@ -160,7 +161,7 @@ async function loadDashboard(){
         const data = schoolSnap.data();
         document.getElementById("schoolName").innerText = data.name;
         document.getElementById("schoolAddress").innerText = data.address || "";
-        document.getElementById("schoolLogo").src = data.logo || "";
+        document.getElementById("schoolLogo").src = data.logo || "https://via.placeholder.com/60";
     }
 
     // Load counts (students, teachers etc.) from collections filtered by schoolId
