@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>Teacher Management</title>
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
+
+.container{
+padding:15px;
+max-width:1100px;
+margin:auto;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+input{
+width:100%;
+padding:10px;
+margin:6px 0;
+}
+
+.permissions{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:5px;
+margin-top:10px;
+}
+
+button{
+padding:12px;
+border:none;
+background:#004aad;
+color:white;
+margin-top:10px;
+cursor:pointer;
+border-radius:6px;
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:20px;
+}
+
+th,td{
+border:1px solid #ccc;
+padding:8px;
+text-align:center;
+}
+
+th{
+background:#004aad;
+color:white;
+}
+
+.photo{
+width:50px;
+height:50px;
+border-radius:50%;
+object-fit:cover;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>Teacher Management</header>
+
+<div class="container">
+
+<div class="card">
+
+<h3>Create Teacher</h3>
+
+<input id="tname" placeholder="Teacher Name">
+
+<input id="tsubject" placeholder="Subject">
+
+<input id="tdegree" placeholder="Degree">
+
+<input id="temail" placeholder="Email">
+
+<input id="tpass" type="password" placeholder="Password">
+
+<input type="file" id="tphoto">
+
+<h4>Page Permissions</h4>
+
+<div class="permissions">
+
+<label><input type="checkbox" value="Admission Management"> Admission Management</label>
+
+<label><input type="checkbox" value="Teacher Management"> Teacher Management</label>
+
+<label><input type="checkbox" value="Result Management"> Result Management</label>
+
+<label><input type="checkbox" value="Exam Management"> Exam Management</label>
+
+<label><input type="checkbox" value="All Students"> All Students</label>
+
+<label><input type="checkbox" value="Study Material"> Study Material</label>
+
+<label><input type="checkbox" value="Complaint Management"> Complaint Management</label>
+
+<label><input type="checkbox" value="Notice & Gallery"> Notice & Gallery</label>
+
+<label><input type="checkbox" value="All Print"> All Print</label>
+
+</div>
+
+<button onclick="createTeacher()">Create Teacher</button>
+
+</div>
+
+
+<div class="card">
+
+<h3>Teachers List</h3>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Photo</th>
+<th>Name</th>
+<th>Subject</th>
+<th>Degree</th>
+<th>Email</th>
+<th>Permissions</th>
+<th>Delete</th>
+
+</tr>
+
+</thead>
+
+<tbody id="teacherTable"></tbody>
+
+</table>
+
+</div>
+
+</div>
+
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getAuth,
+createUserWithEmailAndPassword
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+getDocs,
+deleteDoc,
+doc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+
+};
+
+const app=initializeApp(firebaseConfig);
+
+const auth=getAuth(app);
+
+const db=getFirestore(app);
+
+
+/* IMGBB UPLOAD */
+
+async function uploadImg(file){
+
+const key="21000d5a5d14fcef4b6af4d13647da5a8";
+
+const fd=new FormData();
+
+fd.append("image",file);
+
+const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{
+method:"POST",
+body:fd
+});
+
+const data=await res.json();
+
+return data.data.url;
+
+}
+
+
+/* CREATE TEACHER */
+
+window.createTeacher=async function(){
+
+const name=tname.value;
+const subject=tsubject.value;
+const degree=tdegree.value;
+const email=temail.value;
+const pass=tpass.value;
+
+const file=tphoto.files[0];
+
+let photo="";
+
+if(file){
+photo=await uploadImg(file);
+}
+
+const checks=document.querySelectorAll(".permissions input:checked");
+
+const pages=[...checks].map(c=>c.value);
+
+try{
+
+const user=await createUserWithEmailAndPassword(auth,email,pass);
+
+await addDoc(collection(db,"teachers"),{
+
+uid:user.user.uid,
+name,
+subject,
+degree,
+email,
+photo,
+pages
+
+});
+
+alert("Teacher Created");
+
+loadTeachers();
+
+}catch(e){
+
+alert(e.message)
+
+}
+
+}
+
+
+/* LOAD TEACHERS */
+
+async function loadTeachers(){
+
+const snap=await getDocs(collection(db,"teachers"));
+
+teacherTable.innerHTML="";
+
+snap.forEach(docu=>{
+
+const d=docu.data();
+
+teacherTable.innerHTML+=`
+
+<tr>
+
+<td><img src="${d.photo}" class="photo"></td>
+
+<td>${d.name}</td>
+
+<td>${d.subject}</td>
+
+<td>${d.degree}</td>
+
+<td>${d.email}</td>
+
+<td>${d.pages.join(", ")}</td>
+
+<td>
+
+<button onclick="deleteTeacher('${docu.id}')">
+Delete
+</button>
+
+</td>
+
+</tr>
+
+`;
+
+});
+
+}
+
+loadTeachers();
+
+
+/* DELETE */
+
+window.deleteTeacher=async function(id){
+
+await deleteDoc(doc(db,"teachers",id));
+
+loadTeachers();
+
+}
+
+</script>
+
+</body>
+</html>
