@@ -1,8 +1,9 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta charset="UTF-8">
-<title>School Result System</title>
+<title>Ultra Result System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -39,8 +40,8 @@ box-shadow:0 3px 10px rgba(0,0,0,0.1);
 select,button{
 padding:10px;
 margin:5px;
-max-width:250px;
 width:100%;
+max-width:260px;
 }
 
 button{
@@ -50,12 +51,10 @@ border:none;
 cursor:pointer;
 }
 
-/* marksheet */
-
 #marksheet{
 display:none;
 background:white;
-padding:20px;
+padding:25px;
 border:5px solid #004aad;
 }
 
@@ -78,10 +77,6 @@ font-weight:bold;
 color:#004aad;
 }
 
-.studentTable th{
-background:#fbc02d;
-}
-
 table{
 width:100%;
 border-collapse:collapse;
@@ -92,6 +87,10 @@ th,td{
 border:1px solid #ccc;
 padding:8px;
 text-align:center;
+}
+
+th{
+background:#fbc02d;
 }
 
 .resultBox{
@@ -107,13 +106,16 @@ justify-content:space-between;
 }
 
 @media print{
+
 header,.card,.printBtn{
 display:none;
 }
+
 #marksheet{
 display:block;
 border:none;
 }
+
 }
 
 </style>
@@ -121,7 +123,7 @@ border:none;
 
 <body>
 
-<header>School Result System</header>
+<header>Ultra Result System</header>
 
 <div class="container">
 
@@ -144,13 +146,7 @@ border:none;
 <option>10</option>
 </select>
 
-<select id="examSelect" multiple style="height:120px;">
-<option value="External">External</option>
-<option value="Half Yearly">Half Yearly</option>
-<option value="Yearly">Yearly</option>
-<option value="Unit Test">Unit Test</option>
-<option value="Annual">Annual</option>
-</select>
+<select id="examSelect" multiple style="height:120px;"></select>
 
 <select id="studentSelect"></select>
 
@@ -180,9 +176,7 @@ NEW MODEL PUBLIC SCHOOL<br>
 <span style="font-size:16px">Ujjain Madhya Pradesh</span>
 </div>
 
-<!-- student table -->
-
-<table class="studentTable">
+<table>
 
 <tr>
 <th>Name</th>
@@ -214,8 +208,6 @@ NEW MODEL PUBLIC SCHOOL<br>
 
 </table>
 
-<!-- marks table -->
-
 <table>
 
 <thead id="tableHead"></thead>
@@ -232,27 +224,9 @@ Result : <span id="status"></span>
 
 </div>
 
-<h3>Grade System</h3>
-
-<table>
-
-<tr><th>Marks</th><th>Grade</th></tr>
-<tr><td>91-100</td><td>A1</td></tr>
-<tr><td>81-90</td><td>A2</td></tr>
-<tr><td>71-80</td><td>B1</td></tr>
-<tr><td>61-70</td><td>B2</td></tr>
-<tr><td>51-60</td><td>C1</td></tr>
-<tr><td>41-50</td><td>C2</td></tr>
-<tr><td>33-40</td><td>D</td></tr>
-<tr><td>0-32</td><td>Fail</td></tr>
-
-</table>
-
 <div class="sign">
-
 <div>Class Teacher</div>
 <div>Principal</div>
-
 </div>
 
 </div>
@@ -261,25 +235,81 @@ Result : <span id="status"></span>
 
 </div>
 
-<script>
 
-let students=[
-{id:"1",name:"Govind Parmar",father:"Rajaram",class:"UKG",roll:"123",dob:"2026-03-04",village:"Kachchlaiya",district:"Kanpur",state:"MP"},
-{id:"2",name:"Rahul Sharma",father:"Mahesh",class:"UKG",roll:"124",dob:"2026-02-01",village:"Village2",district:"Kanpur",state:"MP"}
-];
+<script type="module">
 
-let subjects=["Hindi","English","Maths","EVS"];
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-function loadStudents(){
+import {
+getFirestore,
+collection,
+getDocs,
+doc,
+getDoc,
+query,
+where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-let cls=document.getElementById("classSelect").value;
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94"
+};
 
-let list=students.filter(s=>s.class==cls);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+let students=[];
+let subjects=[];
+let exams=[];
+
+/* EXAMS LOAD */
+
+const examSnap=await getDocs(collection(db,"exam_sessions"));
+
+exams=examSnap.docs.map(d=>({
+id:d.id,
+name:d.data().examName
+}));
+
+document.getElementById("examSelect").innerHTML=
+exams.map(e=>`<option value="${e.id}">${e.name}</option>`).join("");
+
+/* SUBJECT LOAD */
+
+const subSnap=await getDocs(collection(db,"subjects"));
+
+subjects=subSnap.docs.map(d=>({
+id:d.id,
+name:d.data().name
+}));
+
+/* STUDENT LOAD */
+
+window.loadStudents=async function(){
+
+const cls=document.getElementById("classSelect").value;
+
+const q=query(
+collection(db,"admissions"),
+where("class","==",cls)
+);
+
+const snap=await getDocs(q);
+
+students=snap.docs.map(d=>({
+id:d.id,
+...d.data()
+}));
 
 document.getElementById("studentSelect").innerHTML=
-list.map(s=>`<option value="${s.id}">${s.name}</option>`);
+students.map(s=>`<option value="${s.id}">
+${s.name} (Roll ${s.roll})
+</option>`).join("");
 
 }
+
+/* GRADE */
 
 function grade(p){
 
@@ -292,44 +322,77 @@ return"F";
 
 }
 
-function generateResult(){
+/* RESULT */
 
-let exams=[...document.getElementById("examSelect").selectedOptions].map(o=>o.value);
+window.generateResult=async function(){
 
-let head="<tr><th>Subject</th>";
+const studentId=document.getElementById("studentSelect").value;
 
-exams.forEach(e=>head+=`<th>${e}</th>`);
+const examsSelected=[...document.getElementById("examSelect").selectedOptions]
+.map(o=>o.value);
 
-head+="</tr>";
+const student=students.find(s=>s.id==studentId);
 
-document.getElementById("tableHead").innerHTML=head;
+document.getElementById("name").innerText=student.name;
+document.getElementById("father").innerText=student.father;
+document.getElementById("class").innerText=student.class;
+document.getElementById("roll").innerText=student.roll;
+document.getElementById("dob").innerText=student.dob;
+document.getElementById("village").innerText=student.village;
+document.getElementById("district").innerText=student.district;
+document.getElementById("state").innerText=student.state;
 
-let body="";
 let total=0;
 let max=0;
 
-subjects.forEach(s=>{
+const head=document.getElementById("tableHead");
+const body=document.getElementById("resultTable");
 
-body+=`<tr><td>${s}</td>`;
+head.innerHTML="<tr><th>Subject</th>";
 
-exams.forEach(()=>{
-
-let m=Math.floor(Math.random()*100);
-
-body+=`<td>${m}</td>`;
-
-total+=m;
-max+=100;
-
+examsSelected.forEach(e=>{
+const name=exams.find(x=>x.id==e).name;
+head.innerHTML+=`<th>${name}</th>`;
 });
 
-body+="</tr>";
+head.innerHTML+="</tr>";
 
-});
+body.innerHTML="";
 
-document.getElementById("resultTable").innerHTML=body;
+for(const sub of subjects){
 
-let percent=(total/max*100).toFixed(2);
+let row=`<tr><td>${sub.name}</td>`;
+
+for(const exam of examsSelected){
+
+const id=`${studentId}_${exam}_${sub.id}`;
+
+const markDoc=await getDoc(doc(db,"marks",id));
+
+if(markDoc.exists()){
+
+const m=markDoc.data();
+
+row+=`<td>${m.marks}</td>`;
+
+total+=m.marks;
+max+=m.maxMarks;
+
+}else{
+
+row+="<td>-</td>";
+
+}
+
+}
+
+row+="</tr>";
+
+body.innerHTML+=row;
+
+}
+
+const percent=((total/max)*100).toFixed(2);
 
 document.getElementById("total").innerText=total;
 document.getElementById("percent").innerText=percent;
@@ -340,9 +403,9 @@ document.getElementById("marksheet").style.display="block";
 
 }
 
-function changeStyle(){
+window.changeStyle=function(){
 
-let s=document.getElementById("styleSelect").value;
+const s=document.getElementById("styleSelect").value;
 
 document.getElementById("marksheet").className=s;
 
