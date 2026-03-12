@@ -20,7 +20,7 @@ img{width:100px;height:100px;object-fit:cover;margin:10px 0;border-radius:10px;}
 
 <input id="pname" placeholder="School Name">
 <input id="paddress" placeholder="Address">
-<input id="pschoolid" placeholder="School ID">
+<input id="pschoolid" placeholder="School ID (Optional)">
 <input id="pdise" placeholder="DISE Code">
 <input type="file" id="plogo">
 <img id="logoPreview" alt="Logo Preview">
@@ -66,24 +66,27 @@ async function uploadImg(file){
 // Save profile
 window.saveProfile = async ()=>{
     const file = document.getElementById("plogo").files[0];
-    let logo = document.getElementById("logoPreview").src||"";
+    let logo = document.getElementById("logoPreview").src || "";
+
     if(file) logo = await uploadImg(file);
 
     await setDoc(doc(db,"school","profile"),{
         name: document.getElementById("pname").value,
         address: document.getElementById("paddress").value,
-        schoolId: document.getElementById("pschoolid").value,
+        schoolId: document.getElementById("pschoolid").value||"",
         dise: document.getElementById("pdise").value,
         logo
     }, {merge:true});
 
     alert("Profile Saved Successfully!");
+    window.location.href="Admin-login.html";
 };
 
 // Load existing profile & handle admin-only edit
 onAuthStateChanged(auth, async user=>{
     if(!user) {
         alert("Please login as admin to edit profile!");
+        window.location.href="Admin-login.html";
         return;
     }
 
