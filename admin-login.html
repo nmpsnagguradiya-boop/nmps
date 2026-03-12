@@ -1,0 +1,393 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+
+<meta charset="UTF-8">
+<title>School ERP</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+display:flex;
+align-items:center;
+gap:15px;
+}
+
+header img{
+width:60px;
+height:60px;
+object-fit:cover;
+border-radius:6px;
+}
+
+.container{
+max-width:1100px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+}
+
+input,textarea,button{
+padding:10px;
+margin:5px;
+width:250px;
+}
+
+button{
+background:#004aad;
+color:white;
+border:none;
+cursor:pointer;
+}
+
+.permissions{
+display:flex;
+flex-wrap:wrap;
+}
+
+.permissions label{
+width:200px;
+}
+
+#adminPanel,#teacherPanel{
+display:none;
+}
+
+.menu a{
+display:block;
+padding:10px;
+background:#eee;
+margin-bottom:5px;
+text-decoration:none;
+color:black;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<img id="schoolLogo">
+
+<div>
+
+<div id="schoolName">School ERP</div>
+<div id="schoolAddress"></div>
+
+</div>
+
+</header>
+
+<div class="container">
+
+<!-- LOGIN -->
+
+<div class="card" id="loginBox">
+
+<h3>Login</h3>
+
+<input id="email" placeholder="Email"><br>
+
+<input id="password" type="password" placeholder="Password"><br>
+
+<button onclick="login()">Login</button>
+
+</div>
+
+
+<!-- ADMIN PANEL -->
+
+<div id="adminPanel">
+
+<div class="card">
+
+<h3>School Profile</h3>
+
+<input id="schoolNameInput" placeholder="School Name"><br>
+
+<textarea id="schoolAddressInput" placeholder="School Address"></textarea><br>
+
+<input id="schoolIdInput" placeholder="School ID"><br>
+
+<input type="file" id="logoFile"><br>
+
+<button onclick="uploadLogo()">Upload Logo</button>
+
+<br>
+
+<button onclick="saveSchool()">Save Profile</button>
+
+</div>
+
+
+<div class="card">
+
+<h3>Create Teacher</h3>
+
+<input id="tname" placeholder="Teacher Name"><br>
+
+<input id="temail" placeholder="Teacher Email"><br>
+
+<input id="tpass" placeholder="Password"><br>
+
+<h4>Permissions</h4>
+
+<div class="permissions">
+
+<label><input type="checkbox" value="admission.html">Admission</label>
+
+<label><input type="checkbox" value="students.html">Students</label>
+
+<label><input type="checkbox" value="subjects.html">Subjects</label>
+
+<label><input type="checkbox" value="exam.html">Exam</label>
+
+<label><input type="checkbox" value="marks-entry.html">Marks Entry</label>
+
+<label><input type="checkbox" value="result.html">Result</label>
+
+<label><input type="checkbox" value="marksheet.html">Marksheet</label>
+
+</div>
+
+<button onclick="createTeacher()">Create Teacher</button>
+
+</div>
+
+</div>
+
+
+<!-- TEACHER PANEL -->
+
+<div id="teacherPanel" class="card">
+
+<h3>Teacher Dashboard</h3>
+
+<div class="menu" id="teacherMenu"></div>
+
+</div>
+
+</div>
+
+
+<script type="module">
+
+import { initializeApp }
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"
+
+import {
+getAuth,
+signInWithEmailAndPassword,
+createUserWithEmailAndPassword
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
+
+import {
+getFirestore,
+doc,
+setDoc,
+getDoc
+}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
+
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f",
+measurementId: "G-V4J8BP2LCN"
+};
+
+const app=initializeApp(firebaseConfig)
+
+const auth=getAuth(app)
+
+const db=getFirestore(app)
+
+const imgbbKey="21000d5a5d14fcef4b6af4d13647da5a8"
+
+
+/* LOAD SCHOOL */
+
+async function loadSchool(){
+
+const snap=await getDoc(doc(db,"school_profile","profile"))
+
+if(snap.exists()){
+
+const d=snap.data()
+
+schoolName.innerText=d.schoolName
+
+schoolAddress.innerText=d.schoolAddress
+
+schoolLogo.src=d.logo
+
+}
+
+}
+
+loadSchool()
+
+
+/* LOGIN */
+
+window.login=async function(){
+
+const email=emailInput.value
+
+const pass=password.value
+
+try{
+
+const user=await signInWithEmailAndPassword(auth,email,pass)
+
+const adminDoc=await getDoc(doc(db,"admins",user.user.uid))
+
+if(adminDoc.exists()){
+
+loginBox.style.display="none"
+
+adminPanel.style.display="block"
+
+return
+
+}
+
+const teacherDoc=await getDoc(doc(db,"teachers",user.user.uid))
+
+if(teacherDoc.exists()){
+
+loginBox.style.display="none"
+
+teacherPanel.style.display="block"
+
+loadTeacherMenu(teacherDoc.data().pages)
+
+return
+
+}
+
+alert("No role assigned")
+
+}catch(e){
+
+alert(e.message)
+
+}
+
+}
+
+
+/* IMG UPLOAD */
+
+window.uploadLogo=async function(){
+
+const file=document.getElementById("logoFile").files[0]
+
+const fd=new FormData()
+
+fd.append("image",file)
+
+const res=await fetch(
+`https://api.imgbb.com/1/upload?key=${imgbbKey}`,
+{method:"POST",body:fd}
+)
+
+const data=await res.json()
+
+schoolLogo.src=data.data.url
+
+}
+
+
+/* SAVE SCHOOL */
+
+window.saveSchool=async function(){
+
+await setDoc(doc(db,"school_profile","profile"),{
+
+schoolName:schoolNameInput.value,
+schoolAddress:schoolAddressInput.value,
+schoolId:schoolIdInput.value,
+logo:schoolLogo.src
+
+})
+
+loadSchool()
+
+alert("Saved")
+
+}
+
+
+/* CREATE TEACHER */
+
+window.createTeacher=async function(){
+
+const name=tname.value
+
+const email=temail.value
+
+const pass=tpass.value
+
+const checks=document.querySelectorAll(".permissions input:checked")
+
+const pages=[...checks].map(c=>c.value)
+
+const user=await createUserWithEmailAndPassword(auth,email,pass)
+
+await setDoc(doc(db,"teachers",user.user.uid),{
+
+name:name,
+email:email,
+pages:pages
+
+})
+
+alert("Teacher created")
+
+}
+
+
+/* TEACHER MENU */
+
+function loadTeacherMenu(pages){
+
+const menu=document.getElementById("teacherMenu")
+
+pages.forEach(p=>{
+
+menu.innerHTML+=`<a href="${p}">${p}</a>`
+
+})
+
+}
+
+</script>
+
+</body>
+
+  </html>
