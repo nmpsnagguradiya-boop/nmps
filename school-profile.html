@@ -6,11 +6,11 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{font-family:Arial;margin:0;background:#f2f2f2;}
-.container{max-width:600px;margin:30px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
-input,button{width:100%;padding:10px;margin:8px 0;}
-button{background:#004aad;color:white;border:none;border-radius:8px;font-size:16px;}
-img{width:120px;height:120px;border-radius:10px;margin-top:10px;object-fit:cover;}
+body{font-family:Arial;margin:0;background:#f2f2f2}
+.container{max-width:600px;margin:30px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2)}
+input,button{width:100%;padding:10px;margin:8px 0}
+button{background:#004aad;color:white;border:none;border-radius:8px;font-size:16px}
+#logoPreview{width:120px;height:120px;border-radius:10px;object-fit:cover;margin-top:10px}
 </style>
 
 </head>
@@ -29,7 +29,7 @@ img{width:120px;height:120px;border-radius:10px;margin-top:10px;object-fit:cover
 <input id="ssession" placeholder="Session (2026-2027)">
 
 <label>School Logo</label>
-<input type="file" id="logoFile">
+<input type="file" id="logoInput">
 
 <img id="logoPreview">
 
@@ -43,45 +43,54 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId: "nmpsnagguradiya-b9b94",
-storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId: "811957568318",
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94",
+storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId:"811957568318",
+appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const schoolId = localStorage.getItem("schoolId") || "school_001";
+/* MULTI SCHOOL */
+const schoolId = localStorage.getItem("schoolId");
 
-const logoFile = document.getElementById("logoFile");
+if(!schoolId){
+alert("School not logged in");
+}
+
+/* Elements */
+
+const logoInput = document.getElementById("logoInput");
 const logoPreview = document.getElementById("logoPreview");
 
+let currentLogo="";
 
-// Image Preview
-logoFile.addEventListener("change",()=>{
-const file = logoFile.files[0];
+/* Preview */
+
+logoInput.addEventListener("change",()=>{
+const file = logoInput.files[0];
 if(file){
 logoPreview.src = URL.createObjectURL(file);
 }
 });
 
+/* Convert to base64 */
 
-// Convert image to base64
 function toBase64(file){
 return new Promise((resolve,reject)=>{
 const reader = new FileReader();
 reader.readAsDataURL(file);
-reader.onload = ()=>resolve(reader.result.split(",")[1]);
-reader.onerror = error=>reject(error);
+reader.onload = ()=>resolve(reader.result.split(',')[1]);
+reader.onerror = reject;
 });
 }
 
+/* ImgBB Upload */
 
-// Upload image to ImgBB
-async function uploadImage(file){
+async function uploadLogo(file){
 
 const apiKey="21000d5a5d14fcef4b6af4d13647da5a8";
 
@@ -101,13 +110,14 @@ if(data.success){
 return data.data.url;
 }else{
 console.log(data);
+alert("Image upload failed");
 return "";
 }
 
 }
 
+/* Load Profile */
 
-// Load Profile
 async function loadProfile(){
 
 const ref = doc(db,"schools",schoolId);
@@ -128,6 +138,7 @@ ssession.value = d.session || "";
 
 if(d.logo){
 logoPreview.src = d.logo;
+currentLogo = d.logo;
 }
 
 }
@@ -136,16 +147,22 @@ logoPreview.src = d.logo;
 
 loadProfile();
 
+/* Save Profile */
 
-// Save Profile
 window.saveProfile = async function(){
 
-const file = logoFile.files[0];
+let logoURL = currentLogo;
 
-let logoUrl = "";
+const file = logoInput.files[0];
 
 if(file){
-logoUrl = await uploadImage(file);
+
+logoURL = await uploadLogo(file);
+
+if(!logoURL){
+return;
+}
+
 }
 
 await setDoc(doc(db,"schools",schoolId),{
@@ -157,9 +174,11 @@ address:saddress.value,
 dise:sdise.value,
 recognition:srecognition.value,
 session:ssession.value,
-logo:logoUrl
+logo:logoURL
 
 },{merge:true});
+
+logoPreview.src = logoURL;
 
 alert("Profile saved successfully");
 
@@ -168,4 +187,4 @@ alert("Profile saved successfully");
 </script>
 
 </body>
-  </html>
+</html>
