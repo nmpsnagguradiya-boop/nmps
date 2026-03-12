@@ -2,35 +2,38 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>School Profile</title>
+<title>School Profile - Admin Only</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{font-family:Arial;margin:0;background:#f2f2f2;}
 .container{max-width:500px;margin:30px auto;padding:20px;background:white;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
-input{width:100%;padding:10px;margin:8px 0;}
-input[readonly]{background:#e0e0e0;}
-button{padding:12px;border:none;background:#004aad;color:white;font-size:16px;border-radius:8px;cursor:pointer;}
+input, button{width:100%;padding:10px;margin:8px 0;font-size:16px;}
+button{border:none;background:#004aad;color:white;border-radius:8px;cursor:pointer;}
 button:hover{background:#003080;}
-button#saveBtn{margin-top:10px;}
+img{width:100px;height:100px;object-fit:cover;margin:10px 0;border-radius:10px;}
 </style>
 </head>
 <body>
 
 <div class="container">
 <h2>School Profile</h2>
+
 <input id="pname" placeholder="School Name">
 <input id="paddress" placeholder="Address">
 <input id="pschoolid" placeholder="School ID">
 <input id="pdise" placeholder="DISE Code">
 <input type="file" id="plogo">
+<img id="logoPreview" alt="Logo Preview">
 <button id="saveBtn" onclick="saveProfile()">Save Profile</button>
 </div>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+// Firebase Config
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
@@ -44,14 +47,13 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-const pname = document.getElementById("pname");
-const paddress = document.getElementById("paddress");
-const pschoolid = document.getElementById("pschoolid");
-const pdise = document.getElementById("pdise");
-const plogo = document.getElementById("plogo");
-const saveBtn = document.getElementById("saveBtn");
+// Preview logo
+document.getElementById("plogo").addEventListener("change", e=>{
+    const file = e.target.files[0];
+    if(file) document.getElementById("logoPreview").src = URL.createObjectURL(file);
+});
 
-// IMGBB upload
+// Upload Image to Imgbb
 async function uploadImg(file){
     const key="21000d5a5d14fcef4b6af4d13647da5a8";
     const fd = new FormData();
@@ -62,65 +64,54 @@ async function uploadImg(file){
 }
 
 // Save profile
-async function saveProfile(){
-    let logo = "";
-    const file = plogo.files[0];
+window.saveProfile = async ()=>{
+    const file = document.getElementById("plogo").files[0];
+    let logo = document.getElementById("logoPreview").src||"";
     if(file) logo = await uploadImg(file);
 
     await setDoc(doc(db,"school","profile"),{
-        name: pname.value,
-        address: paddress.value,
-        schoolId: pschoolid.value,
-        dise: pdise.value,
+        name: document.getElementById("pname").value,
+        address: document.getElementById("paddress").value,
+        schoolId: document.getElementById("pschoolid").value,
+        dise: document.getElementById("pdise").value,
         logo
-    },{merge:true});
+    }, {merge:true});
 
-    alert("Profile Saved!");
-}
+    alert("Profile Saved Successfully!");
+};
 
-// Load existing profile
-async function loadProfile(){
-    const snap = await getDoc(doc(db,"school","profile"));
-    if(snap.exists()){
-        const d = snap.data();
-        pname.value = d.name || "";
-        paddress.value = d.address || "";
-        pschoolid.value = d.schoolId || "";
-        pdise.value = d.dise || "";
-    }
-}
-
-// Check user role
-onAuthStateChanged(auth, async user => {
+// Load existing profile & handle admin-only edit
+onAuthStateChanged(auth, async user=>{
     if(!user) {
-        alert("Please login as Admin");
-        location.href = "login.html";
+        alert("Please login as admin to edit profile!");
         return;
     }
 
-    const adminRef = doc(db,"admins",user.uid);
-    const adminSnap = await getDoc(adminRef);
+    // Check if user is admin
+    const adminSnap = await getDoc(doc(db,"admins",user.uid));
+    const isAdmin = adminSnap.exists();
 
-    if(adminSnap.exists()){
-        // Admin -> editable
-        pname.readOnly = false;
-        paddress.readOnly = false;
-        pschoolid.readOnly = false;
-        pdise.readOnly = false;
-        plogo.disabled = false;
-        saveBtn.style.display = "block";
-    } else {
-        // Teacher -> readonly
-        pname.readOnly = true;
-        paddress.readOnly = true;
-        pschoolid.readOnly = true;
-        pdise.readOnly = true;
-        plogo.disabled = true;
-        saveBtn.style.display = "none";
+    // Load profile
+    const snap = await getDoc(doc(db,"school","profile"));
+    if(snap.exists()){
+        const d = snap.data();
+        document.getElementById("pname").value = d.name||"";
+        document.getElementById("paddress").value = d.address||"";
+        document.getElementById("pschoolid").value = d.schoolId||"";
+        document.getElementById("pdise").value = d.dise||"";
+        document.getElementById("logoPreview").src = d.logo||"";
     }
 
-    await loadProfile();
+    if(!isAdmin){
+        // Disable inputs for non-admins
+        ["pname","paddress","pschoolid","pdise","plogo","saveBtn"].forEach(id=>{
+            const el = document.getElementById(id);
+            el.disabled = true;
+            if(el.tagName=="BUTTON") el.style.display="none";
+        });
+    }
 });
+
 </script>
 </body>
 </html>
