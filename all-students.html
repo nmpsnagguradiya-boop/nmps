@@ -80,6 +80,16 @@ padding:20px;
 border-radius:8px;
 box-shadow:0 0 10px rgba(0,0,0,0.3);
 display:none;
+max-height:80vh;
+overflow:auto;
+width:95%;
+max-width:500px;
+}
+
+.popup input, .popup select{
+width:100%;
+padding:8px;
+margin-top:6px;
 }
 
 </style>
@@ -96,6 +106,9 @@ display:none;
 
 <select id="classSelect">
 <option value="">Select Class</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
 <option>1</option>
 <option>2</option>
 <option>3</option>
@@ -111,8 +124,6 @@ display:none;
 </select>
 
 <button class="topbtn" onclick="exportClass()">Export Class</button>
-
-<button class="topbtn" onclick="bulkPromote()">Bulk Promote</button>
 
 <input type="file" id="importExcel">
 
@@ -225,32 +236,123 @@ alert(
 
 }
 
-window.editStudent=async function(id){
+window.editStudent=function(id){
 
 let s=students.find(x=>x.id==id);
 
-let newName=prompt("Edit Name",s.name);
+document.getElementById("popup").style.display="block";
 
-if(!newName) return;
+document.getElementById("popup").innerHTML=`
+
+<h3>Edit Student</h3>
+
+<input id="name" value="${s.name}">
+<input id="father" value="${s.father}">
+<input id="mobile" value="${s.mobile}">
+<input id="adhar" value="${s.adhar||""}">
+<input id="village" value="${s.village||""}">
+<input id="city" value="${s.city||""}">
+<input id="district" value="${s.district||""}">
+<input id="state" value="${s.state||""}">
+<input id="roll" value="${s.roll||""}">
+<input id="scholer" value="${s.scholer||""}">
+
+<select id="class">
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+<option>11</option>
+<option>12</option>
+</select>
+
+<br><br>
+
+<button onclick="saveEdit('${id}')">Update</button>
+<button onclick="closePopup()">Cancel</button>
+
+`;
+
+}
+
+window.saveEdit=async function(id){
 
 await updateDoc(doc(db,"admissions",id),{
-name:newName
+
+name:document.getElementById("name").value,
+father:document.getElementById("father").value,
+mobile:document.getElementById("mobile").value,
+adhar:document.getElementById("adhar").value,
+village:document.getElementById("village").value,
+city:document.getElementById("city").value,
+district:document.getElementById("district").value,
+state:document.getElementById("state").value,
+roll:document.getElementById("roll").value,
+scholer:document.getElementById("scholer").value,
+class:document.getElementById("class").value
+
 });
 
+closePopup();
 loadStudents();
 
 }
 
-window.promoteStudent=async function(id){
+window.promoteStudent=function(id){
 
-let newClass=prompt("Enter New Class");
+document.getElementById("popup").style.display="block";
 
-if(!newClass) return;
+document.getElementById("popup").innerHTML=`
+
+<h3>Select Class</h3>
+
+<select id="newClass">
+
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+<option>11</option>
+<option>12</option>
+
+</select>
+
+<br><br>
+
+<button onclick="savePromote('${id}')">Promote</button>
+<button onclick="closePopup()">Cancel</button>
+
+`;
+
+}
+
+window.savePromote=async function(id){
 
 await updateDoc(doc(db,"admissions",id),{
-class:newClass
+
+class:document.getElementById("newClass").value
+
 });
 
+closePopup();
 loadStudents();
 
 }
@@ -297,35 +399,6 @@ XLSX.writeFile(wb,"students.xlsx");
 
 }
 
-window.bulkPromote=async function(){
-
-let selected=document.getElementById("classSelect").value;
-
-if(!selected){
-alert("Select Class First");
-return;
-}
-
-let next=parseInt(selected)+1;
-
-for(let s of students){
-
-if(s.class==selected){
-
-await updateDoc(doc(db,"admissions",s.id),{
-class:String(next)
-});
-
-}
-
-}
-
-alert("Class Promoted");
-
-loadStudents();
-
-}
-
 document.getElementById("importExcel").addEventListener("change",function(e){
 
 const reader=new FileReader();
@@ -355,6 +428,10 @@ loadStudents();
 reader.readAsArrayBuffer(e.target.files[0]);
 
 });
+
+window.closePopup=function(){
+document.getElementById("popup").style.display="none";
+}
 
 loadStudents();
 
