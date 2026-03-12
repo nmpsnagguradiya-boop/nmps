@@ -28,19 +28,18 @@ img{width:100px;height:100px;object-fit:cover;margin:10px 0;border-radius:10px;}
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 // Firebase Config
 const firebaseConfig = {
-apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId: "nmpsnagguradiya-b9b94",
-storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId: "811957568318",
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+  apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+  authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+  projectId: "nmpsnagguradiya-b9b94",
+  storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+  messagingSenderId: "811957568318",
+  appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -64,49 +63,46 @@ async function uploadImg(file){
 }
 
 // Save profile
-window.saveProfile = async ()=>{
+async function saveProfile(){
     const file = document.getElementById("plogo").files[0];
     let logo = document.getElementById("logoPreview").src || "";
-
     if(file) logo = await uploadImg(file);
 
-    await setDoc(doc(db,"school","profile"),{
+    await setDoc(doc(db,"school_profile","profile"),{
         name: document.getElementById("pname").value,
         address: document.getElementById("paddress").value,
-        schoolId: document.getElementById("pschoolid").value||"",
+        schoolId: document.getElementById("pschoolid").value || "",
         dise: document.getElementById("pdise").value,
         logo
     }, {merge:true});
 
     alert("Profile Saved Successfully!");
     window.location.href="Admin-login.html";
-};
+}
 
-// Load existing profile & handle admin-only edit
+// Load existing profile & check admin
 onAuthStateChanged(auth, async user=>{
-    if(!user) {
-        alert("Please login as admin to edit profile!");
+    if(!user){
+        alert("Please login as admin!");
         window.location.href="Admin-login.html";
         return;
     }
 
-    // Check if user is admin
     const adminSnap = await getDoc(doc(db,"admins",user.uid));
     const isAdmin = adminSnap.exists();
 
-    // Load profile
-    const snap = await getDoc(doc(db,"school","profile"));
+    // Load existing profile
+    const snap = await getDoc(doc(db,"school_profile","profile"));
     if(snap.exists()){
         const d = snap.data();
-        document.getElementById("pname").value = d.name||"";
-        document.getElementById("paddress").value = d.address||"";
-        document.getElementById("pschoolid").value = d.schoolId||"";
-        document.getElementById("pdise").value = d.dise||"";
-        document.getElementById("logoPreview").src = d.logo||"";
+        document.getElementById("pname").value = d.name || "";
+        document.getElementById("paddress").value = d.address || "";
+        document.getElementById("pschoolid").value = d.schoolId || "";
+        document.getElementById("pdise").value = d.dise || "";
+        document.getElementById("logoPreview").src = d.logo || "";
     }
 
     if(!isAdmin){
-        // Disable inputs for non-admins
         ["pname","paddress","pschoolid","pdise","plogo","saveBtn"].forEach(id=>{
             const el = document.getElementById(id);
             el.disabled = true;
@@ -114,7 +110,7 @@ onAuthStateChanged(auth, async user=>{
         });
     }
 });
-
 </script>
+
 </body>
 </html>
