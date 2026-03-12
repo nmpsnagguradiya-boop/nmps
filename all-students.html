@@ -34,15 +34,7 @@ padding:10px 15px;
 border:none;
 border-radius:5px;
 cursor:pointer;
-margin-bottom:10px;
-}
-
-.search,select{
-width:100%;
-padding:10px;
-margin-top:10px;
-border-radius:5px;
-border:1px solid #ccc;
+margin:5px;
 }
 
 table{
@@ -88,8 +80,6 @@ padding:20px;
 border-radius:8px;
 box-shadow:0 0 10px rgba(0,0,0,0.3);
 display:none;
-max-width:400px;
-width:90%;
 }
 
 </style>
@@ -102,10 +92,10 @@ width:90%;
 
 <div class="container">
 
-<button class="topbtn" onclick="addStudent()">+ Add New Student</button>
+<button class="topbtn" onclick="addStudent()">+ Add Student</button>
 
-<select id="classFilter" onchange="exportClass()">
-<option value="">Export All Classes</option>
+<select id="classSelect">
+<option value="">Select Class</option>
 <option>1</option>
 <option>2</option>
 <option>3</option>
@@ -119,6 +109,10 @@ width:90%;
 <option>11</option>
 <option>12</option>
 </select>
+
+<button class="topbtn" onclick="exportClass()">Export Class</button>
+
+<button class="topbtn" onclick="bulkPromote()">Bulk Promote</button>
 
 <input type="file" id="importExcel">
 
@@ -175,7 +169,7 @@ querySnapshot.forEach((docSnap)=>{
 
 const data=docSnap.data();
 
-if(data.schoolId !== schoolId) return;
+if(data.schoolId!==schoolId) return;
 
 data.id=docSnap.id;
 
@@ -195,13 +189,9 @@ html+=`
 <td>
 
 <button class="view" onclick="viewStudent('${data.id}')">Form</button>
-
 <button class="edit" onclick="editStudent('${data.id}')">Edit</button>
-
 <button class="promote" onclick="promoteStudent('${data.id}')">Promote</button>
-
 <button class="delete" onclick="deleteStudent('${data.id}')">Delete</button>
-
 <button class="print" onclick="openPrintForm('${data.id}')">Print</button>
 
 </td>
@@ -217,33 +207,22 @@ document.getElementById("total").innerText=count;
 
 }
 
+window.addStudent=function(){
+window.location.href="admission.html";
+}
+
 window.viewStudent=function(id){
 
 let s=students.find(x=>x.id==id);
 
-document.getElementById("popup").style.display="block";
+alert(
+"Name : "+s.name+
+"\nFather : "+s.father+
+"\nMobile : "+s.mobile+
+"\nClass : "+s.class+
+"\nAadhar : "+(s.adhar||"")
+);
 
-document.getElementById("popup").innerHTML=`
-
-<h3>${s.name}</h3>
-
-<p>Father : ${s.father}</p>
-<p>Mobile : ${s.mobile}</p>
-<p>Class : ${s.class}</p>
-<p>Aadhar : ${s.adhar || ""}</p>
-
-<img src="${s.photo}" width="80">
-
-<br><br>
-
-<button onclick="closePopup()">Close</button>
-
-`;
-
-}
-
-window.closePopup=function(){
-document.getElementById("popup").style.display="none";
 }
 
 window.editStudent=async function(id){
@@ -264,17 +243,12 @@ loadStudents();
 
 window.promoteStudent=async function(id){
 
-let s=students.find(x=>x.id==id);
+let newClass=prompt("Enter New Class");
 
-let next=parseInt(s.class)+1;
-
-if(next>12){
-alert("Already highest class");
-return;
-}
+if(!newClass) return;
 
 await updateDoc(doc(db,"admissions",id),{
-class:String(next)
+class:newClass
 });
 
 loadStudents();
@@ -301,7 +275,7 @@ window.location.href="print-form.html?id="+id;
 
 window.exportClass=function(){
 
-let selected=document.getElementById("classFilter").value;
+let selected=document.getElementById("classSelect").value;
 
 let data=[];
 
@@ -320,6 +294,35 @@ const wb=XLSX.utils.book_new();
 XLSX.utils.book_append_sheet(wb,ws,"Students");
 
 XLSX.writeFile(wb,"students.xlsx");
+
+}
+
+window.bulkPromote=async function(){
+
+let selected=document.getElementById("classSelect").value;
+
+if(!selected){
+alert("Select Class First");
+return;
+}
+
+let next=parseInt(selected)+1;
+
+for(let s of students){
+
+if(s.class==selected){
+
+await updateDoc(doc(db,"admissions",s.id),{
+class:String(next)
+});
+
+}
+
+}
+
+alert("Class Promoted");
+
+loadStudents();
 
 }
 
@@ -358,4 +361,4 @@ loadStudents();
 </script>
 
 </body>
-  </html>
+</html>
