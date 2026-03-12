@@ -7,60 +7,45 @@
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 <style>
 body{font-family:Arial;margin:0;background:#f2f2f2;}
-header{background:#004aad;color:white;padding:15px;text-align:center;font-size:22px;}
-.container{padding:20px;max-width:800px;margin:auto;background:white;margin-top:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
+.container{max-width:800px;margin:30px auto;padding:20px;background:white;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
 input, select{width:100%;padding:10px;margin:8px 0;}
-button{padding:10px;background:#004aad;color:white;border:none;border-radius:8px;cursor:pointer;margin-top:10px;}
+button{padding:12px;border:none;background:#004aad;color:white;font-size:16px;border-radius:8px;cursor:pointer;margin-top:5px;}
 button:hover{background:#003080;}
-table{width:100%;border-collapse:collapse;margin-top:20px;}
-th,td{border:1px solid #ddd;padding:10px;text-align:left;}
+table{width:100%;border-collapse:collapse;margin-top:15px;}
+th,td{border:1px solid #ccc;padding:8px;text-align:center;}
 th{background:#004aad;color:white;}
 img{width:50px;height:50px;border-radius:50%;object-fit:cover;}
-.checkbox-group{display:flex;gap:10px;flex-wrap:wrap;}
 </style>
 </head>
 <body>
-
-<header><i class="fas fa-chalkboard-teacher"></i> Teacher Management</header>
-
 <div class="container">
-<h3>Add Teacher</h3>
+<h2>Teacher Management</h2>
 <input id="tname" placeholder="Teacher Name">
 <input id="tsubject" placeholder="Subject">
 <input id="tdegree" placeholder="Degree">
 <input id="temail" placeholder="Email">
-<input id="tpassword" placeholder="Password">
+<input id="tpassword" placeholder="Password" type="password">
 <input type="file" id="tphoto">
 <div>
-<label>Page Permissions:</label>
-<div class="checkbox-group">
-<label><input type="checkbox" value="Admission Management"> Admission Management</label>
-<label><input type="checkbox" value="Exam Management"> Exam Management</label>
-<label><input type="checkbox" value="Result Management"> Result Management</label>
-<label><input type="checkbox" value="Fees Management"> Fees Management</label>
-<label><input type="checkbox" value="Complaint Management"> Complaint Management</label>
-<label><input type="checkbox" value="Study Material"> Study Material</label>
-<label><input type="checkbox" value="Notice & Gallery"> Notice & Gallery</label>
-<label><input type="checkbox" value="All Students"> All Students</label>
-<label><input type="checkbox" value="All Print"> All Print</label>
+<label><input type="checkbox" value="Admission Management" class="tpages"> Admission Management</label>
+<label><input type="checkbox" value="Exam Management" class="tpages"> Exam Management</label>
+<label><input type="checkbox" value="Result Management" class="tpages"> Result Management</label>
+<label><input type="checkbox" value="Fees Management" class="tpages"> Fees Management</label>
 </div>
-</div>
-<button onclick="addTeacher()"><i class="fas fa-plus"></i> Add Teacher</button>
+<button onclick="addTeacher()"><i class="fa fa-plus"></i> Add Teacher</button>
 
 <h3>Teacher List</h3>
-<table id="teacherTable">
+<table>
 <thead>
-<tr>
-<th>Photo</th><th>Name</th><th>Subject</th><th>Degree</th><th>Email</th><th>Pages</th><th>Action</th>
-</tr>
+<tr><th>Photo</th><th>Name</th><th>Subject</th><th>Degree</th><th>Email</th><th>Pages</th><th>Action</th></tr>
 </thead>
-<tbody></tbody>
+<tbody id="teacherTable"></tbody>
 </table>
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, setDoc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, setDoc, getDocs, doc, deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -70,33 +55,12 @@ storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
 messagingSenderId: "811957568318",
 appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 };
+
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Load teachers
-async function loadTeachers(){
-    const tbody = document.querySelector("#teacherTable tbody");
-    tbody.innerHTML="";
-    const snap = await getDocs(collection(db,"teachers"));
-    snap.forEach(d=>{
-        const data = d.data();
-        const row = document.createElement("tr");
-        row.innerHTML=`<td><img src="${data.photo||''}"></td>
-        <td>${data.name}</td>
-        <td>${data.subject}</td>
-        <td>${data.degree}</td>
-        <td>${data.email}</td>
-        <td>${(data.pages||[]).join(", ")}</td>
-        <td><button onclick="deleteTeacher('${d.id}')"><i class="fas fa-trash"></i> Delete</button></td>`;
-        tbody.appendChild(row);
-    });
-}
-loadTeachers();
-
-// ImgBB upload
 async function uploadImg(file){
-    if(!file) return "";
-    const key = "21000d5a5d14fcef4b6af4d13647da5a8";
+    const key="21000d5a5d14fcef4b6af4d13647da5a8";
     const fd = new FormData();
     fd.append("image",file);
     const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:fd});
@@ -104,37 +68,43 @@ async function uploadImg(file){
     return data.data.url;
 }
 
-// Add teacher
-window.addTeacher = async ()=>{
-    const name = tname.value.trim();
-    const subject = tsubject.value.trim();
-    const degree = tdegree.value.trim();
-    const email = temail.value.trim();
-    const password = tpassword.value.trim();
-    const photoFile = tphoto.files[0];
-    if(!name||!subject||!degree||!email||!password){alert("All fields required"); return;}
+window.addTeacher = async function(){
+    const name=document.getElementById("tname").value;
+    const subject=document.getElementById("tsubject").value;
+    const degree=document.getElementById("tdegree").value;
+    const email=document.getElementById("temail").value;
+    const password=document.getElementById("tpassword").value;
+    const file=document.getElementById("tphoto").files[0];
     let photo="";
-    if(photoFile) photo = await uploadImg(photoFile);
-    const pages = Array.from(document.querySelectorAll(".checkbox-group input:checked")).map(c=>c.value);
-    const id = email.replace(/[@.]/g,"_"); // Firestore doc id
-    await setDoc(doc(db,"teachers",id),{
-        name,subject,degree,email,password,photo,pages
-    });
-    alert("Teacher added successfully");
+    if(file) photo=await uploadImg(file);
+    const pages = Array.from(document.querySelectorAll(".tpages:checked")).map(c=>c.value);
+    const id="t_"+Date.now();
+    await setDoc(doc(db,"teachers",id),{name,subject,degree,email,password,photo,pages});
+    alert("Teacher Added!");
     loadTeachers();
-    tname.value=tsubject.value=tdegree.value=temail.value=tpassword.value="";
-    tphoto.value=null;
-    document.querySelectorAll(".checkbox-group input").forEach(c=>c.checked=false);
 }
 
-// Delete teacher
-window.deleteTeacher = async (id)=>{
-    if(confirm("Are you sure to delete this teacher?")){
-        await deleteDoc(doc(db,"teachers",id));
-        loadTeachers();
-    }
+async function loadTeachers(){
+    const snap = await getDocs(collection(db,"teachers"));
+    const tbody=document.getElementById("teacherTable");
+    tbody.innerHTML="";
+    snap.forEach(docu=>{
+        const d=docu.data();
+        tbody.innerHTML+=`<tr>
+            <td>${d.photo?`<img src="${d.photo}">`:""}</td>
+            <td>${d.name}</td>
+            <td>${d.subject}</td>
+            <td>${d.degree}</td>
+            <td>${d.email}</td>
+            <td>${(d.pages||[]).join(", ")}</td>
+            <td><button onclick="deleteTeacher('${docu.id}')"><i class="fa fa-trash"></i></button></td>
+        </tr>`;
+    });
 }
+
+window.deleteTeacher=async function(id){ if(confirm("Delete teacher?")){ await deleteDoc(doc(db,"teachers",id)); loadTeachers(); } }
+
+loadTeachers();
 </script>
-
 </body>
-                                             </html>
+    </html>
