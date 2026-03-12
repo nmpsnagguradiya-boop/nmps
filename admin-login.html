@@ -2,304 +2,103 @@
 <html>
 
 <head>
-
 <meta charset="UTF-8">
-<title>Admin Dashboard</title>
+<title>Ultimate School ERP</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-
-body{
-font-family:Arial;
-margin:0;
-background:#f2f2f2;
-}
-
+body{font-family:Arial;margin:0;background:#f2f2f2;}
 /* LOGIN */
-
-#loginBox{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:white;
-display:flex;
-align-items:center;
-justify-content:center;
-z-index:10;
-}
-
-.loginCard{
-background:white;
-padding:30px;
-box-shadow:0 0 10px rgba(0,0,0,0.3);
-border-radius:10px;
-width:90%;
-max-width:350px;
-}
-
-input{
-width:100%;
-padding:10px;
-margin:8px 0;
-}
-
+#loginBox{position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;}
+.loginCard{background:white;padding:30px;box-shadow:0 0 10px rgba(0,0,0,0.3);border-radius:10px;width:90%;max-width:350px;}
+input{width:100%;padding:10px;margin:8px 0;}
+button{padding:12px;border:none;background:#004aad;color:white;font-size:16px;border-radius:8px;cursor:pointer;}
+button:hover{background:#003080;}
 /* HEADER */
-
-header{
-background:#004aad;
-color:white;
-padding:10px;
-display:flex;
-align-items:center;
-justify-content:space-between;
-flex-wrap:wrap;
-}
-
-#schoolLogo{
-width:60px;
-height:60px;
-border-radius:50%;
-object-fit:cover;
-background:white;
-}
-
-#schoolName{
-font-size:22px;
-font-weight:bold;
-}
-
-#schoolAddress{
-font-size:14px;
-}
-
-.logout{
-background:red;
-padding:8px 15px;
-border:none;
-color:white;
-border-radius:6px;
-cursor:pointer;
-}
-
-/* CONTAINER */
-
-.container{
-padding:15px;
-}
-
-/* CARDS */
-
-.grid{
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-gap:15px;
-}
-
-.card{
-background:white;
-padding:20px;
-border-radius:10px;
-text-align:center;
-box-shadow:0 0 10px rgba(0,0,0,0.2);
-}
-
-.count{
-font-size:28px;
-font-weight:bold;
-color:#004aad;
-}
-
-/* BUTTONS */
-
-.buttons{
-margin-top:30px;
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-gap:15px;
-}
-
-button{
-padding:15px;
-border:none;
-background:#004aad;
-color:white;
-font-size:16px;
-border-radius:8px;
-cursor:pointer;
-}
-
-button:hover{
-background:#003080;
-}
-
+header{background:#004aad;color:white;padding:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;}
+#schoolLogo{width:60px;height:60px;border-radius:50%;object-fit:cover;background:white;}
+#schoolName{font-size:22px;font-weight:bold;}
+#schoolAddress{font-size:14px;}
+#logoutBtn{background:#f44336;padding:8px 12px;}
+.container{padding:15px;}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;}
+.card{background:white;padding:20px;border-radius:10px;text-align:center;box-shadow:0 0 10px rgba(0,0,0,0.2);}
+.count{font-size:28px;font-weight:bold;color:#004aad;}
+.buttons{margin-top:30px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;}
 /* PROFILE POPUP */
-
-#profileBox{
-position:fixed;
-top:0;
-left:0;
-width:100%;
-height:100%;
-background:rgba(0,0,0,0.5);
-display:none;
-align-items:center;
-justify-content:center;
-}
-
-.profileForm{
-background:white;
-padding:20px;
-border-radius:10px;
-width:90%;
-max-width:400px;
-}
-
+#profileBox{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;}
+.profileForm{background:white;padding:20px;border-radius:10px;width:90%;max-width:400px;}
 </style>
-
 </head>
 
 <body>
 
 <!-- LOGIN -->
-
 <div id="loginBox">
-
 <div class="loginCard">
-
 <h3>Admin / Teacher Login</h3>
-
 <input id="email" placeholder="Email">
-
 <input id="password" type="password" placeholder="Password">
-
 <button onclick="login()">Login</button>
-
+</div>
 </div>
 
-</div>
-
+<!-- HEADER -->
 <header>
-
-<div style="display:flex;align-items:center;gap:10px">
-
+<div style="display:flex;align-items:center;gap:10px;">
 <img id="schoolLogo">
-
 <div>
 <div id="schoolName">School Name</div>
 <div id="schoolAddress">School Address</div>
 </div>
-
 </div>
-
-<button class="logout" onclick="logout()">Logout</button>
-
+<button id="logoutBtn" onclick="logout()">Logout</button>
 </header>
-
 
 <div class="container">
 
 <div class="grid">
-
-<div class="card">
-<div class="count" id="students">0</div>
-Total Students
-</div>
-
-<div class="card">
-<div class="count" id="teachers">0</div>
-Total Teachers
-</div>
-
-<div class="card">
-<div class="count" id="complaints">0</div>
-Total Complaints
-</div>
-
-<div class="card">
-<div class="count" id="admissions">0</div>
-Total Admissions
-</div>
-
-<div class="card">
-<div class="count" id="results">0</div>
-Total Results
-</div>
-
+<div class="card"><div class="count" id="students">0</div>Total Students</div>
+<div class="card"><div class="count" id="teachers">0</div>Total Teachers</div>
+<div class="card"><div class="count" id="complaints">0</div>Total Complaints</div>
+<div class="card"><div class="count" id="admissions">0</div>Total Admissions</div>
+<div class="card"><div class="count" id="results">0</div>Total Results</div>
 </div>
 
 <div class="buttons" id="buttonsArea">
-
-<button>Admission Management</button>
-
-<button>Result Management</button>
-
-<button>Exam Management</button>
-
-<button>Complaint Management</button>
-
-<button>Study Material</button>
-
-<button>Notice & Gallery</button>
-
-<button>All Students</button>
-
-<button>All Print</button>
-
-<button>Fees Management</button>
-
-<button onclick="openProfile()">
-Add / Edit School Profile
-</button>
-
+<button onclick="location.href='admin_admissions.html'">Admission Management</button>
+<button onclick="location.href='academy.html'">Exam Management</button>
+<button onclick="location.href='admin_results.html'">Result Management</button>
+<button onclick="location.href='admin-fees.html'">Fees Management</button>
+<button onclick="location.href='admin_complaints.html'">Complaint Management</button>
+<button onclick="location.href='admin_study.html'">Study Material</button>
+<button onclick="location.href='admin.html'">Notice & Gallery</button>
+<button onclick="location.href='all-students.html'">All Students</button>
+<button onclick="location.href='print.html'">All Print</button>
+<button onclick="location.href='admin-teacher.html'">Create Teacher / Permission</button>
+<button onclick="openProfile()">Add / Edit School Profile</button>
 </div>
-
 </div>
-
 
 <!-- SCHOOL PROFILE -->
-
 <div id="profileBox">
-
 <div class="profileForm">
-
 <h3>School Profile</h3>
-
 <input id="pname" placeholder="School Name">
 <input id="paddress" placeholder="Address">
 <input id="pschoolid" placeholder="School ID">
 <input id="pdise" placeholder="DISE Code">
-
 <input type="file" id="plogo">
-
 <button onclick="saveProfile()">Save</button>
 <button onclick="closeProfile()">Close</button>
-
 </div>
-
 </div>
-
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getFirestore,
-collection,
-getDocs,
-doc,
-setDoc,
-getDoc
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-import {
-getAuth,
-signInWithEmailAndPassword,
-onAuthStateChanged,
-signOut
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -312,166 +111,102 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth=getAuth(app);
-
+const auth = getAuth(app);
 
 /* LOGIN */
-
-window.login=async function(){
-
-const email=email.value;
-const pass=password.value;
-
-try{
-
-await signInWithEmailAndPassword(auth,email,pass);
-
-}catch(e){
-
-alert(e.message)
-
+window.login = async function() {
+    const email = document.getElementById("email").value;
+    const pass = document.getElementById("password").value;
+    try {
+        await signInWithEmailAndPassword(auth, email, pass);
+    } catch(e) {
+        alert("Login Failed: " + e.message);
+    }
 }
-
-}
-
 
 /* LOGOUT */
-
-window.logout=async function(){
-
-await signOut(auth);
-
-location.reload();
-
+window.logout = async function() {
+    await signOut(auth);
+    location.reload();
 }
 
+/* ROLE CHECK + DASHBOARD LOAD */
+onAuthStateChanged(auth, async user => {
+    if (!user) return;
 
-/* ROLE CHECK */
+    document.getElementById("loginBox").style.display="none";
 
-onAuthStateChanged(auth,async user=>{
+    // Check admin
+    const adminRef = doc(db,"admins",user.uid);
+    const adminSnap = await getDoc(adminRef);
 
-if(!user)return;
+    if(adminSnap.exists()){
+        console.log("Admin logged in");
+    } else {
+        // Teacher login
+        const teacherRef = doc(db,"teachers",user.uid);
+        const teacherSnap = await getDoc(teacherRef);
+        if(teacherSnap.exists()){
+            const data = teacherSnap.data();
+            const allowed = data.pages || [];
+            document.querySelectorAll("#buttonsArea button").forEach(btn=>{
+                if(!allowed.includes(btn.innerText)){
+                    btn.style.display="none";
+                }
+            });
+        }
+    }
 
-loginBox.style.display="none";
+    // Load counts
+    async function countData(c,id){
+        const snap = await getDocs(collection(db,c));
+        document.getElementById(id).innerText = snap.size;
+    }
+    countData("students","students");
+    countData("teachers","teachers");
+    countData("complaints","complaints");
+    countData("admissions","admissions");
+    countData("results","results");
 
-const teacher=await getDoc(doc(db,"teachers",user.uid));
-
-if(teacher.exists()){
-
-const data=teacher.data();
-
-const allowed=data.pages||[];
-
-document.querySelectorAll("#buttonsArea button").forEach(btn=>{
-
-if(!allowed.includes(btn.innerText) && btn.innerText!="Add / Edit School Profile"){
-
-btn.style.display="none";
-
-}
-
+    // Load school profile
+    const profileSnap = await getDoc(doc(db,"school","profile"));
+    if(profileSnap.exists()){
+        const d = profileSnap.data();
+        document.getElementById("schoolName").innerText = d.name;
+        document.getElementById("schoolAddress").innerText = d.address;
+        document.getElementById("schoolLogo").src = d.logo;
+    }
 });
 
-}
+/* PROFILE POPUP */
+window.openProfile = ()=> profileBox.style.display="flex";
+window.closeProfile = ()=> profileBox.style.display="none";
 
-});
-
-
-/* COUNT */
-
-async function countData(c,id){
-
-const snap=await getDocs(collection(db,c));
-
-document.getElementById(id).innerText=snap.size;
-
-}
-
-countData("students","students");
-countData("teachers","teachers");
-countData("complaints","complaints");
-countData("admissions","admissions");
-countData("results","results");
-
-
-/* PROFILE */
-
-async function loadProfile(){
-
-const snap=await getDoc(doc(db,"school","profile"));
-
-if(snap.exists()){
-
-const d=snap.data();
-
-schoolName.innerText=d.name||"";
-schoolAddress.innerText=d.address||"";
-schoolLogo.src=d.logo||"";
-
-}
-
-}
-
-loadProfile();
-
-
-window.openProfile=()=>{
-profileBox.style.display="flex"
-}
-
-window.closeProfile=()=>{
-profileBox.style.display="none"
-}
-
-
-/* IMGBB */
-
+/* IMGBB UPLOAD */
 async function uploadImg(file){
-
-const key="21000d5a5d14fcef4b6af4d13647da5a8";
-
-const fd=new FormData();
-
-fd.append("image",file);
-
-const res=await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{
-method:"POST",
-body:fd
-});
-
-const data=await res.json();
-
-return data.data.url;
-
+    const key = "21000d5a5d14fcef4b6af4d13647da5a8";
+    const fd = new FormData();
+    fd.append("image",file);
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:fd});
+    const data = await res.json();
+    return data.data.url;
 }
-
 
 /* SAVE PROFILE */
-
-window.saveProfile=async()=>{
-
-let logo="";
-
-const file=plogo.files[0];
-
-if(file) logo=await uploadImg(file);
-
-await setDoc(doc(db,"school","profile"),{
-
-name:pname.value,
-address:paddress.value,
-schoolId:pschoolid.value,
-dise:pdise.value,
-logo
-
-},{merge:true});
-
-alert("Profile Saved");
-
-closeProfile();
-
-loadProfile();
-
+window.saveProfile = async ()=>{
+    let logo = "";
+    const file = document.getElementById("plogo").files[0];
+    if(file) logo = await uploadImg(file);
+    await setDoc(doc(db,"school","profile"),{
+        name: document.getElementById("pname").value,
+        address: document.getElementById("paddress").value,
+        schoolId: document.getElementById("pschoolid").value,
+        dise: document.getElementById("pdise").value,
+        logo
+    },{merge:true});
+    alert("Profile Saved");
+    closeProfile();
+    location.reload();
 }
 
 </script>
