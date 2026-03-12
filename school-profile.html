@@ -3,14 +3,13 @@
 <head>
 <meta charset="UTF-8">
 <title>School Profile</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-body{font-family:Arial;margin:0;background:#f2f2f2}
-.container{max-width:600px;margin:30px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2)}
+body{font-family:Arial;background:#f2f2f2}
+.container{max-width:600px;margin:30px auto;background:white;padding:20px;border-radius:10px}
 input,button{width:100%;padding:10px;margin:8px 0}
-button{background:#004aad;color:white;border:none;border-radius:8px;font-size:16px}
-#logoPreview{width:120px;height:120px;border-radius:10px;object-fit:cover;margin-top:10px}
+button{background:#004aad;color:white;border:none;border-radius:8px}
+img{width:120px;height:120px;border-radius:10px;margin-top:10px;object-fit:cover}
 </style>
 
 </head>
@@ -26,10 +25,10 @@ button{background:#004aad;color:white;border:none;border-radius:8px;font-size:16
 <input id="saddress" placeholder="Address">
 <input id="sdise" placeholder="DISE Code">
 <input id="srecognition" placeholder="Recognition ID">
-<input id="ssession" placeholder="Session (2026-2027)">
+<input id="ssession" placeholder="Session">
 
 <label>School Logo</label>
-<input type="file" id="logoInput">
+<input type="file" id="logo">
 
 <img id="logoPreview">
 
@@ -54,91 +53,75 @@ appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-/* MULTI SCHOOL */
-const schoolId = localStorage.getItem("schoolId");
-
-if(!schoolId){
-alert("School not logged in");
-}
-
-/* Elements */
-
-const logoInput = document.getElementById("logoInput");
-const logoPreview = document.getElementById("logoPreview");
+const schoolId = localStorage.getItem("schoolId") || "school_001";
 
 let currentLogo="";
 
-/* Preview */
+const logoInput=document.getElementById("logo");
+const preview=document.getElementById("logoPreview");
+
 
 logoInput.addEventListener("change",()=>{
-const file = logoInput.files[0];
+const file=logoInput.files[0];
 if(file){
-logoPreview.src = URL.createObjectURL(file);
+preview.src=URL.createObjectURL(file);
 }
 });
 
-/* Convert to base64 */
 
-function toBase64(file){
-return new Promise((resolve,reject)=>{
-const reader = new FileReader();
-reader.readAsDataURL(file);
-reader.onload = ()=>resolve(reader.result.split(',')[1]);
-reader.onerror = reject;
-});
-}
+async function uploadImage(file){
 
-/* ImgBB Upload */
+const formData=new FormData();
 
-async function uploadLogo(file){
+formData.append("image",file);
 
-const apiKey="21000d5a5d14fcef4b6af4d13647da5a8";
+const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a8",{
 
-const base64 = await toBase64(file);
-
-const formData = new FormData();
-formData.append("image",base64);
-
-const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`,{
 method:"POST",
 body:formData
+
 });
 
-const data = await res.json();
+const data=await res.json();
 
 if(data.success){
+
 return data.data.url;
+
 }else{
+
 console.log(data);
 alert("Image upload failed");
 return "";
-}
 
 }
 
-/* Load Profile */
+}
+
 
 async function loadProfile(){
 
-const ref = doc(db,"schools",schoolId);
+const ref=doc(db,"schools",schoolId);
 
-const snap = await getDoc(ref);
+const snap=await getDoc(ref);
 
 if(snap.exists()){
 
-const d = snap.data();
+const d=snap.data();
 
-sname.value = d.name || "";
-semail.value = d.adminEmail || "";
-spass.value = d.adminPassword || "";
-saddress.value = d.address || "";
-sdise.value = d.dise || "";
-srecognition.value = d.recognition || "";
-ssession.value = d.session || "";
+sname.value=d.name||"";
+semail.value=d.adminEmail||"";
+spass.value=d.adminPassword||"";
+saddress.value=d.address||"";
+sdise.value=d.dise||"";
+srecognition.value=d.recognition||"";
+ssession.value=d.session||"";
 
 if(d.logo){
-logoPreview.src = d.logo;
-currentLogo = d.logo;
+
+preview.src=d.logo;
+currentLogo=d.logo;
+
 }
 
 }
@@ -147,21 +130,18 @@ currentLogo = d.logo;
 
 loadProfile();
 
-/* Save Profile */
 
-window.saveProfile = async function(){
+window.saveProfile=async function(){
 
-let logoURL = currentLogo;
+let logoURL=currentLogo;
 
-const file = logoInput.files[0];
+const file=logoInput.files[0];
 
 if(file){
 
-logoURL = await uploadLogo(file);
+logoURL=await uploadImage(file);
 
-if(!logoURL){
-return;
-}
+if(!logoURL) return;
 
 }
 
@@ -178,7 +158,8 @@ logo:logoURL
 
 },{merge:true});
 
-logoPreview.src = logoURL;
+
+preview.src=logoURL;
 
 alert("Profile saved successfully");
 
