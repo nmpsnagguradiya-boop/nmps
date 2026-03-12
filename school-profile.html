@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>School Profile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+<style>
+body{font-family:Arial;margin:0;background:#f2f2f2;}
+header{background:#004aad;color:white;padding:15px;text-align:center;font-size:22px;}
+.container{padding:20px;max-width:600px;margin:auto;background:white;margin-top:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
+input{width:100%;padding:10px;margin:10px 0;}
+button{padding:12px;background:#004aad;color:white;border:none;border-radius:8px;cursor:pointer;margin-top:10px;width:100%;font-size:16px;}
+button:hover{background:#003080;}
+</style>
+</head>
+<body>
+
+<header><i class="fas fa-school"></i> School Profile</header>
+
+<div class="container">
+<input id="pname" placeholder="School Name">
+<input id="paddress" placeholder="Address">
+<input id="pschoolid" placeholder="School ID">
+<input id="pdise" placeholder="DISE Code">
+<input type="file" id="plogo">
+<button onclick="saveProfile()"><i class="fas fa-save"></i> Save Profile</button>
+</div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+};
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// Load existing profile
+async function loadProfile(){
+    const snap = await getDoc(doc(db,"school","profile"));
+    if(snap.exists()){
+        const d = snap.data();
+        pname.value = d.name || "";
+        paddress.value = d.address || "";
+        pschoolid.value = d.schoolId || "";
+        pdise.value = d.dise || "";
+    }
+}
+loadProfile();
+
+// Upload to ImgBB
+async function uploadImg(file){
+    if(!file) return "";
+    const key = "21000d5a5d14fcef4b6af4d13647da5a8";
+    const fd = new FormData();
+    fd.append("image",file);
+    const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:fd});
+    const data = await res.json();
+    return data.data.url;
+}
+
+// Save profile
+window.saveProfile = async ()=>{
+    let logo = "";
+    const file = plogo.files[0];
+    if(file) logo = await uploadImg(file);
+    await setDoc(doc(db,"school","profile"),{
+        name: pname.value,
+        address: paddress.value,
+        schoolId: pschoolid.value,
+        dise: pdise.value,
+        logo
+    },{merge:true});
+    alert("Profile saved successfully!");
+}
+</script>
+
+</body>
+</html>
