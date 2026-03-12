@@ -1,201 +1,52 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <meta charset="UTF-8">
-<title>Admin Dashboard</title>
-
+<title>Admin Login - Multi-School ERP</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-
-body{
-font-family:Arial;
-margin:0;
-background:#f2f2f2;
-}
-
-header{
-background:#004aad;
-color:white;
-padding:15px;
-text-align:center;
-font-size:22px;
-}
-
-.container{
-padding:15px;
-}
-
-.grid{
-
-display:grid;
-grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
-gap:15px;
-
-}
-
-.card{
-
-background:white;
-padding:20px;
-border-radius:10px;
-text-align:center;
-box-shadow:0 0 10px rgba(0,0,0,0.2);
-
-}
-
-.count{
-
-font-size:28px;
-font-weight:bold;
-color:#004aad;
-
-}
-
-.label{
-
-margin-top:5px;
-
-}
-
-.buttons{
-
-margin-top:30px;
-
-display:grid;
-
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-
-gap:15px;
-
-}
-
-button{
-
-padding:15px;
-
-border:none;
-
-background:#004aad;
-
-color:white;
-
-font-size:16px;
-
-border-radius:8px;
-
-cursor:pointer;
-
-}
-
+body{font-family:Arial;background:#f2f2f2;margin:0;}
+.container{max-width:400px;margin:80px auto;padding:20px;background:white;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.3);}
+input,button{width:100%;padding:12px;margin:8px 0;}
+button{background:#004aad;color:white;border:none;border-radius:8px;cursor:pointer;font-size:16px;}
+button:hover{background:#003080;}
 </style>
-
 </head>
-
 <body>
-
-<header>Super Admin Dashboard</header>
-
 <div class="container">
-
-<div class="grid">
-
-<div class="card">
-<div class="count" id="students">0</div>
-<div class="label">Total Students</div>
+<h2>Admin Login</h2>
+<input id="email" type="email" placeholder="Admin Email">
+<input id="password" type="password" placeholder="Password">
+<button onclick="login()">Login</button>
 </div>
-
-<div class="card">
-<div class="count" id="teachers">0</div>
-<div class="label">Total Teachers</div>
-</div>
-
-<div class="card">
-<div class="count" id="complaints">0</div>
-<div class="label">Total Complaints</div>
-</div>
-
-<div class="card">
-<div class="count" id="admissions">0</div>
-<div class="label">Total Admissions</div>
-</div>
-
-<div class="card">
-<div class="count" id="results">0</div>
-<div class="label">Total Results</div>
-</div>
-
-</div>
-
-
-<div class="buttons">
-
-<button onclick="location.href='admin_admissions.html'">
-Admission Management
-</button>
-
-<button onclick="location.href='admin_teachers.html'">
-Teacher Management
-</button>
-
-<button onclick="location.href='admin_results.html'">
-Result Management
-</button>
-
-<button onclick="location.href='admin_complaints.html'">
-Complaint Management
-</button>
-
-<button onclick="location.href='admin_study.html'">
-Study Material
-</button>
-
-<button onclick="location.href='admin.html'">
-Notice & Gallery
-</button>
-
-</div>
-
-</div>
-
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
-apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId: "nmpsnagguradiya-b9b94",
-storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId: "811957568318",
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+  apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+  authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+  projectId: "nmpsnagguradiya-b9b94",
+  storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+  messagingSenderId: "811957568318",
+  appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 };
-
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const auth = getAuth(app);
 
-async function countData(collectionName,id){
-
-const snap = await getDocs(collection(db,collectionName));
-
-document.getElementById(id).innerText = snap.size;
-
+window.login = async () => {
+  const email = document.getElementById("email").value.trim();
+  const pass = document.getElementById("password").value.trim();
+  if(!email || !pass){ alert("Enter email & password"); return; }
+  try{
+    await signInWithEmailAndPassword(auth,email,pass);
+    alert("Login Successful!");
+    window.location.href="dashboard.html";
+  } catch(e){
+    alert("Login Failed: "+e.message);
+  }
 }
-
-countData("students","students");
-
-countData("teachers","teachers");
-
-countData("complaints","complaints");
-
-countData("admissions","admissions");
-
-countData("results","results");
-
 </script>
-
 </body>
-
 </html>
