@@ -4,9 +4,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>School Result System</title>
-
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Result System</title>
 
 <style>
 
@@ -22,13 +20,12 @@ color:white;
 padding:15px;
 text-align:center;
 font-size:22px;
-font-weight:bold;
 }
 
 .container{
-max-width:1100px;
-margin:auto;
 padding:20px;
+max-width:1000px;
+margin:auto;
 }
 
 .card{
@@ -36,7 +33,6 @@ background:white;
 padding:20px;
 border-radius:10px;
 margin-bottom:20px;
-box-shadow:0 3px 10px rgba(0,0,0,0.1);
 }
 
 select,button{
@@ -44,38 +40,11 @@ padding:10px;
 margin:5px;
 }
 
-button{
-background:#004aad;
-color:white;
-border:none;
-cursor:pointer;
-}
-
 #marksheet{
 display:none;
 background:white;
-padding:25px;
-border:5px solid #004aad;
-}
-
-.school{
-text-align:center;
-font-size:26px;
-font-weight:bold;
-color:#004aad;
-}
-
-.student{
-display:flex;
-justify-content:space-between;
-margin-top:20px;
-}
-
-.photo{
-width:120px;
-height:140px;
-border:2px solid black;
-object-fit:cover;
+padding:20px;
+border:4px solid #004aad;
 }
 
 table{
@@ -91,32 +60,15 @@ text-align:center;
 }
 
 th{
-background:#fbc02d;
+background:#004aad;
+color:white;
 }
 
-.resultBox{
-margin-top:20px;
-font-weight:bold;
-font-size:18px;
-}
-
-.sign{
-margin-top:50px;
-display:flex;
-justify-content:space-between;
-}
-
-@media print{
-
-header,.card,.printBtn{
-display:none;
-}
-
-#marksheet{
-display:block;
-border:none;
-}
-
+.photo{
+width:120px;
+height:140px;
+object-fit:cover;
+border:2px solid black;
 }
 
 </style>
@@ -132,6 +84,7 @@ border:none;
 <div class="card">
 
 <select id="classSelect">
+
 <option value="">Select Class</option>
 <option>Nursery</option>
 <option>LKG</option>
@@ -146,57 +99,38 @@ border:none;
 <option>8</option>
 <option>9</option>
 <option>10</option>
+
 </select>
 
+<button onclick="loadStudents()">Load Students</button>
+
+<br>
+
 <select id="studentSelect"></select>
+
+<br>
 
 <select id="examSelect" multiple style="height:120px;"></select>
 
 <br>
 
-<button onclick="loadStudents()">Load Students</button>
-
 <button onclick="generateResult()">Generate Result</button>
 
-<button class="printBtn" onclick="printMarksheet()">Print Marksheet</button>
+<button onclick="window.print()">Print</button>
 
 </div>
 
 
 <div id="marksheet">
 
-<div class="school">
-
-NEW MODEL PUBLIC SCHOOL<br>
-
-<span style="font-size:14px">
-
-Ujjain Madhya Pradesh
-
-</span>
-
-</div>
-
-
-<div class="student">
-
-<div>
+<h2>Marksheet</h2>
 
 Name : <span id="name"></span><br>
 Father : <span id="father"></span><br>
 Class : <span id="class"></span><br>
 Roll : <span id="roll"></span><br>
-DOB : <span id="dob"></span><br>
-Village : <span id="village"></span><br>
-District : <span id="district"></span><br>
-State : <span id="state"></span><br>
-
-</div>
 
 <img id="photo" class="photo">
-
-</div>
-
 
 <table>
 
@@ -206,48 +140,8 @@ State : <span id="state"></span><br>
 
 </table>
 
-
-<div class="resultBox">
-
-Total : <span id="totalMarks"></span><br>
-
-Percentage : <span id="percentage"></span>%<br>
-
-Grade : <span id="grade"></span><br>
-
-Result : <span id="result"></span>
-
-</div>
-
-
-<h3>Grade System</h3>
-
-<table>
-
-<tr>
-<th>Marks</th>
-<th>Grade</th>
-</tr>
-
-<tr><td>91-100</td><td>A1</td></tr>
-<tr><td>81-90</td><td>A2</td></tr>
-<tr><td>71-80</td><td>B1</td></tr>
-<tr><td>61-70</td><td>B2</td></tr>
-<tr><td>51-60</td><td>C1</td></tr>
-<tr><td>41-50</td><td>C2</td></tr>
-<tr><td>33-40</td><td>D</td></tr>
-<tr><td>0-32</td><td>Fail</td></tr>
-
-</table>
-
-
-<div class="sign">
-
-<div>Class Teacher</div>
-
-<div>Principal</div>
-
-</div>
+Total : <span id="total"></span><br>
+Percentage : <span id="percent"></span><br>
 
 </div>
 
@@ -263,12 +157,13 @@ import {
 getFirestore,
 collection,
 getDocs,
-doc,
-getDoc,
 query,
-where
+where,
+doc,
+getDoc
 } from
 "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -277,6 +172,7 @@ projectId:"nmpsnagguradiya-b9b94"
 };
 
 const app=initializeApp(firebaseConfig);
+
 const db=getFirestore(app);
 
 let students=[];
@@ -286,32 +182,57 @@ let exams=[];
 
 /* LOAD EXAMS */
 
-const examSnap=await getDocs(collection(db,"exam_sessions"));
+async function loadExams(){
 
-exams=examSnap.docs.map(d=>({
+const snap=await getDocs(collection(db,"exam_sessions"));
+
+exams=snap.docs.map(d=>({
 id:d.id,
-name:d.data().examName
+...d.data()
 }));
 
-examSelect.innerHTML=
-exams.map(e=>`<option value="${e.id}">${e.name}</option>`).join("");
+const examSelect=document.getElementById("examSelect");
+
+examSelect.innerHTML="";
+
+exams.forEach(e=>{
+
+const opt=document.createElement("option");
+
+opt.value=e.id;
+
+opt.text=e.examName;
+
+examSelect.appendChild(opt);
+
+});
+
+}
+
+loadExams();
 
 
 /* LOAD SUBJECTS */
 
-const subSnap=await getDocs(collection(db,"subjects"));
+async function loadSubjects(){
 
-subjects=subSnap.docs.map(d=>({
+const snap=await getDocs(collection(db,"subjects"));
+
+subjects=snap.docs.map(d=>({
 id:d.id,
-name:d.data().name
+...d.data()
 }));
+
+}
+
+loadSubjects();
 
 
 /* LOAD STUDENTS */
 
 window.loadStudents=async function(){
 
-const cls=classSelect.value;
+const cls=document.getElementById("classSelect").value;
 
 const q=query(
 collection(db,"admissions"),
@@ -325,28 +246,21 @@ id:d.id,
 ...d.data()
 }));
 
-studentSelect.innerHTML=
-students.map(s=>`
-<option value="${s.id}">
-${s.name} (Roll ${s.roll})
-</option>
-`).join("");
+const studentSelect=document.getElementById("studentSelect");
 
-}
+studentSelect.innerHTML="";
 
+students.forEach(s=>{
 
-/* GRADE */
+const opt=document.createElement("option");
 
-function getGrade(p){
+opt.value=s.id;
 
-if(p>=90)return"A1";
-if(p>=80)return"A2";
-if(p>=70)return"B1";
-if(p>=60)return"B2";
-if(p>=50)return"C1";
-if(p>=40)return"C2";
-if(p>=33)return"D";
-return"F";
+opt.text=s.name;
+
+studentSelect.appendChild(opt);
+
+});
 
 }
 
@@ -355,9 +269,10 @@ return"F";
 
 window.generateResult=async function(){
 
-const studentId=studentSelect.value;
+const studentId=document.getElementById("studentSelect").value;
 
-const examsSelected=[...examSelect.selectedOptions].map(o=>o.value);
+const examsSelected=[...document.getElementById("examSelect").selectedOptions]
+.map(o=>o.value);
 
 const student=students.find(s=>s.id==studentId);
 
@@ -365,28 +280,24 @@ name.innerText=student.name;
 father.innerText=student.father;
 class.innerText=student.class;
 roll.innerText=student.roll;
-dob.innerText=student.dob;
-village.innerText=student.village;
-district.innerText=student.district;
-state.innerText=student.state;
 photo.src=student.photo;
 
 let total=0;
 let max=0;
 
-/* HEADER */
+const head=document.getElementById("tableHead");
+const body=document.getElementById("resultTable");
 
-tableHead.innerHTML="<tr><th>Subject</th>";
+head.innerHTML="<tr><th>Subject</th>";
 
 examsSelected.forEach(e=>{
-const ex=exams.find(x=>x.id==e).name;
-tableHead.innerHTML+=`<th>${ex}</th>`;
+const ex=exams.find(x=>x.id==e);
+head.innerHTML+=`<th>${ex.examName}</th>`;
 });
 
-tableHead.innerHTML+="</tr>";
+head.innerHTML+="</tr>";
 
-resultTable.innerHTML="";
-
+body.innerHTML="";
 
 for(const sub of subjects){
 
@@ -405,6 +316,7 @@ const m=markDoc.data();
 row+=`<td>${m.marks}</td>`;
 
 total+=m.marks;
+
 max+=m.maxMarks;
 
 }else{
@@ -417,38 +329,22 @@ row+="<td>-</td>";
 
 row+="</tr>";
 
-resultTable.innerHTML+=row;
+body.innerHTML+=row;
 
 }
 
-const percent=((total/max)*100).toFixed(2);
+percent=((total/max)*100).toFixed(2);
 
-totalMarks.innerText=total;
+document.getElementById("total").innerText=total;
 
-percentage.innerText=percent;
+document.getElementById("percent").innerText=percent;
 
-grade.innerText=getGrade(percent);
-
-result.innerText=percent>=33?"PASS":"FAIL";
-
-marksheet.style.display="block";
-
-}
-
-
-/* PRINT */
-
-window.printMarksheet=function(){
-
-marksheet.style.display="block";
-
-setTimeout(()=>{
-window.print();
-},300);
+document.getElementById("marksheet").style.display="block";
 
 }
 
 </script>
 
 </body>
+
 </html>
