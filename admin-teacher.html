@@ -35,13 +35,15 @@ background:white;
 padding:20px;
 border-radius:10px;
 margin-bottom:20px;
-box-shadow:0 0 10px rgba(0,0,0,0.2);
+box-shadow:0 0 10px rgba(0,0,0,0.15);
 }
 
 input{
 width:100%;
 padding:10px;
 margin:6px 0;
+border:1px solid #ccc;
+border-radius:5px;
 }
 
 .permissions{
@@ -107,7 +109,7 @@ object-fit:cover;
 
 <input id="temail" placeholder="Email">
 
-<input id="tpass" type="password" placeholder="Password">
+<input id="tpass" placeholder="Password">
 
 <input type="file" id="tphoto">
 
@@ -149,7 +151,6 @@ object-fit:cover;
 <thead>
 
 <tr>
-
 <th>Photo</th>
 <th>Name</th>
 <th>Subject</th>
@@ -157,7 +158,6 @@ object-fit:cover;
 <th>Email</th>
 <th>Permissions</th>
 <th>Delete</th>
-
 </tr>
 
 </thead>
@@ -174,11 +174,6 @@ object-fit:cover;
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getAuth,
-createUserWithEmailAndPassword
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 import {
 getFirestore,
@@ -200,14 +195,13 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 
 };
 
-const app=initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
-const auth=getAuth(app);
-
-const db=getFirestore(app);
+const db = getFirestore(app);
 
 
-/* IMGBB UPLOAD */
+
+/* IMAGE UPLOAD IMGBB */
 
 async function uploadImg(file){
 
@@ -229,9 +223,10 @@ return data.data.url;
 }
 
 
+
 /* CREATE TEACHER */
 
-window.createTeacher=async function(){
+window.createTeacher = async function(){
 
 const name=tname.value;
 const subject=tsubject.value;
@@ -251,17 +246,13 @@ const checks=document.querySelectorAll(".permissions input:checked");
 
 const pages=[...checks].map(c=>c.value);
 
-try{
-
-const user=await createUserWithEmailAndPassword(auth,email,pass);
-
 await addDoc(collection(db,"teachers"),{
 
-uid:user.user.uid,
 name,
 subject,
 degree,
 email,
+password:pass,
 photo,
 pages
 
@@ -271,13 +262,8 @@ alert("Teacher Created");
 
 loadTeachers();
 
-}catch(e){
-
-alert(e.message)
-
 }
 
-}
 
 
 /* LOAD TEACHERS */
@@ -327,9 +313,10 @@ Delete
 loadTeachers();
 
 
-/* DELETE */
 
-window.deleteTeacher=async function(id){
+/* DELETE TEACHER */
+
+window.deleteTeacher = async function(id){
 
 await deleteDoc(doc(db,"teachers",id));
 
@@ -340,4 +327,5 @@ loadTeachers();
 </script>
 
 </body>
+
 </html>
