@@ -8,11 +8,14 @@
 body{font-family:Arial;margin:0;background:#f2f2f2;}
 .container{max-width:500px;margin:30px auto;padding:20px;background:white;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
 input{width:100%;padding:10px;margin:8px 0;}
+input[readonly]{background:#e0e0e0;}
 button{padding:12px;border:none;background:#004aad;color:white;font-size:16px;border-radius:8px;cursor:pointer;}
 button:hover{background:#003080;}
+button#saveBtn{margin-top:10px;}
 </style>
 </head>
 <body>
+
 <div class="container">
 <h2>School Profile</h2>
 <input id="pname" placeholder="School Name">
@@ -20,7 +23,7 @@ button:hover{background:#003080;}
 <input id="pschoolid" placeholder="School ID">
 <input id="pdise" placeholder="DISE Code">
 <input type="file" id="plogo">
-<button onclick="saveProfile()">Save Profile</button>
+<button id="saveBtn" onclick="saveProfile()">Save Profile</button>
 </div>
 
 <script type="module">
@@ -41,16 +44,15 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-// Redirect if not logged in as admin
-onAuthStateChanged(auth,user=>{
-    if(!user){
-        alert("Please login first as admin");
-        location.href="login.html";
-    }
-});
+const pname = document.getElementById("pname");
+const paddress = document.getElementById("paddress");
+const pschoolid = document.getElementById("pschoolid");
+const pdise = document.getElementById("pdise");
+const plogo = document.getElementById("plogo");
+const saveBtn = document.getElementById("saveBtn");
 
+// IMGBB upload
 async function uploadImg(file){
-    if(!file) return "";
     const key="21000d5a5d14fcef4b6af4d13647da5a8";
     const fd = new FormData();
     fd.append("image",file);
@@ -59,36 +61,66 @@ async function uploadImg(file){
     return data.data.url;
 }
 
-window.saveProfile = async function(){
-    const name=document.getElementById("pname").value.trim();
-    const address=document.getElementById("paddress").value.trim();
-    const schoolId=document.getElementById("pschoolid").value.trim();
-    const dise=document.getElementById("pdise").value.trim();
-    const file=document.getElementById("plogo").files[0];
-    let logo="";
-    if(file) logo=await uploadImg(file);
-
-    if(!name || !address) return alert("Name and Address required");
+// Save profile
+async function saveProfile(){
+    let logo = "";
+    const file = plogo.files[0];
+    if(file) logo = await uploadImg(file);
 
     await setDoc(doc(db,"school","profile"),{
-        name,address,schoolId,dise,logo
+        name: pname.value,
+        address: paddress.value,
+        schoolId: pschoolid.value,
+        dise: pdise.value,
+        logo
     },{merge:true});
 
-    alert("Profile Saved Successfully!");
-    location.href="admin-dashboard.html";
+    alert("Profile Saved!");
 }
 
 // Load existing profile
-(async()=>{
+async function loadProfile(){
     const snap = await getDoc(doc(db,"school","profile"));
     if(snap.exists()){
         const d = snap.data();
-        document.getElementById("pname").value=d.name||"";
-        document.getElementById("paddress").value=d.address||"";
-        document.getElementById("pschoolid").value=d.schoolId||"";
-        document.getElementById("pdise").value=d.dise||"";
+        pname.value = d.name || "";
+        paddress.value = d.address || "";
+        pschoolid.value = d.schoolId || "";
+        pdise.value = d.dise || "";
     }
-})();
+}
+
+// Check user role
+onAuthStateChanged(auth, async user => {
+    if(!user) {
+        alert("Please login as Admin");
+        location.href = "login.html";
+        return;
+    }
+
+    const adminRef = doc(db,"admins",user.uid);
+    const adminSnap = await getDoc(adminRef);
+
+    if(adminSnap.exists()){
+        // Admin -> editable
+        pname.readOnly = false;
+        paddress.readOnly = false;
+        pschoolid.readOnly = false;
+        pdise.readOnly = false;
+        plogo.disabled = false;
+        saveBtn.style.display = "block";
+    } else {
+        // Teacher -> readonly
+        pname.readOnly = true;
+        paddress.readOnly = true;
+        pschoolid.readOnly = true;
+        pdise.readOnly = true;
+        plogo.disabled = true;
+        saveBtn.style.display = "none";
+    }
+
+    await loadProfile();
+});
 </script>
 </body>
 </html>
