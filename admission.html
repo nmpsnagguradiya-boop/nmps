@@ -5,8 +5,6 @@
 <meta charset="UTF-8">
 <title>Student Admission</title>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-
 <style>
 
 body{
@@ -90,18 +88,22 @@ text-align:center;
 <input type="text" id="name" placeholder="Student Name" required>
 <input type="text" id="father" placeholder="Father Name" required>
 <input type="text" id="mobile" placeholder="Mobile Number" required>
+
 <input type="text" id="village" placeholder="Village">
 <input type="text" id="city" placeholder="City">
 <input type="text" id="post" placeholder="Post">
 <input type="text" id="district" placeholder="District">
 <input type="text" id="state" placeholder="State">
 <input type="text" id="national" placeholder="Nationality">
+
 <input type="text" id="sssm" placeholder="SSSM ID">
 <input type="text" id="family" placeholder="Family ID">
 <input type="text" id="apar" placeholder="APAR ID">
 <input type="text" id="adhar" placeholder="Aadhar Card">
+
 <input type="text" id="caste" placeholder="Caste">
 <input type="text" id="category" placeholder="Category">
+
 <input type="text" id="roll" placeholder="Roll Number">
 <input type="text" id="scholer" placeholder="Scholar Number">
 
@@ -133,9 +135,6 @@ text-align:center;
 
 <label>Student Photo</label>
 <input type="file" id="photo">
-
-<label>Document Upload</label>
-<input type="file" id="document">
 
 <button type="submit">Submit Admission</button>
 
@@ -190,6 +189,7 @@ body:formData
 });
 
 const data=await res.json();
+
 return data.data.url;
 
 }
@@ -200,12 +200,7 @@ form.addEventListener("submit",async function(e){
 
 e.preventDefault();
 
-const name=document.getElementById("name").value;
-const father=document.getElementById("father").value;
-const mobile=document.getElementById("mobile").value;
-const className=document.getElementById("class").value;
-
-const photoFile=document.getElementById("photo").files[0];
+let photoFile=document.getElementById("photo").files[0];
 
 let photoURL="";
 
@@ -217,10 +212,36 @@ await addDoc(collection(db,"admissions"),{
 
 schoolId:schoolId,
 
-name:name,
-father:father,
-mobile:mobile,
-class:className,
+name:document.getElementById("name").value,
+father:document.getElementById("father").value,
+mobile:document.getElementById("mobile").value,
+
+village:document.getElementById("village").value,
+city:document.getElementById("city").value,
+post:document.getElementById("post").value,
+district:document.getElementById("district").value,
+state:document.getElementById("state").value,
+national:document.getElementById("national").value,
+
+sssm:document.getElementById("sssm").value,
+family:document.getElementById("family").value,
+apar:document.getElementById("apar").value,
+adhar:document.getElementById("adhar").value,
+
+caste:document.getElementById("caste").value,
+category:document.getElementById("category").value,
+
+roll:document.getElementById("roll").value,
+scholer:document.getElementById("scholer").value,
+
+admissionDate:document.getElementById("admissionDate").value,
+
+class:document.getElementById("class").value,
+
+dob:document.getElementById("dob").value,
+
+message:document.getElementById("message").value,
+
 photo:photoURL
 
 });
