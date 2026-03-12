@@ -2,154 +2,186 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Update School Profile</title>
+<title>School Profile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
 body{font-family:Arial;margin:0;background:#f2f2f2;}
 .container{max-width:600px;margin:30px auto;padding:20px;background:white;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
 input,button{width:100%;padding:10px;margin:8px 0;}
 button{border:none;background:#004aad;color:white;font-size:16px;border-radius:8px;cursor:pointer;}
-button:hover{background:#003080;}
-img.preview{width:100px;height:100px;object-fit:cover;margin-top:5px;border-radius:10px;display:none;}
+img{width:120px;height:120px;border-radius:10px;margin-top:10px;object-fit:cover;}
 </style>
+
 </head>
 <body>
 
 <div class="container">
+
 <h2>Update School Profile</h2>
-<input type="hidden" id="schoolId">
-<input id="sname" placeholder="School Name" required>
-<input id="semail" placeholder="Admin Email" required>
-<input id="spass" placeholder="Admin Password" required>
-<input id="saddress" placeholder="Address" required>
-<input id="sdise" placeholder="DISE Code" required>
-<input id="srecognition" placeholder="Recognition / Manyata ID">
+
+<input id="sname" placeholder="School Name">
+<input id="semail" placeholder="Admin Email">
+<input id="spass" placeholder="Admin Password">
+<input id="saddress" placeholder="Address">
+<input id="sdise" placeholder="DISE Code">
+<input id="srecognition" placeholder="Recognition ID">
+
 <label>School Logo</label>
-<input type="file" id="slogo" accept="image/*">
-<img id="logoPreview" class="preview">
-<label>Current Session / Academic Year</label>
-<input id="ssession" placeholder="Ex: 2026-2027">
-<button id="saveBtn">Save Profile</button>
+<input type="file" id="logoFile">
+
+<img id="logoPreview">
+
+<input id="ssession" placeholder="Session (2026-2027)">
+
+<button onclick="saveProfile()">Save Profile</button>
+
 </div>
 
+
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+
 const firebaseConfig = {
+
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
 projectId: "nmpsnagguradiya-b9b94",
 storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
 messagingSenderId: "811957568318",
 appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-const slogo = document.getElementById("slogo");
-const logoPreview = document.getElementById("logoPreview");
+const schoolId = localStorage.getItem("schoolId") || "school_001";
 
-// Current school ID from login
-const currentSchoolId = localStorage.getItem("schoolId") || "school_001";
 
-// Show local preview
-slogo.addEventListener("change", ()=>{
-    const file = slogo.files[0];
-    if(file){ 
-        logoPreview.src = URL.createObjectURL(file); 
-        logoPreview.style.display="block"; 
-    }
+// convert image to base64
+function toBase64(file){
+
+return new Promise((resolve,reject)=>{
+
+const reader=new FileReader();
+
+reader.readAsDataURL(file);
+
+reader.onload=()=>resolve(reader.result.split(",")[1]);
+
+reader.onerror=error=>reject(error);
+
 });
 
-// Function to upload image to Imgbb
-async function uploadImg(file){
-    if(!file) return "";
-    const key = "21000d5a5d14fcef4b6af4d13647da5a8"; // Your Imgbb API Key
-    const fd = new FormData();
-    fd.append("image", file);
-    try{
-        const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {method:"POST", body:fd});
-        const data = await res.json();
-        if(data && data.data && data.data.url) return data.data.url;
-        throw new Error("Invalid response from Imgbb");
-    } catch(e){
-        console.error("Logo upload failed:", e);
-        return "";
-    }
 }
 
-// Load existing profile
+
+// upload image to imgbb
+async function uploadLogo(file){
+
+const apiKey="21000d5a5d14fcef4b6af4d13647da5a8";
+
+const base64=await toBase64(file);
+
+const formData=new FormData();
+
+formData.append("image",base64);
+
+const res=await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`,{
+
+method:"POST",
+
+body:formData
+
+});
+
+const data=await res.json();
+
+if(data.success){
+
+return data.data.url;
+
+}else{
+
+console.log(data);
+
+return "";
+
+}
+
+}
+
+
+// load profile
 async function loadProfile(){
-    try {
-        const schoolRef = doc(db,"schools",currentSchoolId);
-        const snap = await getDoc(schoolRef);
-        if(snap.exists()){
-            const d = snap.data();
-            document.getElementById("sname").value = d.name || "";
-            document.getElementById("semail").value = d.adminEmail || "";
-            document.getElementById("spass").value = d.adminPassword || "";
-            document.getElementById("saddress").value = d.address || "";
-            document.getElementById("sdise").value = d.dise || "";
-            document.getElementById("srecognition").value = d.recognition || "";
-            document.getElementById("ssession").value = d.session || "";
-            if(d.logo){ logoPreview.src = d.logo; logoPreview.style.display="block"; }
-        }
-    } catch(e){
-        console.error("Error loading profile:", e);
-    }
+
+const ref=doc(db,"schools",schoolId);
+
+const snap=await getDoc(ref);
+
+if(snap.exists()){
+
+const d=snap.data();
+
+sname.value=d.name||"";
+semail.value=d.adminEmail||"";
+spass.value=d.adminPassword||"";
+saddress.value=d.address||"";
+sdise.value=d.dise||"";
+srecognition.value=d.recognition||"";
+ssession.value=d.session||"";
+
+if(d.logo){
+
+logoPreview.src=d.logo;
+
+}
+
+}
+
 }
 
 loadProfile();
 
-// Save / Update profile
-document.getElementById("saveBtn").addEventListener("click", async ()=>{
-    const name = document.getElementById("sname").value.trim();
-    const email = document.getElementById("semail").value.trim();
-    const password = document.getElementById("spass").value.trim();
-    const address = document.getElementById("saddress").value.trim();
-    const dise = document.getElementById("sdise").value.trim();
-    const recognition = document.getElementById("srecognition").value.trim();
-    const session = document.getElementById("ssession").value.trim();
-    const logoFile = slogo.files[0];
 
-    if(!name||!email||!password||!address||!dise){ 
-        alert("Please fill all required fields"); 
-        return; 
-    }
+// save profile
+window.saveProfile = async function(){
 
-    try{
-        let logoUrl = "";
-        if(logoFile){ 
-            logoUrl = await uploadImg(logoFile);
-            if(!logoUrl) console.warn("Logo upload failed, saving without logo");
-        }
+const file=document.getElementById("logoFile").files[0];
 
-        const schoolRef = doc(db,"schools",currentSchoolId);
-        await setDoc(schoolRef,{
-            name,
-            adminEmail: email,
-            adminPassword: password,
-            address,
-            dise,
-            recognition: recognition || "",
-            session: session || "",
-            ...(logoUrl ? {logo: logoUrl} : {})
-        },{merge:true});
+let logoURL="";
 
-        // Show saved logo immediately
-        if(logoUrl){
-            logoPreview.src = logoUrl;
-            logoPreview.style.display="block";
-        }
+if(file){
 
-        alert("Profile saved successfully!");
-    } catch(e){
-        console.error("Error saving profile:", e);
-        alert("Error saving profile, check console for details");
-    }
-});
+logoURL=await uploadLogo(file);
+
+logoPreview.src=logoURL;
+
+}
+
+await setDoc(doc(db,"schools",schoolId),{
+
+name:sname.value,
+adminEmail:semail.value,
+adminPassword:spass.value,
+address:saddress.value,
+dise:sdise.value,
+recognition:srecognition.value,
+session:ssession.value,
+logo:logoURL
+
+},{merge:true});
+
+
+alert("Profile saved successfully");
+
+}
+
+
 </script>
 
 </body>
