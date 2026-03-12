@@ -17,7 +17,7 @@ background:#f2f2f2;
 header{
 background:#004aad;
 color:white;
-padding:15px;
+padding:16px;
 text-align:center;
 font-size:22px;
 }
@@ -26,25 +26,46 @@ font-size:22px;
 padding:20px;
 }
 
-.topbar{
-margin-bottom:15px;
+/* BIG BUTTONS */
+
+.big-buttons{
+display:flex;
+gap:20px;
+flex-wrap:wrap;
+margin-bottom:20px;
 }
 
-.topbtn{
-background:#004aad;
-color:white;
-padding:8px 14px;
-border:none;
-border-radius:5px;
+.big-btn{
+flex:1;
+min-width:200px;
+background:white;
+padding:20px;
+border-radius:10px;
+display:flex;
+align-items:center;
+gap:15px;
+font-size:18px;
+font-weight:bold;
 cursor:pointer;
-margin-right:10px;
+box-shadow:0 0 8px rgba(0,0,0,0.15);
+transition:0.3s;
 }
+
+.big-btn:hover{
+transform:scale(1.03);
+}
+
+.icon{
+font-size:30px;
+}
+
+/* dashboard */
 
 .dashboard{
 display:flex;
 gap:20px;
-margin-bottom:20px;
 flex-wrap:wrap;
+margin-bottom:20px;
 }
 
 .box{
@@ -56,15 +77,18 @@ text-align:center;
 box-shadow:0 0 5px rgba(0,0,0,0.2);
 }
 
+/* controls */
+
 .controls{
 margin-bottom:15px;
 }
 
 input,select{
 padding:8px;
-margin-right:10px;
-margin-top:5px;
+margin:5px;
 }
+
+/* table */
 
 table{
 width:100%;
@@ -84,20 +108,33 @@ border-radius:5px;
 }
 
 button{
-padding:5px 10px;
+padding:6px 10px;
 border:none;
-border-radius:4px;
+border-radius:5px;
 cursor:pointer;
 }
 
-.approve{background:green;color:white;}
-.reject{background:orange;color:white;}
-.delete{background:red;color:white;}
-.print{background:#004aad;color:white;}
-.photo{background:#6f42c1;color:white;}
+.photo{
+background:#6f42c1;
+color:white;
+}
+
+.delete{
+background:red;
+color:white;
+}
+
+/* mobile */
+
+@media(max-width:700px){
+
+.big-buttons{
+flex-direction:column;
+}
+
+}
 
 </style>
-
 </head>
 
 <body>
@@ -106,13 +143,23 @@ cursor:pointer;
 
 <div class="container">
 
-<div class="topbar">
+<!-- BIG NAV BUTTONS -->
 
-<button class="topbtn" onclick="window.location.href='admission.html'">Add Student</button>
+<div class="big-buttons">
 
-<button class="topbtn" onclick="window.location.href='all-students.html'">All Students</button>
+<div class="big-btn" onclick="window.location.href='admission.html'">
+<span class="icon">➕</span>
+Add Students
+</div>
+
+<div class="big-btn" onclick="window.location.href='all-students.html'">
+<span class="icon">👨‍🎓</span>
+All Students
+</div>
 
 </div>
+
+<!-- DASHBOARD -->
 
 <div class="dashboard">
 
@@ -121,28 +168,13 @@ Total Admissions
 <h2 id="total">0</h2>
 </div>
 
-<div class="box">
-Approved
-<h2 id="approved">0</h2>
 </div>
 
-<div class="box">
-Pending
-<h2 id="pending">0</h2>
-</div>
-
-</div>
+<!-- CONTROLS -->
 
 <div class="controls">
 
 <input type="text" id="search" placeholder="Search Name / Mobile">
-
-<select id="filter">
-<option value="all">All Status</option>
-<option value="Pending">Pending</option>
-<option value="Approved">Approved</option>
-<option value="Rejected">Rejected</option>
-</select>
 
 <select id="classFilter">
 <option value="all">All Classes</option>
@@ -186,19 +218,18 @@ Pending
 
 </div>
 
+<!-- TABLE -->
+
 <table>
 
 <thead>
 <tr>
-<th>ID</th>
 <th>Name</th>
 <th>Father</th>
 <th>Mobile</th>
 <th>Village</th>
 <th>Class</th>
 <th>Photo</th>
-<th>Document</th>
-<th>Status</th>
 <th>Actions</th>
 </tr>
 </thead>
@@ -248,14 +279,14 @@ admissions.push(data);
 });
 
 renderTable();
-updateDashboard();
+
+document.getElementById("total").innerText=admissions.length;
 
 }
 
 function renderTable(){
 
 const search=document.getElementById("search").value.toLowerCase();
-const filter=document.getElementById("filter").value;
 const classFilter=document.getElementById("classFilter").value;
 
 const table=document.getElementById("list");
@@ -265,15 +296,11 @@ admissions.forEach(data=>{
 
 if(search && !data.name.toLowerCase().includes(search) && !data.mobile.includes(search)) return;
 
-if(filter!="all" && (data.status||"Pending")!=filter) return;
-
 if(classFilter!="all" && data.class!=classFilter) return;
 
 table.innerHTML+=`
 
 <tr>
-
-<td>${data.studentId||"-"}</td>
 
 <td>${data.name}</td>
 <td>${data.father}</td>
@@ -284,22 +311,10 @@ table.innerHTML+=`
 <td><img src="${data.photo||""}"></td>
 
 <td>
-<a href="${data.document||"#"}" target="_blank">Download</a>
-</td>
-
-<td>${data.status||"Pending"}</td>
-
-<td>
 
 <button class="photo" onclick="uploadPhoto('${data.id}')">Photo</button>
 
-<button class="approve" onclick="approve('${data.id}')">Approve</button>
-
-<button class="reject" onclick="reject('${data.id}')">Reject</button>
-
 <button class="delete" onclick="remove('${data.id}')">Delete</button>
-
-<button class="print" onclick='printForm(${JSON.stringify(data)})'>Print</button>
 
 </td>
 
@@ -311,40 +326,7 @@ table.innerHTML+=`
 
 }
 
-function updateDashboard(){
-
-document.getElementById("total").innerText=admissions.length;
-
-document.getElementById("approved").innerText=
-admissions.filter(a=>a.status=="Approved").length;
-
-document.getElementById("pending").innerText=
-admissions.filter(a=>!a.status || a.status=="Pending").length;
-
-}
-
-window.approve=async function(id){
-
-const studentId="NMPS"+Date.now();
-
-await updateDoc(doc(db,"admissions",id),{
-status:"Approved",
-studentId:studentId
-});
-
-loadAdmissions();
-
-}
-
-window.reject=async function(id){
-
-await updateDoc(doc(db,"admissions",id),{
-status:"Rejected"
-});
-
-loadAdmissions();
-
-}
+/* DELETE */
 
 window.remove=async function(id){
 
@@ -358,26 +340,85 @@ loadAdmissions();
 
 }
 
-window.printForm=function(data){
+/* PHOTO UPLOAD */
 
-const w=window.open("");
+window.uploadPhoto=function(id){
 
-w.document.write(`
-<h2>Student Admission</h2>
-<p>ID: ${data.studentId||"Pending"}</p>
-<p>Name: ${data.name}</p>
-<p>Father: ${data.father}</p>
-<p>Mobile: ${data.mobile}</p>
-<p>Village: ${data.village}</p>
-<p>Class: ${data.class}</p>
-<img src="${data.photo}" width="120">
-`);
+const input=document.createElement("input");
+input.type="file";
 
-w.print();
+input.onchange=async e=>{
+
+const file=e.target.files[0];
+
+const formData=new FormData();
+formData.append("image",file);
+
+const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+method:"POST",
+body:formData
+});
+
+const data=await res.json();
+
+await updateDoc(doc(db,"admissions",id),{
+photo:data.data.url
+});
+
+loadAdmissions();
+
+};
+
+input.click();
 
 }
+
+/* BULK IMPORT */
+
+document.getElementById("excelImport").addEventListener("change",function(e){
+
+const selectedClass=document.getElementById("classImport").value;
+
+if(!selectedClass){
+alert("Select Class First");
+return;
+}
+
+const reader=new FileReader();
+
+reader.onload=async function(evt){
+
+const data=new Uint8Array(evt.target.result);
+
+const workbook=XLSX.read(data,{type:'array'});
+
+const sheet=workbook.Sheets[workbook.SheetNames[0]];
+
+const json=XLSX.utils.sheet_to_json(sheet);
+
+for(let s of json){
+
+s.class=selectedClass;
+s.schoolId=schoolId;
+
+await addDoc(collection(db,"admissions"),s);
+
+}
+
+alert("Bulk Students Added");
+
+loadAdmissions();
+
+}
+
+reader.readAsArrayBuffer(e.target.files[0]);
+
+});
+
+document.getElementById("search").addEventListener("keyup",renderTable);
+document.getElementById("classFilter").addEventListener("change",renderTable);
 
 </script>
 
 </body>
-  </html>
+</html>
