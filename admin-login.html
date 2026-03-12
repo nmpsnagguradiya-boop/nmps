@@ -5,7 +5,6 @@
 
 <meta charset="UTF-8">
 <title>Admin Dashboard</title>
-
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -15,6 +14,37 @@ font-family:Arial;
 margin:0;
 background:#f2f2f2;
 }
+
+/* LOGIN */
+
+#loginBox{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:white;
+display:flex;
+align-items:center;
+justify-content:center;
+}
+
+.loginCard{
+background:white;
+padding:30px;
+box-shadow:0 0 10px rgba(0,0,0,0.3);
+border-radius:10px;
+width:90%;
+max-width:350px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:8px 0;
+}
+
+/* HEADER */
 
 header{
 background:#004aad;
@@ -48,73 +78,52 @@ font-size:14px;
 padding:15px;
 }
 
-.grid{
+/* CARDS */
 
+.grid{
 display:grid;
 grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
 gap:15px;
-
 }
 
 .card{
-
 background:white;
 padding:20px;
 border-radius:10px;
 text-align:center;
 box-shadow:0 0 10px rgba(0,0,0,0.2);
-
 }
 
 .count{
-
 font-size:28px;
 font-weight:bold;
 color:#004aad;
-
 }
 
-.label{
-
-margin-top:5px;
-
-}
+/* BUTTONS */
 
 .buttons{
-
 margin-top:30px;
-
 display:grid;
-
 grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
-
 gap:15px;
-
 }
 
 button{
-
 padding:15px;
-
 border:none;
-
 background:#004aad;
-
 color:white;
-
 font-size:16px;
-
 border-radius:8px;
-
 cursor:pointer;
-
 }
 
 button:hover{
 background:#003080;
 }
 
-/* popup */
+/* PROFILE POPUP */
 
 #profileBox{
 position:fixed;
@@ -136,28 +145,43 @@ width:90%;
 max-width:400px;
 }
 
-input{
-width:100%;
-padding:10px;
-margin:8px 0;
-}
-
 </style>
 
 </head>
 
 <body>
 
+<!-- LOGIN -->
+
+<div id="loginBox">
+
+<div class="loginCard">
+
+<h3>Admin / Teacher Login</h3>
+
+<input id="email" placeholder="Email">
+
+<input id="password" type="password" placeholder="Password">
+
+<button onclick="login()">Login</button>
+
+</div>
+
+</div>
+
 <header>
 
 <img id="schoolLogo">
 
 <div>
+
 <div id="schoolName">School Name</div>
 <div id="schoolAddress">School Address</div>
+
 </div>
 
 </header>
+
 
 <div class="container">
 
@@ -165,32 +189,32 @@ margin:8px 0;
 
 <div class="card">
 <div class="count" id="students">0</div>
-<div class="label">Total Students</div>
+Total Students
 </div>
 
 <div class="card">
 <div class="count" id="teachers">0</div>
-<div class="label">Total Teachers</div>
+Total Teachers
 </div>
 
 <div class="card">
 <div class="count" id="complaints">0</div>
-<div class="label">Total Complaints</div>
+Total Complaints
 </div>
 
 <div class="card">
 <div class="count" id="admissions">0</div>
-<div class="label">Total Admissions</div>
+Total Admissions
 </div>
 
 <div class="card">
 <div class="count" id="results">0</div>
-<div class="label">Total Results</div>
+Total Results
 </div>
 
 </div>
 
-<div class="buttons">
+<div class="buttons" id="buttonsArea">
 
 <button onclick="location.href='admin_admissions.html'">
 Admission Management
@@ -202,6 +226,10 @@ Teacher Management
 
 <button onclick="location.href='admin_results.html'">
 Result Management
+</button>
+
+<button onclick="location.href='academy.html'">
+Exam Management
 </button>
 
 <button onclick="location.href='admin_complaints.html'">
@@ -220,6 +248,10 @@ Notice & Gallery
 All Students
 </button>
 
+<button onclick="location.href='print.html'">
+All Print
+</button>
+
 <button onclick="location.href='admin-teacher.html'">
 Create Teacher / Permission
 </button>
@@ -233,7 +265,7 @@ Add / Edit School Profile
 </div>
 
 
-<!-- School Profile Popup -->
+<!-- SCHOOL PROFILE -->
 
 <div id="profileBox">
 
@@ -242,13 +274,13 @@ Add / Edit School Profile
 <h3>School Profile</h3>
 
 <input id="pname" placeholder="School Name">
-
 <input id="paddress" placeholder="Address">
+<input id="pschoolid" placeholder="School ID">
+<input id="pdise" placeholder="DISE Code">
 
 <input type="file" id="plogo">
 
 <button onclick="saveProfile()">Save</button>
-
 <button onclick="closeProfile()">Close</button>
 
 </div>
@@ -259,7 +291,21 @@ Add / Edit School Profile
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,setDoc,getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import { 
+getFirestore,
+collection,
+getDocs,
+doc,
+setDoc,
+getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+getAuth,
+signInWithEmailAndPassword,
+onAuthStateChanged
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -272,15 +318,77 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
+const auth=getAuth(app);
 
 
-/* COUNT DATA */
+/* LOGIN */
 
-async function countData(collectionName,id){
+window.login=async function(){
 
-const snap = await getDocs(collection(db,collectionName));
+const email=document.getElementById("email").value;
+const pass=document.getElementById("password").value;
 
-document.getElementById(id).innerText = snap.size;
+try{
+
+await signInWithEmailAndPassword(auth,email,pass);
+
+}catch(e){
+
+alert(e.message)
+
+}
+
+}
+
+
+/* ROLE CHECK */
+
+onAuthStateChanged(auth,async user=>{
+
+if(!user)return;
+
+document.getElementById("loginBox").style.display="none";
+
+const admin=await getDoc(doc(db,"admins",user.uid));
+
+if(admin.exists()){
+
+console.log("Admin Login")
+
+}else{
+
+const teacher=await getDoc(doc(db,"teachers",user.uid));
+
+if(teacher.exists()){
+
+const data=teacher.data();
+
+const allowed=data.pages||[];
+
+document.querySelectorAll("#buttonsArea button").forEach(btn=>{
+
+if(!allowed.includes(btn.innerText)){
+
+btn.style.display="none";
+
+}
+
+});
+
+}
+
+}
+
+});
+
+
+/* COUNT */
+
+async function countData(c,id){
+
+const snap=await getDocs(collection(db,c));
+
+document.getElementById(id).innerText=snap.size;
 
 }
 
@@ -291,23 +399,19 @@ countData("admissions","admissions");
 countData("results","results");
 
 
-/* SCHOOL PROFILE */
+/* PROFILE */
 
 async function loadProfile(){
 
-const ref=doc(db,"school","profile");
-
-const snap=await getDoc(ref);
+const snap=await getDoc(doc(db,"school","profile"));
 
 if(snap.exists()){
 
 const d=snap.data();
 
-document.getElementById("schoolName").innerText=d.name;
-
-document.getElementById("schoolAddress").innerText=d.address;
-
-document.getElementById("schoolLogo").src=d.logo;
+schoolName.innerText=d.name;
+schoolAddress.innerText=d.address;
+schoolLogo.src=d.logo;
 
 }
 
@@ -316,20 +420,16 @@ document.getElementById("schoolLogo").src=d.logo;
 loadProfile();
 
 
-window.openProfile=function(){
-
-document.getElementById("profileBox").style.display="flex";
-
+window.openProfile=()=>{
+profileBox.style.display="flex"
 }
 
-window.closeProfile=function(){
-
-document.getElementById("profileBox").style.display="none";
-
+window.closeProfile=()=>{
+profileBox.style.display="none"
 }
 
 
-/* IMAGE UPLOAD IMGBB */
+/* IMGBB */
 
 async function uploadImg(file){
 
@@ -353,29 +453,23 @@ return data.data.url;
 
 /* SAVE PROFILE */
 
-window.saveProfile=async function(){
-
-const name=document.getElementById("pname").value;
-
-const address=document.getElementById("paddress").value;
-
-const file=document.getElementById("plogo").files[0];
+window.saveProfile=async()=>{
 
 let logo="";
 
-if(file){
+const file=plogo.files[0];
 
-logo=await uploadImg(file);
-
-}
+if(file) logo=await uploadImg(file);
 
 await setDoc(doc(db,"school","profile"),{
 
-name,
-address,
+name:pname.value,
+address:paddress.value,
+schoolId:pschoolid.value,
+dise:pdise.value,
 logo
 
-});
+},{merge:true});
 
 alert("Profile Saved");
 
@@ -388,4 +482,4 @@ loadProfile();
 </script>
 
 </body>
-</html>
+  </html>
