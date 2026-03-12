@@ -1,12 +1,15 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+
 <title>School ERP</title>
 
 <style>
+
+*{box-sizing:border-box}
 
 body{
 font-family:Arial;
@@ -14,39 +17,56 @@ margin:0;
 background:#f2f2f2;
 }
 
+/* HEADER */
+
 header{
 background:#004aad;
 color:white;
-padding:15px;
+padding:10px;
 display:flex;
 align-items:center;
-gap:15px;
+gap:10px;
+flex-wrap:wrap;
 }
 
 header img{
-width:60px;
-height:60px;
+width:50px;
+height:50px;
 object-fit:cover;
 border-radius:6px;
+background:white;
 }
+
+.schoolText{
+font-size:18px;
+}
+
+/* CONTAINER */
 
 .container{
 max-width:1100px;
 margin:auto;
-padding:20px;
+padding:15px;
 }
+
+/* CARD */
 
 .card{
 background:white;
 padding:20px;
 border-radius:10px;
 margin-bottom:20px;
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 
+/* FORM */
+
 input,textarea,button{
+width:100%;
 padding:10px;
-margin:5px;
-width:250px;
+margin-top:8px;
+border-radius:6px;
+border:1px solid #ccc;
 }
 
 button{
@@ -56,26 +76,51 @@ border:none;
 cursor:pointer;
 }
 
+/* GRID */
+
+.row{
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:10px;
+}
+
 .permissions{
-display:flex;
-flex-wrap:wrap;
-}
-
-.permissions label{
-width:200px;
-}
-
-#adminPanel,#teacherPanel{
-display:none;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:5px;
 }
 
 .menu a{
 display:block;
-padding:10px;
+padding:12px;
 background:#eee;
-margin-bottom:5px;
+margin-bottom:6px;
 text-decoration:none;
 color:black;
+border-radius:6px;
+}
+
+/* MOBILE */
+
+@media(max-width:700px){
+
+.row{
+grid-template-columns:1fr;
+}
+
+.permissions{
+grid-template-columns:1fr;
+}
+
+header{
+flex-direction:column;
+align-items:flex-start;
+}
+
+}
+
+#adminPanel,#teacherPanel{
+display:none;
 }
 
 </style>
@@ -88,7 +133,7 @@ color:black;
 
 <img id="schoolLogo">
 
-<div>
+<div class="schoolText">
 
 <div id="schoolName">School ERP</div>
 <div id="schoolAddress"></div>
@@ -105,14 +150,13 @@ color:black;
 
 <h3>Login</h3>
 
-<input id="email" placeholder="Email"><br>
+<input id="emailInput" placeholder="Email">
 
-<input id="password" type="password" placeholder="Password"><br>
+<input id="passwordInput" type="password" placeholder="Password">
 
 <button onclick="login()">Login</button>
 
 </div>
-
 
 <!-- ADMIN PANEL -->
 
@@ -122,50 +166,45 @@ color:black;
 
 <h3>School Profile</h3>
 
-<input id="schoolNameInput" placeholder="School Name"><br>
+<div class="row">
 
-<textarea id="schoolAddressInput" placeholder="School Address"></textarea><br>
+<input id="schoolNameInput" placeholder="School Name">
 
-<input id="schoolIdInput" placeholder="School ID"><br>
+<input id="schoolIdInput" placeholder="School ID">
 
-<input type="file" id="logoFile"><br>
+</div>
+
+<textarea id="schoolAddressInput" placeholder="School Address"></textarea>
+
+<input type="file" id="logoFile">
 
 <button onclick="uploadLogo()">Upload Logo</button>
-
-<br>
 
 <button onclick="saveSchool()">Save Profile</button>
 
 </div>
 
-
 <div class="card">
 
 <h3>Create Teacher</h3>
 
-<input id="tname" placeholder="Teacher Name"><br>
+<input id="tname" placeholder="Teacher Name">
 
-<input id="temail" placeholder="Teacher Email"><br>
+<input id="temail" placeholder="Teacher Email">
 
-<input id="tpass" placeholder="Password"><br>
+<input id="tpass" placeholder="Password">
 
-<h4>Permissions</h4>
+<h4>Page Permissions</h4>
 
 <div class="permissions">
 
-<label><input type="checkbox" value="admission.html">Admission</label>
-
-<label><input type="checkbox" value="students.html">Students</label>
-
-<label><input type="checkbox" value="subjects.html">Subjects</label>
-
-<label><input type="checkbox" value="exam.html">Exam</label>
-
-<label><input type="checkbox" value="marks-entry.html">Marks Entry</label>
-
-<label><input type="checkbox" value="result.html">Result</label>
-
-<label><input type="checkbox" value="marksheet.html">Marksheet</label>
+<label><input type="checkbox" value="admission.html"> Admission</label>
+<label><input type="checkbox" value="students.html"> Students</label>
+<label><input type="checkbox" value="subjects.html"> Subjects</label>
+<label><input type="checkbox" value="exam.html"> Exams</label>
+<label><input type="checkbox" value="marks-entry.html"> Marks Entry</label>
+<label><input type="checkbox" value="result.html"> Result</label>
+<label><input type="checkbox" value="marksheet.html"> Marksheet</label>
 
 </div>
 
@@ -175,55 +214,51 @@ color:black;
 
 </div>
 
-
 <!-- TEACHER PANEL -->
 
 <div id="teacherPanel" class="card">
 
 <h3>Teacher Dashboard</h3>
 
-<div class="menu" id="teacherMenu"></div>
+<div id="teacherMenu" class="menu"></div>
 
 </div>
 
 </div>
-
 
 <script type="module">
 
-import { initializeApp }
+import { initializeApp } 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js"
 
-import {
+import { 
 getAuth,
 signInWithEmailAndPassword,
 createUserWithEmailAndPassword
-}
+} 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js"
 
-import {
+import { 
 getFirestore,
 doc,
 setDoc,
 getDoc
-}
+} 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js"
 
 
-const firebaseConfig = {
-apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId: "nmpsnagguradiya-b9b94",
-storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId: "811957568318",
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f",
-measurementId: "G-V4J8BP2LCN"
-};
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94",
+storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId:"811957568318",
+appId:"1:811957568318:web:7058de9ba52df9d6bae26f",
+measurementId:"G-V4J8BP2LCN"
+}
 
 const app=initializeApp(firebaseConfig)
-
 const auth=getAuth(app)
-
 const db=getFirestore(app)
 
 const imgbbKey="21000d5a5d14fcef4b6af4d13647da5a8"
@@ -240,9 +275,7 @@ if(snap.exists()){
 const d=snap.data()
 
 schoolName.innerText=d.schoolName
-
 schoolAddress.innerText=d.schoolAddress
-
 schoolLogo.src=d.logo
 
 }
@@ -257,40 +290,36 @@ loadSchool()
 window.login=async function(){
 
 const email=emailInput.value
-
-const pass=password.value
+const pass=passwordInput.value
 
 try{
 
 const user=await signInWithEmailAndPassword(auth,email,pass)
 
-const adminDoc=await getDoc(doc(db,"admins",user.user.uid))
+const admin=await getDoc(doc(db,"admins",user.user.uid))
 
-if(adminDoc.exists()){
+if(admin.exists()){
 
 loginBox.style.display="none"
-
 adminPanel.style.display="block"
-
 return
 
 }
 
-const teacherDoc=await getDoc(doc(db,"teachers",user.user.uid))
+const teacher=await getDoc(doc(db,"teachers",user.user.uid))
 
-if(teacherDoc.exists()){
+if(teacher.exists()){
 
 loginBox.style.display="none"
-
 teacherPanel.style.display="block"
 
-loadTeacherMenu(teacherDoc.data().pages)
+const pages=teacher.data().pages
 
-return
+pages.forEach(p=>{
+teacherMenu.innerHTML+=`<a href="${p}">${p}</a>`
+})
 
 }
-
-alert("No role assigned")
 
 }catch(e){
 
@@ -301,14 +330,13 @@ alert(e.message)
 }
 
 
-/* IMG UPLOAD */
+/* LOGO UPLOAD */
 
 window.uploadLogo=async function(){
 
-const file=document.getElementById("logoFile").files[0]
+const file=logoFile.files[0]
 
 const fd=new FormData()
-
 fd.append("image",file)
 
 const res=await fetch(
@@ -336,9 +364,9 @@ logo:schoolLogo.src
 
 })
 
-loadSchool()
+alert("School Profile Saved")
 
-alert("Saved")
+loadSchool()
 
 }
 
@@ -348,9 +376,7 @@ alert("Saved")
 window.createTeacher=async function(){
 
 const name=tname.value
-
 const email=temail.value
-
 const pass=tpass.value
 
 const checks=document.querySelectorAll(".permissions input:checked")
@@ -367,27 +393,11 @@ pages:pages
 
 })
 
-alert("Teacher created")
-
-}
-
-
-/* TEACHER MENU */
-
-function loadTeacherMenu(pages){
-
-const menu=document.getElementById("teacherMenu")
-
-pages.forEach(p=>{
-
-menu.innerHTML+=`<a href="${p}">${p}</a>`
-
-})
+alert("Teacher Created")
 
 }
 
 </script>
 
 </body>
-
   </html>
