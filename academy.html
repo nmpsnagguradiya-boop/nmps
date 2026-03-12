@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Exam Management</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:16px;
+text-align:center;
+font-size:22px;
+}
+
+/* container */
+
+.container{
+padding:20px;
+}
+
+/* buttons */
+
+.menu{
+display:flex;
+gap:20px;
+flex-wrap:wrap;
+}
+
+.card{
+flex:1;
+min-width:220px;
+background:white;
+padding:25px;
+border-radius:12px;
+display:flex;
+align-items:center;
+gap:15px;
+font-size:20px;
+font-weight:bold;
+cursor:pointer;
+box-shadow:0 0 10px rgba(0,0,0,0.15);
+transition:0.3s;
+}
+
+.card:hover{
+transform:scale(1.05);
+}
+
+/* icons */
+
+.icon{
+font-size:32px;
+}
+
+/* colors */
+
+.exam{
+border-left:6px solid #28a745;
+}
+
+.mark{
+border-left:6px solid #ff9800;
+}
+
+/* mobile */
+
+@media(max-width:700px){
+
+.menu{
+flex-direction:column;
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>Exam Management</header>
+
+<div class="container">
+
+<div class="menu">
+
+<div class="card exam"
+onclick="window.location.href='exam.html'">
+
+<span class="icon">📚</span>
+
+Exam Setup
+
+</div>
+
+<div class="card mark"
+onclick="window.location.href='mark.html'">
+
+<span class="icon">📝</span>
+
+Marks Entry
+
+</div>
+
+</div>
+
+</div>
+
+<script>
+
+/* MULTI SCHOOL SUPPORT */
+
+const schoolId = localStorage.getItem("schoolId") || "school_001";
+
+</script>
+
+</body>
+</html>
