@@ -36,7 +36,6 @@ img.preview{width:100px;height:100px;object-fit:cover;margin-top:5px;border-radi
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase Config
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
@@ -49,19 +48,22 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Current admin schoolId (replace with login logic)
-const currentSchoolId = localStorage.getItem("schoolId") || "school_001";
-
 const slogo = document.getElementById("slogo");
 const logoPreview = document.getElementById("logoPreview");
+
+// Current admin schoolId (replace with login)
+const currentSchoolId = localStorage.getItem("schoolId") || "school_001";
 
 // Show preview
 slogo.addEventListener("change", ()=>{
     const file = slogo.files[0];
-    if(file){ logoPreview.src = URL.createObjectURL(file); logoPreview.style.display="block"; }
+    if(file){ 
+        logoPreview.src = URL.createObjectURL(file); 
+        logoPreview.style.display="block"; 
+    }
 });
 
-// Imgbb Upload Function
+// Imgbb Upload
 async function uploadImg(file){
     const key = "21000d5a5d14fcef4b6af4d13647da5a8";
     const fd = new FormData();
@@ -78,7 +80,8 @@ async function uploadImg(file){
 
 // Load existing profile
 async function loadProfile(){
-    const snap = await getDoc(doc(db,"schools",currentSchoolId));
+    const schoolRef = doc(db,"schools",currentSchoolId);
+    const snap = await getDoc(schoolRef);
     if(snap.exists()){
         const d = snap.data();
         document.getElementById("sname").value = d.name || "";
@@ -94,7 +97,7 @@ async function loadProfile(){
 
 loadProfile();
 
-// Save / Update Profile
+// Save / Update
 document.getElementById("saveBtn").addEventListener("click", async ()=>{
     const name = document.getElementById("sname").value.trim();
     const email = document.getElementById("semail").value.trim();
@@ -105,24 +108,33 @@ document.getElementById("saveBtn").addEventListener("click", async ()=>{
     const session = document.getElementById("ssession").value.trim();
     const logoFile = slogo.files[0];
 
-    if(!name||!email||!password||!address||!dise){ alert("Please fill all required fields"); return; }
+    if(!name||!email||!password||!address||!dise){ 
+        alert("Please fill all required fields"); 
+        return; 
+    }
 
     let logoUrl = "";
     if(logoFile) logoUrl = await uploadImg(logoFile);
 
-    await setDoc(doc(db,"schools",currentSchoolId),{
-        name,
-        adminEmail: email,
-        adminPassword: password,
-        address,
-        dise,
-        recognition: recognition || "",
-        session: session || "",
-        logo: logoUrl || undefined
-    },{merge:true});
+    try{
+        await setDoc(doc(db,"schools",currentSchoolId),{
+            name,
+            adminEmail: email,
+            adminPassword: password,
+            address,
+            dise,
+            recognition: recognition || "",
+            session: session || "",
+            logo: logoUrl || undefined
+        },{merge:true});
 
-    alert("Profile saved successfully!");
+        alert("Profile saved successfully!");
+    } catch(e){
+        console.error(e);
+        alert("Error saving profile, check console.");
+    }
 });
 </script>
+
 </body>
-</html>
+    </html>
