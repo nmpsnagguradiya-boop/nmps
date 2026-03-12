@@ -1,1 +1,354 @@
-coming soon 
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Student Admission</title>
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
+
+.container{
+padding:20px;
+}
+
+form{
+background:white;
+padding:20px;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+input,select,textarea{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+button{
+margin-top:15px;
+background:#004aad;
+color:white;
+padding:12px;
+border:none;
+width:100%;
+border-radius:5px;
+font-size:16px;
+cursor:pointer;
+}
+
+.success{
+color:green;
+text-align:center;
+margin-top:10px;
+}
+
+table{
+width:100%;
+margin-top:20px;
+background:white;
+border-collapse:collapse;
+}
+
+table th,table td{
+border:1px solid #ccc;
+padding:8px;
+text-align:center;
+}
+
+.search{
+margin-top:20px;
+padding:10px;
+width:100%;
+border-radius:5px;
+border:1px solid #ccc;
+}
+
+.printbtn{
+background:green;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>Student Admission Form</header>
+
+<div class="container">
+
+<form id="form">
+
+<input type="text" id="name" placeholder="Student Name" required>
+<input type="text" id="father" placeholder="Father Name" required>
+<input type="text" id="mobile" placeholder="Mobile Number" required>
+<input type="text" id="village" placeholder="Village" required>
+<input type="text" id="city" placeholder="Village / City">
+<input type="text" id="post" placeholder="Post">
+<input type="text" id="district" placeholder="District">
+<input type="text" id="state" placeholder="State">
+<input type="text" id="national" placeholder="Nationality">
+<input type="text" id="sssm" placeholder="SSSM ID">
+<input type="text" id="family" placeholder="Family ID">
+<input type="text" id="apar" placeholder="APAR ID">
+<input type="text" id="adhar" placeholder="Aadhar Card">
+<input type="text" id="caste" placeholder="Caste">
+<input type="text" id="category" placeholder="Category">
+<input type="text" id="roll" placeholder="Roll Number">
+<input type="text" id="scholer" placeholder="Scholar Number">
+<input type="date" id="admissionDate">
+
+<select id="class">
+<option>Select Class</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+
+<input type="date" id="dob">
+
+<textarea id="message" placeholder="Message"></textarea>
+
+<label>Student Photo</label>
+<input type="file" id="photo">
+
+<img id="preview" width="80" style="margin-top:10px;">
+
+<label>Document Upload</label>
+<input type="file" id="document">
+
+<button type="submit">Submit Admission</button>
+
+<div class="success" id="msg"></div>
+
+</form>
+
+<input type="text" id="searchStudent" class="search" placeholder="Search Student">
+
+<select id="classFilter">
+<option value="">All Classes</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+
+<button onclick="printStudents()" class="printbtn">Print Student List</button>
+<button onclick="exportExcel()">Export Excel</button>
+<input type="file" id="importExcel">
+
+<button onclick="promoteStudents()">Promote Class</button>
+
+<h3>Class Wise Total Students</h3>
+<div id="classStats"></div>
+
+<h3>Total Students : <span id="total">0</span></h3>
+
+<table>
+
+<thead>
+<tr>
+<th>Name</th>
+<th>Class</th>
+<th>Mobile</th>
+<th>Photo</th>
+<th>Action</th>
+</tr>
+</thead>
+
+<tbody id="studentList"></tbody>
+
+</table>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,addDoc,getDocs,deleteDoc,doc,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f",
+measurementId: "G-V4J8BP2LCN"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+async function uploadImgBB(file){
+
+const formData=new FormData();
+formData.append("image",file);
+
+const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+method:"POST",
+body:formData
+});
+
+const data=await res.json();
+return data.data.url;
+
+}
+
+document.getElementById("photo").addEventListener("change",function(){
+
+const file=this.files[0];
+
+if(file){
+
+const reader=new FileReader();
+
+reader.onload=function(e){
+document.getElementById("preview").src=e.target.result;
+}
+
+reader.readAsDataURL(file);
+
+}
+
+});
+
+document.getElementById("form").addEventListener("submit",async function(e){
+
+e.preventDefault();
+
+const name=document.getElementById("name").value;
+const father=document.getElementById("father").value;
+const mobile=document.getElementById("mobile").value;
+const village=document.getElementById("village").value;
+const city=document.getElementById("city").value;
+const post=document.getElementById("post").value;
+const district=document.getElementById("district").value;
+const state=document.getElementById("state").value;
+const national=document.getElementById("national").value;
+const sssm=document.getElementById("sssm").value;
+const family=document.getElementById("family").value;
+const apar=document.getElementById("apar").value;
+const adhar=document.getElementById("adhar").value;
+const caste=document.getElementById("caste").value;
+const category=document.getElementById("category").value;
+const roll=document.getElementById("roll").value;
+const scholer=document.getElementById("scholer").value;
+const admissionDate=document.getElementById("admissionDate").value;
+const className=document.getElementById("class").value;
+const dob=document.getElementById("dob").value;
+const message=document.getElementById("message").value;
+
+const photo=document.getElementById("photo").files[0];
+const documentFile=document.getElementById("document").files[0];
+
+let photoURL="";
+let docURL="";
+
+if(photo){
+photoURL=await uploadImgBB(photo);
+}
+
+if(documentFile){
+docURL=await uploadImgBB(documentFile);
+}
+
+await addDoc(collection(db,"admissions"),{
+name,father,mobile,village,city,post,district,state,national,sssm,family,apar,adhar,caste,category,roll,scholer,admissionDate,class:className,dob,message,photo:photoURL,document:docURL,date:new Date()
+});
+
+document.getElementById("msg").innerText="Admission Submitted Successfully";
+document.getElementById("form").reset();
+
+loadStudents();
+
+});
+
+async function loadStudents(){
+
+const querySnapshot=await getDocs(collection(db,"admissions"));
+
+let html="";
+let count=0;
+let classCount={};
+
+querySnapshot.forEach((docSnap)=>{
+
+const data=docSnap.data();
+count++;
+
+if(!classCount[data.class]){
+classCount[data.class]=0;
+}
+
+classCount[data.class]++;
+
+html+=`
+<tr onclick="viewStudent('${docSnap.id}')">
+<td>${data.name}</td>
+<td>${data.class}</td>
+<td>${data.mobile}</td>
+<td><img src="${data.photo}" width="50"></td>
+<td>
+<button onclick="event.stopPropagation();editStudent('${docSnap.id}')">Edit</button>
+<button onclick="event.stopPropagation();deleteStudent('${docSnap.id}')">Delete</button>
+</td>
+</tr>
+`;
+
+});
+
+document.getElementById("studentList").innerHTML=html;
+document.getElementById("total").innerText=count;
+
+let statsHTML="";
+
+for(let c in classCount){
+statsHTML+=`Class ${c} : ${classCount[c]} Students <br>`;
+}
+
+document.getElementById("classStats").innerHTML=statsHTML;
+
+}
+
+loadStudents();
+
+</script>
+
+</body>
+  </html>
