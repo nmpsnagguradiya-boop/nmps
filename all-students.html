@@ -25,6 +25,16 @@ font-size:22px;
 padding:20px;
 }
 
+.topbtn{
+background:#28a745;
+color:white;
+padding:10px 15px;
+border:none;
+border-radius:5px;
+cursor:pointer;
+margin-bottom:10px;
+}
+
 .search,select{
 width:100%;
 padding:10px;
@@ -65,6 +75,7 @@ margin:2px;
 .view{background:#004aad;color:white;}
 .photo{background:#28a745;color:white;}
 .print{background:#17a2b8;color:white;}
+.promote{background:#6f42c1;color:white;}
 
 .stats{
 margin-top:20px;
@@ -83,6 +94,8 @@ border-radius:6px;
 
 <div class="container">
 
+<button class="topbtn" onclick="addStudent()">+ Add New Student</button>
+
 <input type="text" id="search" class="search" placeholder="Search Student">
 
 <select id="classFilter">
@@ -100,6 +113,8 @@ border-radius:6px;
 <option>8</option>
 <option>9</option>
 <option>10</option>
+<option>11</option>
+<option>12</option>
 </select>
 
 <div class="stats">
@@ -142,6 +157,8 @@ appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
+const schoolId = localStorage.getItem("schoolId") || "school_001";
+
 let students=[];
 
 async function loadStudents(){
@@ -157,6 +174,9 @@ students=[];
 querySnapshot.forEach((docSnap)=>{
 
 const data=docSnap.data();
+
+if(data.schoolId !== schoolId) return;
+
 data.id=docSnap.id;
 
 students.push(data);
@@ -186,6 +206,8 @@ html+=`
 
 <button class="photo" onclick="uploadPhoto('${data.id}')">Photo</button>
 
+<button class="promote" onclick="promoteStudent('${data.id}')">Promote</button>
+
 <button class="delete" onclick="deleteStudent('${data.id}')">Delete</button>
 
 <button class="print" onclick="openPrintForm('${data.id}')">Print Form</button>
@@ -211,10 +233,31 @@ document.getElementById("classStats").innerHTML=statsHTML;
 
 }
 
+window.addStudent=function(){
+window.location.href="admission.html";
+}
+
+window.promoteStudent=async function(id){
+
+let s=students.find(x=>x.id==id);
+
+let nextClass=parseInt(s.class)+1;
+
+if(nextClass>12){
+alert("Already in highest class");
+return;
+}
+
+await updateDoc(doc(db,"admissions",id),{
+class:String(nextClass)
+});
+
+loadStudents();
+
+}
+
 window.openPrintForm=function(id){
-
 window.location.href="print-form.html?id="+id;
-
 }
 
 window.deleteStudent=async function(id){
@@ -226,167 +269,9 @@ loadStudents();
 
 }
 
-window.editStudent=async function(id){
-
-let s=students.find(x=>x.id==id);
-
-let name=prompt("Name",s.name);
-let father=prompt("Father",s.father);
-let mobile=prompt("Mobile",s.mobile);
-let village=prompt("Village",s.village);
-let city=prompt("City",s.city);
-let post=prompt("Post",s.post);
-let district=prompt("District",s.district);
-let state=prompt("State",s.state);
-let adhar=prompt("Aadhar",s.adhar);
-let apar=prompt("APAR",s.apar);
-let sssm=prompt("SSSM",s.sssm);
-let family=prompt("Family ID",s.family);
-let roll=prompt("Roll",s.roll);
-let scholer=prompt("Scholar",s.scholer);
-let caste=prompt("Caste",s.caste);
-let category=prompt("Category",s.category);
-let dob=prompt("DOB",s.dob);
-let admissionDate=prompt("Admission Date",s.admissionDate);
-
-await updateDoc(doc(db,"admissions",id),{
-
-name,father,mobile,village,city,post,district,state,
-adhar,apar,sssm,family,roll,scholer,caste,category,dob,admissionDate
-
-});
-
-loadStudents();
-
-}
-
-window.uploadPhoto=async function(id){
-
-let input=document.createElement("input");
-input.type="file";
-
-input.onchange=async function(){
-
-let file=input.files[0];
-
-let formData=new FormData();
-formData.append("image",file);
-
-let res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
-method:"POST",
-body:formData
-});
-
-let data=await res.json();
-
-await updateDoc(doc(db,"admissions",id),{
-photo:data.data.url
-});
-
-loadStudents();
-
-};
-
-input.click();
-
-}
-
-window.viewStudent=function(id){
-
-let s=students.find(x=>x.id==id);
-
-let win=window.open("");
-
-win.document.write(`
-
-<style>
-
-body{font-family:Arial;padding:20px;}
-
-.form{
-padding:20px;
-}
-
-@media print{
-
-body{background:#ffeb3b;}
-
-.form{
-background:#004aad;
-color:white;
-padding:25px;
-border-radius:10px;
-}
-
-}
-
-</style>
-
-<div class="form">
-
-<h2>Student Admission Form</h2>
-
-<p>Name : ${s.name}</p>
-<p>Father : ${s.father}</p>
-<p>Mobile : ${s.mobile}</p>
-<p>Village : ${s.village}</p>
-<p>City : ${s.city}</p>
-<p>Post : ${s.post}</p>
-<p>District : ${s.district}</p>
-<p>State : ${s.state}</p>
-<p>Aadhar : ${s.adhar}</p>
-<p>APAR : ${s.apar}</p>
-<p>SSSM : ${s.sssm}</p>
-<p>Family ID : ${s.family}</p>
-<p>Roll : ${s.roll}</p>
-<p>Scholar : ${s.scholer}</p>
-<p>Caste : ${s.caste}</p>
-<p>Category : ${s.category}</p>
-<p>DOB : ${s.dob}</p>
-<p>Admission Date : ${s.admissionDate}</p>
-<p>Class : ${s.class}</p>
-
-<img src="${s.photo}" width="120">
-
-<br><br>
-
-<button onclick="window.print()">Print</button>
-
-</div>
-
-`);
-
-}
-
-document.getElementById("search").addEventListener("keyup",function(){
-
-let filter=this.value.toLowerCase();
-
-let rows=document.querySelectorAll("#studentList tr");
-
-rows.forEach(row=>{
-let name=row.children[0].innerText.toLowerCase();
-row.style.display=name.includes(filter)?"":"none";
-});
-
-});
-
-document.getElementById("classFilter").addEventListener("change",function(){
-
-let filter=this.value;
-
-let rows=document.querySelectorAll("#studentList tr");
-
-rows.forEach(row=>{
-let cls=row.children[1].innerText;
-row.style.display=(filter==""||cls==filter)?"":"none";
-});
-
-});
-
 loadStudents();
 
 </script>
 
 </body>
-</html>
+  </html>
