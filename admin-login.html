@@ -6,10 +6,13 @@
 <title>Ultimate School ERP</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<!-- Font Awesome for icons -->
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+
 <style>
 body{font-family:Arial;margin:0;background:#f2f2f2;}
 /* LOGIN */
-#loginBox{position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;}
+#loginBox{position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;z-index:10;}
 .loginCard{background:white;padding:30px;box-shadow:0 0 10px rgba(0,0,0,0.3);border-radius:10px;width:90%;max-width:350px;}
 input{width:100%;padding:10px;margin:8px 0;}
 button{padding:12px;border:none;background:#004aad;color:white;font-size:16px;border-radius:8px;cursor:pointer;}
@@ -19,15 +22,13 @@ header{background:#004aad;color:white;padding:10px;display:flex;align-items:cent
 #schoolLogo{width:60px;height:60px;border-radius:50%;object-fit:cover;background:white;}
 #schoolName{font-size:22px;font-weight:bold;}
 #schoolAddress{font-size:14px;}
-#logoutBtn{background:#f44336;padding:8px 12px;}
+#logoutBtn{background:#f44336;padding:8px 12px;cursor:pointer;}
 .container{padding:15px;}
 .grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;}
 .card{background:white;padding:20px;border-radius:10px;text-align:center;box-shadow:0 0 10px rgba(0,0,0,0.2);}
 .count{font-size:28px;font-weight:bold;color:#004aad;}
 .buttons{margin-top:30px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;}
-/* PROFILE POPUP */
-#profileBox{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:none;align-items:center;justify-content:center;}
-.profileForm{background:white;padding:20px;border-radius:10px;width:90%;max-width:400px;}
+.buttons button{display:flex;align-items:center;gap:10px;justify-content:center;}
 </style>
 </head>
 
@@ -39,7 +40,7 @@ header{background:#004aad;color:white;padding:10px;display:flex;align-items:cent
 <h3>Admin / Teacher Login</h3>
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
-<button onclick="login()">Login</button>
+<button onclick="login()"><i class="fas fa-right-to-bracket"></i> Login</button>
 </div>
 </div>
 
@@ -52,7 +53,7 @@ header{background:#004aad;color:white;padding:10px;display:flex;align-items:cent
 <div id="schoolAddress">School Address</div>
 </div>
 </div>
-<button id="logoutBtn" onclick="logout()">Logout</button>
+<button id="logoutBtn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
 </header>
 
 <div class="container">
@@ -66,38 +67,24 @@ header{background:#004aad;color:white;padding:10px;display:flex;align-items:cent
 </div>
 
 <div class="buttons" id="buttonsArea">
-<button onclick="location.href='admin_admissions.html'">Admission Management</button>
-<button onclick="location.href='academy.html'">Exam Management</button>
-<button onclick="location.href='admin_results.html'">Result Management</button>
-<button onclick="location.href='admin-fees.html'">Fees Management</button>
-<button onclick="location.href='admin_complaints.html'">Complaint Management</button>
-<button onclick="location.href='admin_study.html'">Study Material</button>
-<button onclick="location.href='admin.html'">Notice & Gallery</button>
-<button onclick="location.href='all-students.html'">All Students</button>
-<button onclick="location.href='print.html'">All Print</button>
-<button onclick="location.href='admin-teacher.html'">Create Teacher / Permission</button>
-<button onclick="openProfile()">Add / Edit School Profile</button>
-</div>
-</div>
-
-<!-- SCHOOL PROFILE -->
-<div id="profileBox">
-<div class="profileForm">
-<h3>School Profile</h3>
-<input id="pname" placeholder="School Name">
-<input id="paddress" placeholder="Address">
-<input id="pschoolid" placeholder="School ID">
-<input id="pdise" placeholder="DISE Code">
-<input type="file" id="plogo">
-<button onclick="saveProfile()">Save</button>
-<button onclick="closeProfile()">Close</button>
+<button onclick="location.href='admin_admissions.html'"><i class="fas fa-user-graduate"></i> Admission Management</button>
+<button onclick="location.href='academy.html'"><i class="fas fa-book"></i> Exam Management</button>
+<button onclick="location.href='admin_results.html'"><i class="fas fa-chart-line"></i> Result Management</button>
+<button onclick="location.href='admin-fees.html'"><i class="fas fa-money-bill"></i> Fees Management</button>
+<button onclick="location.href='admin_complaints.html'"><i class="fas fa-comment-dots"></i> Complaint Management</button>
+<button onclick="location.href='admin_study.html'"><i class="fas fa-folder-open"></i> Study Material</button>
+<button onclick="location.href='admin.html'"><i class="fas fa-bullhorn"></i> Notice & Gallery</button>
+<button onclick="location.href='all-students.html'"><i class="fas fa-users"></i> All Students</button>
+<button onclick="location.href='print.html'"><i class="fas fa-print"></i> All Print</button>
+<button onclick="location.href='admin-teacher.html'"><i class="fas fa-chalkboard-teacher"></i> Create Teacher / Permission</button>
+<button onclick="location.href='school-profile.html'"><i class="fas fa-school"></i> Add / Edit School Profile</button>
 </div>
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
 const firebaseConfig = {
@@ -113,103 +100,66 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-/* LOGIN */
+// LOGIN
 window.login = async function() {
-    const email = document.getElementById("email").value;
-    const pass = document.getElementById("password").value;
-    try {
-        await signInWithEmailAndPassword(auth, email, pass);
-    } catch(e) {
-        alert("Login Failed: " + e.message);
+    const email = document.getElementById("email").value.trim();
+    const pass = document.getElementById("password").value.trim();
+    if(!email || !pass){ alert("Enter Email & Password"); return; }
+
+    try{
+        // Check in admins collection (Firebase Authentication required)
+        await signInWithEmailAndPassword(auth,email,pass);
+    }catch(e){
+        // If failed, check in Firestore teachers collection
+        const teachersSnap = await getDocs(collection(db,"teachers"));
+        let found=false;
+        teachersSnap.forEach(docSnap=>{
+            const data=docSnap.data();
+            if(data.email===email && data.password===pass){
+                found=true;
+                const allowed=data.pages || [];
+                document.querySelectorAll("#buttonsArea button").forEach(btn=>{
+                    if(!allowed.includes(btn.innerText)){
+                        btn.style.display="none";
+                    }
+                });
+            }
+        });
+        if(!found){ alert("Invalid Login"); return; }
     }
-}
-
-/* LOGOUT */
-window.logout = async function() {
-    await signOut(auth);
-    location.reload();
-}
-
-/* ROLE CHECK + DASHBOARD LOAD */
-onAuthStateChanged(auth, async user => {
-    if (!user) return;
-
     document.getElementById("loginBox").style.display="none";
-
-    // Check admin
-    const adminRef = doc(db,"admins",user.uid);
-    const adminSnap = await getDoc(adminRef);
-
-    if(adminSnap.exists()){
-        console.log("Admin logged in");
-    } else {
-        // Teacher login
-        const teacherRef = doc(db,"teachers",user.uid);
-        const teacherSnap = await getDoc(teacherRef);
-        if(teacherSnap.exists()){
-            const data = teacherSnap.data();
-            const allowed = data.pages || [];
-            document.querySelectorAll("#buttonsArea button").forEach(btn=>{
-                if(!allowed.includes(btn.innerText)){
-                    btn.style.display="none";
-                }
-            });
-        }
-    }
-
-    // Load counts
-    async function countData(c,id){
-        const snap = await getDocs(collection(db,c));
-        document.getElementById(id).innerText = snap.size;
-    }
-    countData("students","students");
-    countData("teachers","teachers");
-    countData("complaints","complaints");
-    countData("admissions","admissions");
-    countData("results","results");
-
-    // Load school profile
-    const profileSnap = await getDoc(doc(db,"school","profile"));
-    if(profileSnap.exists()){
-        const d = profileSnap.data();
-        document.getElementById("schoolName").innerText = d.name;
-        document.getElementById("schoolAddress").innerText = d.address;
-        document.getElementById("schoolLogo").src = d.logo;
-    }
-});
-
-/* PROFILE POPUP */
-window.openProfile = ()=> profileBox.style.display="flex";
-window.closeProfile = ()=> profileBox.style.display="none";
-
-/* IMGBB UPLOAD */
-async function uploadImg(file){
-    const key = "21000d5a5d14fcef4b6af4d13647da5a8";
-    const fd = new FormData();
-    fd.append("image",file);
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:fd});
-    const data = await res.json();
-    return data.data.url;
+    loadDashboardCounts();
+    loadSchoolProfile();
 }
 
-/* SAVE PROFILE */
-window.saveProfile = async ()=>{
-    let logo = "";
-    const file = document.getElementById("plogo").files[0];
-    if(file) logo = await uploadImg(file);
-    await setDoc(doc(db,"school","profile"),{
-        name: document.getElementById("pname").value,
-        address: document.getElementById("paddress").value,
-        schoolId: document.getElementById("pschoolid").value,
-        dise: document.getElementById("pdise").value,
-        logo
-    },{merge:true});
-    alert("Profile Saved");
-    closeProfile();
+// LOGOUT
+window.logout = async function(){
+    await signOut(auth).catch(()=>{});
     location.reload();
+}
+
+// Load counts
+async function loadDashboardCounts(){
+    const collections = ["students","teachers","complaints","admissions","results"];
+    for(let c of collections){
+        const snap = await getDocs(collection(db,c));
+        document.getElementById(c).innerText = snap.size;
+    }
+}
+
+// Load school profile
+async function loadSchoolProfile(){
+    const snap = await getDocs(collection(db,"school"));
+    snap.forEach(d=>{
+        if(d.id==="profile"){
+            const data=d.data();
+            document.getElementById("schoolName").innerText = data.name;
+            document.getElementById("schoolAddress").innerText = data.address;
+            document.getElementById("schoolLogo").src = data.logo || "";
+        }
+    });
 }
 
 </script>
-
 </body>
-  </html>
+</html>
