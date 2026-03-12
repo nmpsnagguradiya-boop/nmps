@@ -63,15 +63,16 @@ slogo.addEventListener("change", ()=>{
     }
 });
 
-// Imgbb Upload
+// Imgbb Upload (fail-safe)
 async function uploadImg(file){
+    if(!file) return "";
     const key = "21000d5a5d14fcef4b6af4d13647da5a8";
     const fd = new FormData();
     fd.append("image", file);
     try {
         const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {method:"POST", body:fd});
         const data = await res.json();
-        return data.data.url;
+        return data?.data?.url || "";
     } catch(err){
         console.error("Image upload failed:", err);
         return "";
@@ -80,18 +81,22 @@ async function uploadImg(file){
 
 // Load existing profile
 async function loadProfile(){
-    const schoolRef = doc(db,"schools",currentSchoolId);
-    const snap = await getDoc(schoolRef);
-    if(snap.exists()){
-        const d = snap.data();
-        document.getElementById("sname").value = d.name || "";
-        document.getElementById("semail").value = d.adminEmail || "";
-        document.getElementById("spass").value = d.adminPassword || "";
-        document.getElementById("saddress").value = d.address || "";
-        document.getElementById("sdise").value = d.dise || "";
-        document.getElementById("srecognition").value = d.recognition || "";
-        document.getElementById("ssession").value = d.session || "";
-        if(d.logo){ logoPreview.src = d.logo; logoPreview.style.display="block"; }
+    try {
+        const schoolRef = doc(db,"schools",currentSchoolId);
+        const snap = await getDoc(schoolRef);
+        if(snap.exists()){
+            const d = snap.data();
+            document.getElementById("sname").value = d.name || "";
+            document.getElementById("semail").value = d.adminEmail || "";
+            document.getElementById("spass").value = d.adminPassword || "";
+            document.getElementById("saddress").value = d.address || "";
+            document.getElementById("sdise").value = d.dise || "";
+            document.getElementById("srecognition").value = d.recognition || "";
+            document.getElementById("ssession").value = d.session || "";
+            if(d.logo){ logoPreview.src = d.logo; logoPreview.style.display="block"; }
+        }
+    } catch(e) {
+        console.error("Error loading profile:", e);
     }
 }
 
@@ -113,10 +118,13 @@ document.getElementById("saveBtn").addEventListener("click", async ()=>{
         return; 
     }
 
-    let logoUrl = "";
-    if(logoFile) logoUrl = await uploadImg(logoFile);
-
     try{
+        let logoUrl = "";
+        if(logoFile){ 
+            logoUrl = await uploadImg(logoFile);
+            if(!logoUrl) console.warn("Logo upload failed, saving without logo");
+        }
+
         await setDoc(doc(db,"schools",currentSchoolId),{
             name,
             adminEmail: email,
@@ -125,16 +133,16 @@ document.getElementById("saveBtn").addEventListener("click", async ()=>{
             dise,
             recognition: recognition || "",
             session: session || "",
-            logo: logoUrl || undefined
+            ...(logoUrl ? {logo: logoUrl} : {})
         },{merge:true});
 
         alert("Profile saved successfully!");
     } catch(e){
-        console.error(e);
-        alert("Error saving profile, check console.");
+        console.error("Error saving profile:", e);
+        alert("Error saving profile, please check console");
     }
 });
 </script>
 
 </body>
-    </html>
+</html>
