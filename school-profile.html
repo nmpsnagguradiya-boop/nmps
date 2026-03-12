@@ -7,7 +7,7 @@
 <style>
 body{font-family:Arial;margin:0;background:#f2f2f2;}
 .container{max-width:600px;margin:30px auto;padding:20px;background:white;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
-input,button,select{width:100%;padding:10px;margin:8px 0;}
+input,button{width:100%;padding:10px;margin:8px 0;}
 button{border:none;background:#004aad;color:white;font-size:16px;border-radius:8px;cursor:pointer;}
 button:hover{background:#003080;}
 img.preview{width:100px;height:100px;object-fit:cover;margin-top:5px;border-radius:10px;display:none;}
@@ -29,7 +29,7 @@ img.preview{width:100px;height:100px;object-fit:cover;margin-top:5px;border-radi
 <img id="logoPreview" class="preview">
 <label>Current Session / Academic Year</label>
 <input id="ssession" placeholder="Ex: 2026-2027">
-<button onclick="saveSchoolProfile()">Save Profile</button>
+<button id="saveBtn">Save Profile</button>
 </div>
 
 <script type="module">
@@ -49,30 +49,35 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// Current Admin's School ID (replace with login logic)
+// Current admin schoolId (replace with login logic)
 const currentSchoolId = localStorage.getItem("schoolId") || "school_001";
 
 const slogo = document.getElementById("slogo");
 const logoPreview = document.getElementById("logoPreview");
 
-// Preview logo
+// Show preview
 slogo.addEventListener("change", ()=>{
     const file = slogo.files[0];
     if(file){ logoPreview.src = URL.createObjectURL(file); logoPreview.style.display="block"; }
 });
 
-// Upload to Imgbb
+// Imgbb Upload Function
 async function uploadImg(file){
     const key = "21000d5a5d14fcef4b6af4d13647da5a8";
     const fd = new FormData();
-    fd.append("image",file);
-    const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`,{method:"POST",body:fd});
-    const data = await res.json();
-    return data.data.url;
+    fd.append("image", file);
+    try {
+        const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {method:"POST", body:fd});
+        const data = await res.json();
+        return data.data.url;
+    } catch(err){
+        console.error("Image upload failed:", err);
+        return "";
+    }
 }
 
 // Load existing profile
-(async()=>{
+async function loadProfile(){
     const snap = await getDoc(doc(db,"schools",currentSchoolId));
     if(snap.exists()){
         const d = snap.data();
@@ -83,12 +88,14 @@ async function uploadImg(file){
         document.getElementById("sdise").value = d.dise || "";
         document.getElementById("srecognition").value = d.recognition || "";
         document.getElementById("ssession").value = d.session || "";
-        if(d.logo){ logoPreview.src=d.logo; logoPreview.style.display="block"; }
+        if(d.logo){ logoPreview.src = d.logo; logoPreview.style.display="block"; }
     }
-})();
+}
+
+loadProfile();
 
 // Save / Update Profile
-async function saveSchoolProfile(){
+document.getElementById("saveBtn").addEventListener("click", async ()=>{
     const name = document.getElementById("sname").value.trim();
     const email = document.getElementById("semail").value.trim();
     const password = document.getElementById("spass").value.trim();
@@ -105,8 +112,8 @@ async function saveSchoolProfile(){
 
     await setDoc(doc(db,"schools",currentSchoolId),{
         name,
-        adminEmail:email,
-        adminPassword:password,
+        adminEmail: email,
+        adminPassword: password,
         address,
         dise,
         recognition: recognition || "",
@@ -114,8 +121,8 @@ async function saveSchoolProfile(){
         logo: logoUrl || undefined
     },{merge:true});
 
-    alert("School Profile Saved / Updated Successfully!");
-}
+    alert("Profile saved successfully!");
+});
 </script>
 </body>
 </html>
