@@ -11,11 +11,13 @@ input,button{width:100%;padding:10px;margin:8px 0;}
 button{border:none;background:#004aad;color:white;font-size:16px;border-radius:8px;cursor:pointer;}
 button:hover{background:#003080;}
 img#preview{width:100px;height:100px;object-fit:cover;margin-top:10px;border-radius:50%;display:none;}
+#backBtn{background:#f44336;margin-bottom:15px;}
 </style>
 </head>
 <body>
 
 <div class="container">
+<button id="backBtn" onclick="history.back()">← Back</button>
 <h2>School Profile</h2>
 <input id="pname" placeholder="School Name" required>
 <input id="paddress" placeholder="Address" required>
@@ -30,7 +32,7 @@ img#preview{width:100px;height:100px;object-fit:cover;margin-top:10px;border-rad
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// 🔹 Firebase Configuration
+// Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
   authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
@@ -42,7 +44,7 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔹 Imgbb upload function
+// Imgbb upload function
 async function uploadImg(file){
   const key = "21000d5a5d14fcef4b6af4d13647da5a8"; // Apka Imgbb API Key
   const fd = new FormData();
@@ -52,7 +54,7 @@ async function uploadImg(file){
   return data.data.url;
 }
 
-// 🔹 Show logo preview
+// Show logo preview
 const plogo = document.getElementById("plogo");
 plogo.addEventListener("change", ()=>{
   const file = plogo.files[0];
@@ -63,7 +65,7 @@ plogo.addEventListener("change", ()=>{
   }
 });
 
-// 🔹 Save Profile
+// Save Profile
 window.saveProfile = async function(){
   const name = document.getElementById("pname").value.trim();
   const address = document.getElementById("paddress").value.trim();
@@ -88,10 +90,9 @@ window.saveProfile = async function(){
   }, {merge:true});
 
   alert("Profile saved successfully!");
-  window.location.href = "admin-login.html"; // Redirect after save
 };
 
-// 🔹 Load existing profile if available
+// Load existing profile if available
 (async()=>{
   const snap = await getDoc(doc(db,"school_profile","profile"));
   if(snap.exists()){
