@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Ultra Pro Result System</title>
+<title>Ultra Result System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
@@ -12,12 +12,10 @@
 <style>
 
 body{
-font-family:'Segoe UI',Arial;
+font-family:Arial;
 margin:0;
-background:#eef2f7;
+background:#f2f2f2;
 }
-
-/* header */
 
 header{
 background:#1a237e;
@@ -26,7 +24,6 @@ padding:15px;
 text-align:center;
 font-size:24px;
 font-weight:bold;
-letter-spacing:1px;
 }
 
 /* layout */
@@ -42,7 +39,7 @@ background:white;
 padding:20px;
 border-radius:10px;
 margin-bottom:20px;
-box-shadow:0 5px 15px rgba(0,0,0,0.15);
+box-shadow:0 3px 10px rgba(0,0,0,0.15);
 }
 
 select,button{
@@ -64,36 +61,95 @@ cursor:pointer;
 #marksheet{
 display:none;
 padding:30px;
-border:6px solid #1a237e;
 background:white;
 }
 
-/* 7 colour styles */
+/* normal styles */
 
-.style1{border-color:#1a237e;background:linear-gradient(#ffffff,#eef2ff);}
-.style2{border-color:#00695c;background:linear-gradient(#ffffff,#e0f7fa);}
-.style3{border-color:#ad1457;background:linear-gradient(#ffffff,#fce4ec);}
-.style4{border-color:#ef6c00;background:linear-gradient(#ffffff,#fff3e0);}
-.style5{border-color:#4a148c;background:linear-gradient(#ffffff,#f3e5f5);}
-.style6{border-color:#2e7d32;background:linear-gradient(#ffffff,#e8f5e9);}
-.style7{border-color:#1565c0;background:linear-gradient(#ffffff,#e3f2fd);}
+.style1{border:6px solid #1a237e;background:#eef2ff;}
+.style2{border:6px solid #00695c;background:#e0f7fa;}
+.style3{border:6px solid #ad1457;background:#fce4ec;}
+.style4{border:6px solid #ef6c00;background:#fff3e0;}
+.style5{border:6px solid #4a148c;background:#f3e5f5;}
+.style6{border:6px solid #2e7d32;background:#e8f5e9;}
+.style7{border:6px solid #1565c0;background:#e3f2fd;}
+
+/* CBSE STYLE */
+
+.cbse{
+
+border:6px solid #c62828;
+background:white;
+font-family:Times New Roman;
+
+}
+
+.cbse .school{
+
+font-size:30px;
+color:#e91e63;
+
+}
+
+.cbse table th{
+
+background:#fbc02d;
+color:black;
+
+}
+
+.cbse table td{
+
+background:#fffde7;
+
+}
+
+/* CERTIFICATE STYLE */
+
+.certificate{
+
+border:15px double #00838f;
+background:#f1f8f9;
+font-family:Georgia;
+
+}
+
+.certificate .school{
+
+font-size:32px;
+color:#0d47a1;
+
+}
+
+.certificate table th{
+
+background:#0288d1;
+color:white;
+
+}
+
+.certificate table td{
+
+background:#e1f5fe;
+
+}
 
 /* school header */
 
 .school{
 text-align:center;
-font-size:28px;
+font-size:26px;
 font-weight:bold;
-color:#1a237e;
+margin-bottom:10px;
 }
 
-/* student section */
+/* student details */
 
 .student{
 display:flex;
 justify-content:space-between;
 margin-top:20px;
-border:2px solid #ddd;
+border:2px solid #ccc;
 padding:15px;
 background:#fafafa;
 }
@@ -101,81 +157,65 @@ background:#fafafa;
 .details{
 line-height:1.7;
 font-size:14px;
-font-weight:500;
 }
 
 .photo{
 width:120px;
 height:140px;
-border:3px solid #1a237e;
+border:2px solid black;
 object-fit:cover;
 }
 
-/* professional table */
+/* table */
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:25px;
-font-size:14px;
+margin-top:20px;
+}
+
+th,td{
+border:1px solid #ccc;
+padding:8px;
+text-align:center;
 }
 
 th{
 background:#1a237e;
 color:white;
-padding:10px;
-font-weight:bold;
-font-style:italic;
-}
-
-td{
-border:1px solid #ccc;
-padding:8px;
-font-weight:bold;
-font-style:italic;
-}
-
-tr:nth-child(even){
-background:#f5f5f5;
 }
 
 .resultBox{
 margin-top:20px;
-font-size:18px;
 font-weight:bold;
-color:#1a237e;
-border-top:3px solid #1a237e;
-padding-top:10px;
+font-size:18px;
 }
 
 .sign{
 margin-top:60px;
 display:flex;
 justify-content:space-between;
-font-weight:bold;
 }
-
-/* print */
 
 @media print{
 
-header,.card,.printBtn,.excelBtn,.batchBtn{
+header,.card,.printBtn{
 display:none;
 }
 
 #marksheet{
 display:block;
-border:none;
 }
 
 }
 
 </style>
+
 </head>
 
 <body>
 
-<header>Ultra Pro Result System</header>
+<header>Ultra Result System</header>
 
 <div class="container">
 
@@ -183,9 +223,6 @@ border:none;
 
 <select id="classSelect">
 <option value="">Select Class</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
 <option>1</option>
 <option>2</option>
 <option>3</option>
@@ -203,6 +240,7 @@ border:none;
 <select id="studentSelect"></select>
 
 <select id="styleSelect" onchange="changeStyle()">
+
 <option value="style1">Style 1</option>
 <option value="style2">Style 2</option>
 <option value="style3">Style 3</option>
@@ -210,6 +248,10 @@ border:none;
 <option value="style5">Style 5</option>
 <option value="style6">Style 6</option>
 <option value="style7">Style 7</option>
+
+<option value="cbse">CBSE Report Card</option>
+<option value="certificate">Certificate Style</option>
+
 </select>
 
 <br>
@@ -217,16 +259,34 @@ border:none;
 <button onclick="loadStudents()">Load Students</button>
 <button onclick="generateResult()">Generate Result</button>
 
-<button class="excelBtn" onclick="exportExcel()">Export Excel</button>
-<button class="batchBtn" onclick="printClass()">Batch Print</button>
-
 </div>
 
 <div id="marksheet" class="style1">
 
 <div class="school">
+
+<div style="display:flex;justify-content:space-between;align-items:center">
+
+<img src="logo.png" width="70">
+
+<div>
+
 NEW MODEL PUBLIC SCHOOL<br>
-<span style="font-size:16px">Ujjain Madhya Pradesh</span>
+
+<span style="font-size:16px">
+Ujjain Madhya Pradesh
+</span>
+
+</div>
+
+<img src="logo.png" width="70">
+
+</div>
+
+<hr>
+
+REPORT CARD
+
 </div>
 
 <div class="student">
@@ -240,17 +300,10 @@ Roll : <span id="roll"></span><br>
 DOB : <span id="dob"></span><br>
 
 Village : <span id="village"></span><br>
-Post : <span id="post"></span><br>
 District : <span id="district"></span><br>
 State : <span id="state"></span><br>
 
-Category : <span id="category"></span><br>
-
 Aadhar : <span id="adhar"></span><br>
-APAR : <span id="apar"></span><br>
-SSSM : <span id="sssm"></span><br>
-Scholar : <span id="scholer"></span><br>
-National : <span id="national"></span><br>
 
 <canvas id="qr"></canvas>
 
@@ -270,15 +323,20 @@ National : <span id="national"></span><br>
 <div class="resultBox">
 
 Total : <span id="total"></span> / <span id="max"></span><br>
+
 Percentage : <span id="percent"></span>%<br>
+
 Grade : <span id="grade"></span><br>
+
 Result : <span id="status"></span>
 
 </div>
 
 <div class="sign">
-<div>Class Teacher Sign</div>
-<div>Principal Sign</div>
+
+<div>Class Teacher</div>
+<div>Principal</div>
+
 </div>
 
 </div>
@@ -344,7 +402,7 @@ window.generateResult=async function(){
 
 const studentId=document.getElementById("studentSelect").value;
 
-const selectedExams=[...document.getElementById("examSelect").selectedOptions].map(o=>o.value);
+const examsSelected=[...document.getElementById("examSelect").selectedOptions].map(o=>o.value);
 
 const student=students.find(s=>s.id==studentId);
 
@@ -355,21 +413,14 @@ document.getElementById("roll").innerText=student.roll;
 document.getElementById("dob").innerText=student.dob;
 
 document.getElementById("village").innerText=student.village;
-document.getElementById("post").innerText=student.post;
 document.getElementById("district").innerText=student.district;
 document.getElementById("state").innerText=student.state;
 
-document.getElementById("category").innerText=student.category;
-
 document.getElementById("adhar").innerText=student.adhar;
-document.getElementById("apar").innerText=student.apar;
-document.getElementById("sssm").innerText=student.sssm;
-document.getElementById("scholer").innerText=student.scholer;
-document.getElementById("national").innerText=student.national;
 
 document.getElementById("photo").src=student.photo;
 
-QRCode.toCanvas(document.getElementById("qr"),"Student:"+student.roll);
+QRCode.toCanvas(document.getElementById("qr"),"Roll:"+student.roll);
 
 let total=0;
 let max=0;
@@ -379,9 +430,9 @@ const body=document.getElementById("resultTable");
 
 head.innerHTML="<tr><th>Subject</th>";
 
-selectedExams.forEach(e=>{
-const examName=exams.find(x=>x.id==e).name;
-head.innerHTML+=`<th>${examName}</th>`;
+examsSelected.forEach(e=>{
+const name=exams.find(x=>x.id==e).name;
+head.innerHTML+=`<th>${name}</th>`;
 });
 
 head.innerHTML+="</tr>";
@@ -392,7 +443,7 @@ for(const sub of subjects){
 
 let row=`<tr><td>${sub.name}</td>`;
 
-for(const exam of selectedExams){
+for(const exam of examsSelected){
 
 const id=`${studentId}_${exam}_${sub.id}`;
 
@@ -438,30 +489,6 @@ window.changeStyle=function(){
 const s=document.getElementById("styleSelect").value;
 
 document.getElementById("marksheet").className=s;
-
-}
-
-window.exportExcel=function(){
-
-const table=document.querySelector("table");
-
-const wb=XLSX.utils.table_to_book(table,{sheet:"Result"});
-
-XLSX.writeFile(wb,"result.xlsx");
-
-}
-
-window.printClass=async function(){
-
-for(const s of students){
-
-document.getElementById("studentSelect").value=s.id;
-
-await generateResult();
-
-window.print();
-
-}
 
 }
 
