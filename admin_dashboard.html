@@ -4,10 +4,6 @@
 <meta charset="UTF-8">
 <title>Ultimate School ERP - Login</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<!-- Font Awesome -->
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
-
 <style>
 body{font-family:Arial;margin:0;background:#f2f2f2;}
 #loginBox{position:fixed;top:0;left:0;width:100%;height:100%;display:flex;align-items:center;justify-content:center;}
@@ -22,15 +18,10 @@ button:hover{background:#003080;}
 <div id="loginBox">
 <div class="loginCard">
 <h3>School ERP Login</h3>
-
-<select id="schoolSelect">
-<option value="">Select School</option>
-</select>
-
+<select id="schoolSelect"><option value="">Select School</option></select>
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
-
-<button onclick="login()"><i class="fas fa-right-to-bracket"></i> Login</button>
+<button onclick="login()">Login</button>
 </div>
 </div>
 
@@ -39,6 +30,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore, collection, getDocs, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 import { getAuth, signInWithEmailAndPassword, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
 
+// Firebase config
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
@@ -52,9 +44,7 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 const auth = getAuth(app);
 
-let selectedSchoolId = "";
-
-// 🔹 Load all schools into dropdown
+// 🔹 Load schools into dropdown
 async function loadSchools(){
     const snap = await getDocs(collection(db,"schools"));
     snap.forEach(d=>{
@@ -64,9 +54,9 @@ async function loadSchools(){
         document.getElementById("schoolSelect").appendChild(option);
     });
 }
-
 loadSchools();
 
+let selectedSchoolId = "";
 document.getElementById("schoolSelect").addEventListener("change", e=>{
     selectedSchoolId = e.target.value;
 });
@@ -75,38 +65,42 @@ document.getElementById("schoolSelect").addEventListener("change", e=>{
 window.login = async function(){
     const email = document.getElementById("email").value.trim();
     const password = document.getElementById("password").value.trim();
-    
-    if(!selectedSchoolId){ alert("Select a school"); return; }
-    if(!email || !password){ alert("Enter Email & Password"); return; }
 
+    if(!selectedSchoolId){ alert("Select a school"); return; }
+    if(!email || !password){ alert("Enter email & password"); return; }
+
+    // Admin login via Firebase Auth
     try{
-        // 1️⃣ Admin login via Firebase Auth
         await signInWithEmailAndPassword(auth,email,password);
         sessionStorage.setItem("schoolId",selectedSchoolId);
         sessionStorage.setItem("userType","admin");
         window.location.href="admin-dashboard.html";
-    }catch(e){
-        // 2️⃣ Teacher login via Firestore
-        const teachersSnap = await getDocs(collection(db,`schools/${selectedSchoolId}/teachers`));
-        let found=false;
-        teachersSnap.forEach(docSnap=>{
-            const data=docSnap.data();
-            if(data.email===email && data.password===password){
-                found=true;
-                sessionStorage.setItem("schoolId",selectedSchoolId);
-                sessionStorage.setItem("userType","teacher");
-                sessionStorage.setItem("teacherPages",JSON.stringify(data.pages||[]));
-            }
-        });
-        if(found){
-            window.location.href="admin-dashboard.html";
-        }else{
-            alert("Invalid credentials");
+        return;
+    }catch(e){ 
+        // Not admin, try teacher login
+    }
+
+    // Teacher login via Firestore
+    const teachersSnap = await getDocs(collection(db,`schools/${selectedSchoolId}/teachers`));
+    let found = false;
+    teachersSnap.forEach(docSnap=>{
+        const data = docSnap.data();
+        if(data.email===email && data.password===password){
+            found = true;
+            sessionStorage.setItem("schoolId",selectedSchoolId);
+            sessionStorage.setItem("userType","teacher");
+            sessionStorage.setItem("teacherPages",JSON.stringify(data.pages||[]));
         }
+    });
+
+    if(found){
+        window.location.href="admin-dashboard.html";
+    }else{
+        alert("Invalid credentials");
     }
 }
 
-// 🔹 Maintain session on refresh
+// 🔹 Persist session on refresh
 onAuthStateChanged(auth,user=>{
     const schoolId = sessionStorage.getItem("schoolId");
     const type = sessionStorage.getItem("userType");
