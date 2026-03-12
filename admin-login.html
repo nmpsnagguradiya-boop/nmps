@@ -3,7 +3,7 @@
 
 <head>
 <meta charset="UTF-8">
-<title>Ultimate School ERP</title>
+<title>Ultimate School ERP - Multi School</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <!-- Font Awesome for icons -->
@@ -38,6 +38,7 @@ header{background:#004aad;color:white;padding:10px;display:flex;align-items:cent
 <div id="loginBox">
 <div class="loginCard">
 <h3>Admin / Teacher Login</h3>
+<input id="schoolId" placeholder="School ID">
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
 <button onclick="login()"><i class="fas fa-right-to-bracket"></i> Login</button>
@@ -82,10 +83,8 @@ header{background:#004aad;color:white;padding:10px;display:flex;align-items:cent
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -98,68 +97,90 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-const auth = getAuth(app);
 
-// LOGIN
+// LOGIN (Admin OR Teacher)
 window.login = async function() {
+    const schoolId = document.getElementById("schoolId").value.trim();
     const email = document.getElementById("email").value.trim();
-    const pass = document.getElementById("password").value.trim();
-    if(!email || !pass){ alert("Enter Email & Password"); return; }
+    const password = document.getElementById("password").value.trim();
+    if(!schoolId || !email || !password){ alert("Enter School ID, Email & Password"); return; }
 
-    try{
-        // Check in admins collection (Firebase Authentication required)
-        await signInWithEmailAndPassword(auth,email,pass);
-    }catch(e){
-        // If failed, check in Firestore teachers collection
-        const teachersSnap = await getDocs(collection(db,"teachers"));
-        let found=false;
-        teachersSnap.forEach(docSnap=>{
-            const data=docSnap.data();
-            if(data.email===email && data.password===pass){
-                found=true;
-                const allowed=data.pages || [];
-                document.querySelectorAll("#buttonsArea button").forEach(btn=>{
-                    if(!allowed.includes(btn.innerText)){
-                        btn.style.display="none";
-                    }
-                });
-            }
-        });
-        if(!found){ alert("Invalid Login"); return; }
+    const schoolRef = doc(db,"schools",schoolId);
+    const schoolSnap = await getDoc(schoolRef);
+    if(!schoolSnap.exists()){ alert("Invalid School ID"); return; }
+
+    const schoolData = schoolSnap.data();
+
+    // Check if admin login
+    if(schoolData.adminEmail === email && schoolData.adminPassword === password){
+        localStorage.setItem("schoolId",schoolId);
+        localStorage.setItem("role","admin");
+        document.getElementById("loginBox").style.display="none";
+        loadDashboard();
+        return;
     }
+
+    // Check if teacher login
+    const teachersSnap = await getDocs(collection(db,"teachers"));
+    let found=false;
+    teachersSnap.forEach(t=>{
+        const tData = t.data();
+        if(tData.schoolId===schoolId && tData.email===email && tData.password===password){
+            found=true;
+            localStorage.setItem("schoolId",schoolId);
+            localStorage.setItem("role","teacher");
+            // Hide buttons according to teacher permission
+            const allowed = tData.pages || [];
+            document.querySelectorAll("#buttonsArea button").forEach(btn=>{
+                if(!allowed.includes(btn.innerText)) btn.style.display="none";
+            });
+        }
+    });
+    if(!found){ alert("Invalid Login"); return; }
+
     document.getElementById("loginBox").style.display="none";
-    loadDashboardCounts();
-    loadSchoolProfile();
+    loadDashboard();
 }
 
 // LOGOUT
-window.logout = async function(){
-    await signOut(auth).catch(()=>{});
+window.logout = function(){
+    localStorage.removeItem("schoolId");
+    localStorage.removeItem("role");
     location.reload();
 }
 
-// Load counts
-async function loadDashboardCounts(){
+// Load dashboard counts & school profile
+async function loadDashboard(){
+    const schoolId = localStorage.getItem("schoolId");
+    if(!schoolId){ document.getElementById("loginBox").style.display="flex"; return; }
+
+    // Load school profile
+    const schoolSnap = await getDoc(doc(db,"schools",schoolId));
+    if(schoolSnap.exists()){
+        const data = schoolSnap.data();
+        document.getElementById("schoolName").innerText = data.name;
+        document.getElementById("schoolAddress").innerText = data.address || "";
+        document.getElementById("schoolLogo").src = data.logo || "";
+    }
+
+    // Load counts (students, teachers etc.) from collections filtered by schoolId
     const collections = ["students","teachers","complaints","admissions","results"];
     for(let c of collections){
         const snap = await getDocs(collection(db,c));
-        document.getElementById(c).innerText = snap.size;
+        let count=0;
+        snap.forEach(d=>{
+            if(d.data().schoolId === schoolId) count++;
+        });
+        document.getElementById(c).innerText = count;
     }
 }
 
-// Load school profile
-async function loadSchoolProfile(){
-    const snap = await getDocs(collection(db,"school"));
-    snap.forEach(d=>{
-        if(d.id==="profile"){
-            const data=d.data();
-            document.getElementById("schoolName").innerText = data.name;
-            document.getElementById("schoolAddress").innerText = data.address;
-            document.getElementById("schoolLogo").src = data.logo || "";
-        }
-    });
-}
-
+// Auto load on refresh
+document.addEventListener("DOMContentLoaded", ()=>{
+    const schoolId = localStorage.getItem("schoolId");
+    if(schoolId) loadDashboard();
+});
 </script>
+
 </body>
 </html>
