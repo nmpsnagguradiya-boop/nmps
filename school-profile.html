@@ -2,33 +2,53 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Upload School Logo</title>
+<title>School Profile</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-body{font-family:Arial;padding:40px}
-img{width:120px;margin-top:10px}
+body{font-family:Arial;margin:0;background:#f2f2f2;}
+.container{max-width:600px;margin:30px auto;background:white;padding:20px;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
+input,button{width:100%;padding:10px;margin:8px 0;}
+button{background:#004aad;color:white;border:none;border-radius:8px;font-size:16px;}
+img{width:120px;height:120px;border-radius:10px;margin-top:10px;object-fit:cover;}
 </style>
+
 </head>
 <body>
 
-<h2>Upload School Logo</h2>
+<div class="container">
 
-<input type="file" id="logo">
-<br><br>
+<h2>School Profile</h2>
 
-<button onclick="uploadLogo()">Upload Logo</button>
+<input id="sname" placeholder="School Name">
+<input id="semail" placeholder="Admin Email">
+<input id="spass" placeholder="Admin Password">
+<input id="saddress" placeholder="Address">
+<input id="sdise" placeholder="DISE Code">
+<input id="srecognition" placeholder="Recognition ID">
+<input id="ssession" placeholder="Session (2026-2027)">
 
-<br>
-<img id="preview">
+<label>School Logo</label>
+<input type="file" id="logoFile">
+
+<img id="logoPreview">
+
+<button onclick="saveProfile()">Save Profile</button>
+
+</div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId: "nmpsnagguradiya-b9b94"
+projectId: "nmpsnagguradiya-b9b94",
+storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
+messagingSenderId: "811957568318",
+appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -36,55 +56,116 @@ const db = getFirestore(app);
 
 const schoolId = localStorage.getItem("schoolId") || "school_001";
 
+const logoFile = document.getElementById("logoFile");
+const logoPreview = document.getElementById("logoPreview");
+
+
+// Image Preview
+logoFile.addEventListener("change",()=>{
+const file = logoFile.files[0];
+if(file){
+logoPreview.src = URL.createObjectURL(file);
+}
+});
+
+
+// Convert image to base64
 function toBase64(file){
 return new Promise((resolve,reject)=>{
 const reader = new FileReader();
 reader.readAsDataURL(file);
-reader.onload = ()=> resolve(reader.result.split(',')[1]);
-reader.onerror = error => reject(error);
+reader.onload = ()=>resolve(reader.result.split(",")[1]);
+reader.onerror = error=>reject(error);
 });
 }
 
-window.uploadLogo = async function(){
 
-const file = document.getElementById("logo").files[0];
+// Upload image to ImgBB
+async function uploadImage(file){
 
-if(!file){
-alert("Select logo first");
-return;
-}
+const apiKey="21000d5a5d14fcef4b6af4d13647da5a8";
 
 const base64 = await toBase64(file);
 
 const formData = new FormData();
 formData.append("image",base64);
 
-const res = await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a8",{
+const res = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`,{
 method:"POST",
 body:formData
 });
 
 const data = await res.json();
 
-if(!data.success){
-alert("Image upload failed");
+if(data.success){
+return data.data.url;
+}else{
 console.log(data);
-return;
+return "";
 }
 
-const url = data.data.url;
+}
 
-document.getElementById("preview").src = url;
+
+// Load Profile
+async function loadProfile(){
+
+const ref = doc(db,"schools",schoolId);
+
+const snap = await getDoc(ref);
+
+if(snap.exists()){
+
+const d = snap.data();
+
+sname.value = d.name || "";
+semail.value = d.adminEmail || "";
+spass.value = d.adminPassword || "";
+saddress.value = d.address || "";
+sdise.value = d.dise || "";
+srecognition.value = d.recognition || "";
+ssession.value = d.session || "";
+
+if(d.logo){
+logoPreview.src = d.logo;
+}
+
+}
+
+}
+
+loadProfile();
+
+
+// Save Profile
+window.saveProfile = async function(){
+
+const file = logoFile.files[0];
+
+let logoUrl = "";
+
+if(file){
+logoUrl = await uploadImage(file);
+}
 
 await setDoc(doc(db,"schools",schoolId),{
-logo:url
+
+name:sname.value,
+adminEmail:semail.value,
+adminPassword:spass.value,
+address:saddress.value,
+dise:sdise.value,
+recognition:srecognition.value,
+session:ssession.value,
+logo:logoUrl
+
 },{merge:true});
 
-alert("Logo saved successfully");
+alert("Profile saved successfully");
 
 }
 
 </script>
 
 </body>
-</html>
+  </html>
