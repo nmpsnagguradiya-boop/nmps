@@ -32,7 +32,7 @@ img#preview{width:100px;height:100px;object-fit:cover;margin-top:10px;border-rad
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore, doc, setDoc, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-// Firebase Configuration
+// 🔹 Firebase Configuration
 const firebaseConfig = {
   apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
   authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
@@ -51,7 +51,8 @@ async function uploadImg(file){
   fd.append("image", file);
   const res = await fetch(`https://api.imgbb.com/1/upload?key=${key}`, {method:"POST", body:fd});
   const data = await res.json();
-  return data.data.url; // 🔹 Ye link Firestore me save hoga
+  if(data && data.data && data.data.url) return data.data.url;
+  throw new Error("Image upload failed!");
 }
 
 // 🔹 Show logo preview
@@ -67,41 +68,49 @@ plogo.addEventListener("change", ()=>{
 
 // 🔹 Save Profile
 window.saveProfile = async function(){
-  const name = document.getElementById("pname").value.trim();
-  const address = document.getElementById("paddress").value.trim();
-  const schoolId = document.getElementById("pschoolid").value.trim();
-  const dise = document.getElementById("pdise").value.trim();
-  const file = plogo.files[0];
-  
-  if(!name || !address || !dise){
-    alert("Please fill all required fields!");
-    return;
-  }
-
-  let logo = "";
-  if(file) {
-    logo = await uploadImg(file); // 🔹 Logo Imgbb par upload
-  } else {
-    // Agar previously save logo hai to Firestore se le lo
-    const snap = await getDoc(doc(db,"school_profile","profile"));
-    if(snap.exists()){
-      const d = snap.data();
-      logo = d.logo || "";
+  try{
+    const name = document.getElementById("pname").value.trim();
+    const address = document.getElementById("paddress").value.trim();
+    const schoolId = document.getElementById("pschoolid").value.trim();
+    const dise = document.getElementById("pdise").value.trim();
+    const file = plogo.files[0];
+    
+    if(!name || !address || !dise){
+      alert("Please fill all required fields!");
+      return;
     }
+
+    let logo = "";
+    if(file) logo = await uploadImg(file); // 🔹 Upload to Imgbb
+    else {
+      // Agar pehle se logo save hai, use rakho
+      const snap = await getDoc(doc(db,"school_profile","profile"));
+      if(snap.exists()) logo = snap.data().logo || "";
+    }
+
+    await setDoc(doc(db,"school_profile","profile"),{
+      name,
+      address,
+      schoolId: schoolId || "",
+      dise,
+      logo
+    }, {merge:true});
+
+    alert("Profile saved successfully!");
+    
+    // 🔹 Update preview without reload
+    if(logo){
+      const preview = document.getElementById("preview");
+      preview.src = logo;
+      preview.style.display = "block";
+    }
+
+  } catch(err){
+    alert("Error saving profile: " + err.message);
   }
-
-  await setDoc(doc(db,"school_profile","profile"),{
-    name,
-    address,
-    schoolId: schoolId || "",
-    dise,
-    logo
-  }, {merge:true});
-
-  alert("Profile saved successfully!");
 };
 
-// 🔹 Load existing profile if available
+// 🔹 Load existing profile
 (async()=>{
   const snap = await getDoc(doc(db,"school_profile","profile"));
   if(snap.exists()){
@@ -112,7 +121,7 @@ window.saveProfile = async function(){
     document.getElementById("pdise").value = d.dise || "";
     if(d.logo){
       const preview = document.getElementById("preview");
-      preview.src = d.logo; // 🔹 Imgbb link se preview
+      preview.src = d.logo;
       preview.style.display = "block";
     }
   }
