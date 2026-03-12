@@ -117,23 +117,14 @@ object-fit:cover;
 
 <div class="permissions">
 
-<label><input type="checkbox" value="Admission Management"> Admission Management</label>
-
-<label><input type="checkbox" value="Teacher Management"> Teacher Management</label>
-
-<label><input type="checkbox" value="Result Management"> Result Management</label>
-
-<label><input type="checkbox" value="Exam Management"> Exam Management</label>
-
-<label><input type="checkbox" value="All Students"> All Students</label>
-
-<label><input type="checkbox" value="Study Material"> Study Material</label>
-
-<label><input type="checkbox" value="Complaint Management"> Complaint Management</label>
-
-<label><input type="checkbox" value="Notice & Gallery"> Notice & Gallery</label>
-
-<label><input type="checkbox" value="All Print"> All Print</label>
+<label><input type="checkbox" value="Admission Management"> Admission</label>
+<label><input type="checkbox" value="Result Management"> Result</label>
+<label><input type="checkbox" value="Exam Management"> Exam</label>
+<label><input type="checkbox" value="All Students"> Students</label>
+<label><input type="checkbox" value="Study Material"> Study</label>
+<label><input type="checkbox" value="Complaint Management"> Complaint</label>
+<label><input type="checkbox" value="Notice & Gallery"> Notice</label>
+<label><input type="checkbox" value="All Print"> Print</label>
 
 </div>
 
@@ -154,9 +145,7 @@ object-fit:cover;
 <th>Photo</th>
 <th>Name</th>
 <th>Subject</th>
-<th>Degree</th>
 <th>Email</th>
-<th>Permissions</th>
 <th>Delete</th>
 </tr>
 
@@ -184,6 +173,7 @@ deleteDoc,
 doc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+
 const firebaseConfig = {
 
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -201,9 +191,11 @@ const db = getFirestore(app);
 
 
 
-/* IMAGE UPLOAD IMGBB */
+/* IMAGE UPLOAD */
 
 async function uploadImg(file){
+
+try{
 
 const key="21000d5a5d14fcef4b6af4d13647da5a8";
 
@@ -220,6 +212,14 @@ const data=await res.json();
 
 return data.data.url;
 
+}catch(e){
+
+console.log("Img upload error",e);
+
+return "";
+
+}
+
 }
 
 
@@ -228,13 +228,15 @@ return data.data.url;
 
 window.createTeacher = async function(){
 
-const name=tname.value;
-const subject=tsubject.value;
-const degree=tdegree.value;
-const email=temail.value;
-const pass=tpass.value;
+try{
 
-const file=tphoto.files[0];
+const name=document.getElementById("tname").value;
+const subject=document.getElementById("tsubject").value;
+const degree=document.getElementById("tdegree").value;
+const email=document.getElementById("temail").value;
+const pass=document.getElementById("tpass").value;
+
+const file=document.getElementById("tphoto").files[0];
 
 let photo="";
 
@@ -254,13 +256,22 @@ degree,
 email,
 password:pass,
 photo,
-pages
+pages,
+created:new Date()
 
 });
 
 alert("Teacher Created");
 
 loadTeachers();
+
+}catch(e){
+
+alert("Error: "+e.message);
+
+console.log(e);
+
+}
 
 }
 
@@ -274,29 +285,25 @@ const snap=await getDocs(collection(db,"teachers"));
 
 teacherTable.innerHTML="";
 
-snap.forEach(docu=>{
+snap.forEach(d=>{
 
-const d=docu.data();
+const data=d.data();
 
 teacherTable.innerHTML+=`
 
 <tr>
 
-<td><img src="${d.photo}" class="photo"></td>
+<td><img src="${data.photo}" class="photo"></td>
 
-<td>${d.name}</td>
+<td>${data.name}</td>
 
-<td>${d.subject}</td>
+<td>${data.subject}</td>
 
-<td>${d.degree}</td>
-
-<td>${d.email}</td>
-
-<td>${d.pages.join(", ")}</td>
+<td>${data.email}</td>
 
 <td>
 
-<button onclick="deleteTeacher('${docu.id}')">
+<button onclick="deleteTeacher('${d.id}')">
 Delete
 </button>
 
@@ -314,7 +321,7 @@ loadTeachers();
 
 
 
-/* DELETE TEACHER */
+/* DELETE */
 
 window.deleteTeacher = async function(id){
 
@@ -327,5 +334,4 @@ loadTeachers();
 </script>
 
 </body>
-
 </html>
