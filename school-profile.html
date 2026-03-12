@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>School Profile</title>
+<title>Update School Profile</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -10,7 +10,8 @@ body{font-family:Arial;margin:0;background:#f2f2f2;}
 .container{max-width:600px;margin:30px auto;padding:20px;background:white;border-radius:10px;box-shadow:0 0 10px rgba(0,0,0,0.2);}
 input,button{width:100%;padding:10px;margin:8px 0;}
 button{border:none;background:#004aad;color:white;font-size:16px;border-radius:8px;cursor:pointer;}
-img{width:120px;height:120px;border-radius:10px;margin-top:10px;object-fit:cover;}
+button:hover{background:#003080;}
+img.preview{width:120px;height:120px;border-radius:10px;margin-top:10px;object-fit:cover;display:none;}
 </style>
 
 </head>
@@ -25,12 +26,12 @@ img{width:120px;height:120px;border-radius:10px;margin-top:10px;object-fit:cover
 <input id="spass" placeholder="Admin Password">
 <input id="saddress" placeholder="Address">
 <input id="sdise" placeholder="DISE Code">
-<input id="srecognition" placeholder="Recognition ID">
+<input id="srecognition" placeholder="Recognition / Manyata ID">
 
 <label>School Logo</label>
-<input type="file" id="logoFile">
+<input type="file" id="logoInput" accept="image/*">
 
-<img id="logoPreview">
+<img id="logoPreview" class="preview">
 
 <input id="ssession" placeholder="Session (2026-2027)">
 
@@ -62,18 +63,38 @@ const db = getFirestore(app);
 const schoolId = localStorage.getItem("schoolId") || "school_001";
 
 
+const logoInput = document.getElementById("logoInput");
+const logoPreview = document.getElementById("logoPreview");
+
+
+// preview image
+logoInput.addEventListener("change",()=>{
+
+const file = logoInput.files[0];
+
+if(file){
+
+logoPreview.src = URL.createObjectURL(file);
+
+logoPreview.style.display="block";
+
+}
+
+});
+
+
 // convert image to base64
-function toBase64(file){
+function convertBase64(file){
 
 return new Promise((resolve,reject)=>{
 
-const reader=new FileReader();
+const reader = new FileReader();
 
 reader.readAsDataURL(file);
 
-reader.onload=()=>resolve(reader.result.split(",")[1]);
+reader.onload = () => resolve(reader.result.split(",")[1]);
 
-reader.onerror=error=>reject(error);
+reader.onerror = error => reject(error);
 
 });
 
@@ -81,17 +102,17 @@ reader.onerror=error=>reject(error);
 
 
 // upload image to imgbb
-async function uploadLogo(file){
+async function uploadToImgBB(file){
 
-const apiKey="21000d5a5d14fcef4b6af4d13647da5a8";
+const apiKey = "21000d5a5d14fcef4b6af4d13647da5a8";
 
-const base64=await toBase64(file);
+const base64 = await convertBase64(file);
 
-const formData=new FormData();
+const formData = new FormData();
 
 formData.append("image",base64);
 
-const res=await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`,{
+const response = await fetch(`https://api.imgbb.com/1/upload?key=${apiKey}`,{
 
 method:"POST",
 
@@ -99,7 +120,7 @@ body:formData
 
 });
 
-const data=await res.json();
+const data = await response.json();
 
 if(data.success){
 
@@ -107,7 +128,7 @@ return data.data.url;
 
 }else{
 
-console.log(data);
+console.log("ImgBB Error",data);
 
 return "";
 
@@ -116,28 +137,30 @@ return "";
 }
 
 
-// load profile
+// load existing profile
 async function loadProfile(){
 
-const ref=doc(db,"schools",schoolId);
+const ref = doc(db,"schools",schoolId);
 
-const snap=await getDoc(ref);
+const snap = await getDoc(ref);
 
 if(snap.exists()){
 
-const d=snap.data();
+const d = snap.data();
 
-sname.value=d.name||"";
-semail.value=d.adminEmail||"";
-spass.value=d.adminPassword||"";
-saddress.value=d.address||"";
-sdise.value=d.dise||"";
-srecognition.value=d.recognition||"";
-ssession.value=d.session||"";
+sname.value = d.name || "";
+semail.value = d.adminEmail || "";
+spass.value = d.adminPassword || "";
+saddress.value = d.address || "";
+sdise.value = d.dise || "";
+srecognition.value = d.recognition || "";
+ssession.value = d.session || "";
 
 if(d.logo){
 
-logoPreview.src=d.logo;
+logoPreview.src = d.logo;
+
+logoPreview.style.display="block";
 
 }
 
@@ -151,15 +174,21 @@ loadProfile();
 // save profile
 window.saveProfile = async function(){
 
-const file=document.getElementById("logoFile").files[0];
+let logoUrl = "";
 
-let logoURL="";
+const file = logoInput.files[0];
 
 if(file){
 
-logoURL=await uploadLogo(file);
+logoUrl = await uploadToImgBB(file);
 
-logoPreview.src=logoURL;
+if(logoUrl){
+
+logoPreview.src = logoUrl;
+
+logoPreview.style.display="block";
+
+}
 
 }
 
@@ -172,17 +201,15 @@ address:saddress.value,
 dise:sdise.value,
 recognition:srecognition.value,
 session:ssession.value,
-logo:logoURL
+logo:logoUrl
 
 },{merge:true});
-
 
 alert("Profile saved successfully");
 
 }
 
-
 </script>
 
 </body>
-</html>
+  </html>
