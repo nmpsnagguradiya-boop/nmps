@@ -25,9 +25,9 @@ font-size:22px;
 }
 
 .container{
-padding:15px;
 max-width:1100px;
 margin:auto;
+padding:15px;
 }
 
 .card{
@@ -48,25 +48,32 @@ border-radius:5px;
 
 .permissions{
 display:grid;
-grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
 gap:5px;
 margin-top:10px;
 }
 
 button{
-padding:12px;
+padding:10px 15px;
 border:none;
 background:#004aad;
 color:white;
-margin-top:10px;
-cursor:pointer;
 border-radius:6px;
+cursor:pointer;
+}
+
+button.delete{
+background:red;
+}
+
+button.edit{
+background:green;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:20px;
+margin-top:15px;
 }
 
 th,td{
@@ -99,7 +106,7 @@ object-fit:cover;
 
 <div class="card">
 
-<h3>Create Teacher</h3>
+<h3>Create / Edit Teacher</h3>
 
 <input id="tname" placeholder="Teacher Name">
 
@@ -113,22 +120,22 @@ object-fit:cover;
 
 <input type="file" id="tphoto">
 
-<h4>Page Permissions</h4>
+<h4>Permissions</h4>
 
 <div class="permissions">
 
-<label><input type="checkbox" value="Admission Management"> Admission</label>
-<label><input type="checkbox" value="Result Management"> Result</label>
-<label><input type="checkbox" value="Exam Management"> Exam</label>
-<label><input type="checkbox" value="All Students"> Students</label>
-<label><input type="checkbox" value="Study Material"> Study</label>
-<label><input type="checkbox" value="Complaint Management"> Complaint</label>
-<label><input type="checkbox" value="Notice & Gallery"> Notice</label>
-<label><input type="checkbox" value="All Print"> Print</label>
+<label><input type="checkbox" value="Admission"> Admission</label>
+<label><input type="checkbox" value="Students"> Students</label>
+<label><input type="checkbox" value="Result"> Result</label>
+<label><input type="checkbox" value="Exam"> Exam</label>
+<label><input type="checkbox" value="Study"> Study</label>
+<label><input type="checkbox" value="Complaint"> Complaint</label>
+<label><input type="checkbox" value="Notice"> Notice</label>
+<label><input type="checkbox" value="Print"> Print</label>
 
 </div>
 
-<button onclick="createTeacher()">Create Teacher</button>
+<button onclick="saveTeacher()">Save Teacher</button>
 
 </div>
 
@@ -136,6 +143,8 @@ object-fit:cover;
 <div class="card">
 
 <h3>Teachers List</h3>
+
+<input id="search" placeholder="Search Teacher..." onkeyup="loadTeachers()">
 
 <table>
 
@@ -146,6 +155,7 @@ object-fit:cover;
 <th>Name</th>
 <th>Subject</th>
 <th>Email</th>
+<th>Edit</th>
 <th>Delete</th>
 </tr>
 
@@ -170,9 +180,9 @@ collection,
 addDoc,
 getDocs,
 deleteDoc,
-doc
+doc,
+updateDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
 
 const firebaseConfig = {
 
@@ -185,13 +195,14 @@ appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
 
 };
 
-const app = initializeApp(firebaseConfig);
+const app=initializeApp(firebaseConfig);
 
-const db = getFirestore(app);
+const db=getFirestore(app);
+
+let editId=null;
 
 
-
-/* IMAGE UPLOAD */
+/* IMGBB */
 
 async function uploadImg(file){
 
@@ -212,31 +223,24 @@ const data=await res.json();
 
 return data.data.url;
 
-}catch(e){
-
-console.log("Img upload error",e);
-
+}catch{
 return "";
-
 }
 
 }
 
 
+/* SAVE */
 
-/* CREATE TEACHER */
+window.saveTeacher=async function(){
 
-window.createTeacher = async function(){
+const name=tname.value;
+const subject=tsubject.value;
+const degree=tdegree.value;
+const email=temail.value;
+const password=tpass.value;
 
-try{
-
-const name=document.getElementById("tname").value;
-const subject=document.getElementById("tsubject").value;
-const degree=document.getElementById("tdegree").value;
-const email=document.getElementById("temail").value;
-const pass=document.getElementById("tpass").value;
-
-const file=document.getElementById("tphoto").files[0];
+const file=tphoto.files[0];
 
 let photo="";
 
@@ -248,38 +252,42 @@ const checks=document.querySelectorAll(".permissions input:checked");
 
 const pages=[...checks].map(c=>c.value);
 
-await addDoc(collection(db,"teachers"),{
-
+const data={
 name,
 subject,
 degree,
 email,
-password:pass,
+password,
 photo,
-pages,
-created:new Date()
+pages
+};
 
-});
+if(editId){
+
+await updateDoc(doc(db,"teachers",editId),data);
+
+editId=null;
+
+alert("Teacher Updated");
+
+}else{
+
+await addDoc(collection(db,"teachers"),data);
 
 alert("Teacher Created");
 
+}
+
 loadTeachers();
 
-}catch(e){
-
-alert("Error: "+e.message);
-
-console.log(e);
-
-}
-
 }
 
 
+/* LOAD */
 
-/* LOAD TEACHERS */
+window.loadTeachers=async function(){
 
-async function loadTeachers(){
+const search=document.getElementById("search").value.toLowerCase();
 
 const snap=await getDocs(collection(db,"teachers"));
 
@@ -287,23 +295,33 @@ teacherTable.innerHTML="";
 
 snap.forEach(d=>{
 
-const data=d.data();
+const t=d.data();
+
+if(t.name.toLowerCase().includes(search)){
 
 teacherTable.innerHTML+=`
 
 <tr>
 
-<td><img src="${data.photo}" class="photo"></td>
+<td><img src="${t.photo}" class="photo"></td>
 
-<td>${data.name}</td>
+<td>${t.name}</td>
 
-<td>${data.subject}</td>
+<td>${t.subject}</td>
 
-<td>${data.email}</td>
+<td>${t.email}</td>
 
 <td>
 
-<button onclick="deleteTeacher('${d.id}')">
+<button class="edit" onclick="editTeacher('${d.id}','${t.name}','${t.subject}','${t.degree}','${t.email}','${t.password}')">
+Edit
+</button>
+
+</td>
+
+<td>
+
+<button class="delete" onclick="deleteTeacher('${d.id}')">
 Delete
 </button>
 
@@ -313,6 +331,8 @@ Delete
 
 `;
 
+}
+
 });
 
 }
@@ -320,14 +340,30 @@ Delete
 loadTeachers();
 
 
-
 /* DELETE */
 
-window.deleteTeacher = async function(id){
+window.deleteTeacher=async function(id){
 
 await deleteDoc(doc(db,"teachers",id));
 
 loadTeachers();
+
+}
+
+
+/* EDIT */
+
+window.editTeacher=function(id,name,subject,degree,email,password){
+
+editId=id;
+
+tname.value=name;
+tsubject.value=subject;
+tdegree.value=degree;
+temail.value=email;
+tpass.value=password;
+
+window.scrollTo(0,0);
 
 }
 
