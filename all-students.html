@@ -8,105 +8,44 @@
 
 <style>
 
-body{
-font-family:Arial;
-margin:0;
-background:#f2f2f2;
-}
+body{font-family:Arial;margin:0;background:#f2f2f2;}
 
-header{
-background:#004aad;
-color:white;
-padding:16px;
-text-align:center;
-font-size:22px;
-}
+header{background:#004aad;color:white;padding:16px;text-align:center;font-size:22px;}
 
-.container{
-padding:20px;
-}
+.container{padding:20px;}
 
-.big-buttons{
-display:flex;
-gap:20px;
-flex-wrap:wrap;
-margin-bottom:20px;
-}
+.controls{margin-bottom:15px;}
 
-.big-btn{
-flex:1;
-min-width:200px;
-background:white;
-padding:20px;
-border-radius:10px;
-display:flex;
-align-items:center;
-gap:15px;
-font-size:18px;
-font-weight:bold;
-cursor:pointer;
-box-shadow:0 0 8px rgba(0,0,0,0.15);
-}
+input,select{padding:8px;margin:5px;width:100%;}
 
-.icon{
-font-size:30px;
-}
+table{width:100%;background:white;border-collapse:collapse;}
 
-.dashboard{
-display:flex;
-gap:20px;
-flex-wrap:wrap;
-margin-bottom:20px;
-}
+th,td{padding:8px;border:1px solid #ddd;text-align:center;}
 
-.box{
-background:white;
-padding:15px;
-border-radius:8px;
-flex:1;
-text-align:center;
-box-shadow:0 0 5px rgba(0,0,0,0.2);
-}
+img{width:50px;border-radius:5px;}
 
-.controls{
-margin-bottom:15px;
-}
-
-input,select{
-padding:8px;
-margin:5px;
-}
-
-table{
-width:100%;
-background:white;
-border-collapse:collapse;
-}
-
-th,td{
-padding:8px;
-border:1px solid #ddd;
-text-align:center;
-}
-
-img{
-width:50px;
-border-radius:5px;
-}
-
-button{
-padding:6px 10px;
-border:none;
-border-radius:5px;
-cursor:pointer;
-margin:2px;
-}
+button{padding:6px 10px;border:none;border-radius:5px;cursor:pointer;margin:2px;}
 
 .edit{background:#ffc107;}
 .photo{background:#6f42c1;color:white;}
 .delete{background:red;color:white;}
 .print{background:#17a2b8;color:white;}
 .export{background:#28a745;color:white;}
+
+.popup{
+position:fixed;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+background:white;
+padding:20px;
+width:95%;
+max-width:500px;
+max-height:80vh;
+overflow:auto;
+box-shadow:0 0 10px rgba(0,0,0,0.3);
+display:none;
+}
 
 </style>
 </head>
@@ -116,27 +55,6 @@ margin:2px;
 <header>Admission Admin Panel</header>
 
 <div class="container">
-
-<div class="big-buttons">
-
-<div class="big-btn" onclick="window.location.href='admission.html'">
-<span class="icon">➕</span>
-Add Students
-</div>
-
-<div class="big-btn" onclick="window.location.href='all-students.html'">
-<span class="icon">👨‍🎓</span>
-All Students
-</div>
-
-</div>
-
-<div class="dashboard">
-<div class="box">
-Total Admissions
-<h2 id="total">0</h2>
-</div>
-</div>
 
 <div class="controls">
 
@@ -161,30 +79,11 @@ Total Admissions
 <option>12</option>
 </select>
 
-<select id="classImport">
-<option value="">Select Class For Import</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-<option>6</option>
-<option>7</option>
-<option>8</option>
-<option>9</option>
-<option>10</option>
-<option>11</option>
-<option>12</option>
-</select>
-
-<input type="file" id="excelImport">
-
 <button class="export" onclick="exportAll()">Export All Students</button>
 
 </div>
+
+<h3>Total Admissions : <span id="total">0</span></h3>
 
 <table>
 
@@ -206,10 +105,12 @@ Total Admissions
 
 </div>
 
+<div class="popup" id="popup"></div>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,updateDoc,deleteDoc,addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,collection,getDocs,doc,updateDoc,deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -263,7 +164,6 @@ table.innerHTML="";
 admissions.forEach(data=>{
 
 if(search && !data.name.toLowerCase().includes(search) && !data.mobile.includes(search)) return;
-
 if(classFilter!="all" && data.class!=classFilter) return;
 
 table.innerHTML+=`
@@ -280,12 +180,8 @@ table.innerHTML+=`
 
 <td>
 
-<button class="edit" onclick="edit('${data.id}')">Edit</button>
-
+<button class="edit" onclick="editStudent('${data.id}')">Edit</button>
 <button class="print" onclick="printForm('${data.id}')">Print</button>
-
-<button class="photo" onclick="uploadPhoto('${data.id}')">Photo</button>
-
 <button class="delete" onclick="remove('${data.id}')">Delete</button>
 
 </td>
@@ -298,20 +194,103 @@ table.innerHTML+=`
 
 }
 
-/* EDIT FULL FORM */
+/* EDIT POPUP */
 
-window.edit=function(id){
+window.editStudent=function(id){
 
-window.location.href="admission.html?id="+id;
+const s=admissions.find(x=>x.id==id);
 
+document.getElementById("popup").style.display="block";
+
+document.getElementById("popup").innerHTML=`
+
+<h3>Edit Student</h3>
+
+<input id="name" value="${s.name||""}" placeholder="Name">
+<input id="father" value="${s.father||""}" placeholder="Father">
+<input id="mobile" value="${s.mobile||""}" placeholder="Mobile">
+
+<input id="village" value="${s.village||""}" placeholder="Village">
+<input id="post" value="${s.post||""}" placeholder="Post">
+<input id="district" value="${s.district||""}" placeholder="District">
+<input id="state" value="${s.state||""}" placeholder="State">
+
+<input id="dob" value="${s.dob||""}" type="date">
+
+<input id="adhar" value="${s.adhar||""}" placeholder="Aadhar">
+<input id="apar" value="${s.apar||""}" placeholder="APAR">
+<input id="sssm" value="${s.sssm||""}" placeholder="SSSM">
+
+<input id="category" value="${s.category||""}" placeholder="Category">
+
+<input id="roll" value="${s.roll||""}" placeholder="Roll">
+<input id="scholer" value="${s.scholer||""}" placeholder="Scholar">
+
+<input id="national" value="${s.national||""}" placeholder="National ID">
+
+<select id="class">
+<option ${s.class=="Nursery"?"selected":""}>Nursery</option>
+<option ${s.class=="LKG"?"selected":""}>LKG</option>
+<option ${s.class=="UKG"?"selected":""}>UKG</option>
+<option ${s.class=="1"?"selected":""}>1</option>
+<option ${s.class=="2"?"selected":""}>2</option>
+<option ${s.class=="3"?"selected":""}>3</option>
+<option ${s.class=="4"?"selected":""}>4</option>
+<option ${s.class=="5"?"selected":""}>5</option>
+<option ${s.class=="6"?"selected":""}>6</option>
+<option ${s.class=="7"?"selected":""}>7</option>
+<option ${s.class=="8"?"selected":""}>8</option>
+<option ${s.class=="9"?"selected":""}>9</option>
+<option ${s.class=="10"?"selected":""}>10</option>
+<option ${s.class=="11"?"selected":""}>11</option>
+<option ${s.class=="12"?"selected":""}>12</option>
+</select>
+
+<br><br>
+
+<button onclick="saveEdit('${id}')">Update</button>
+<button onclick="closePopup()">Cancel</button>
+
+`;
+
+}
+
+window.saveEdit=async function(id){
+
+await updateDoc(doc(db,"admissions",id),{
+
+name:document.getElementById("name").value,
+father:document.getElementById("father").value,
+mobile:document.getElementById("mobile").value,
+village:document.getElementById("village").value,
+post:document.getElementById("post").value,
+district:document.getElementById("district").value,
+state:document.getElementById("state").value,
+dob:document.getElementById("dob").value,
+adhar:document.getElementById("adhar").value,
+apar:document.getElementById("apar").value,
+sssm:document.getElementById("sssm").value,
+category:document.getElementById("category").value,
+roll:document.getElementById("roll").value,
+scholer:document.getElementById("scholer").value,
+national:document.getElementById("national").value,
+class:document.getElementById("class").value
+
+});
+
+closePopup();
+loadAdmissions();
+
+}
+
+window.closePopup=function(){
+document.getElementById("popup").style.display="none";
 }
 
 /* PRINT */
 
 window.printForm=function(id){
-
 window.open("print-form.html?id="+id);
-
 }
 
 /* DELETE */
@@ -321,47 +300,13 @@ window.remove=async function(id){
 if(confirm("Delete admission?")){
 
 await deleteDoc(doc(db,"admissions",id));
-
 loadAdmissions();
 
 }
 
 }
 
-/* PHOTO */
-
-window.uploadPhoto=function(id){
-
-const input=document.createElement("input");
-input.type="file";
-
-input.onchange=async e=>{
-
-const file=e.target.files[0];
-
-const formData=new FormData();
-formData.append("image",file);
-
-const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
-method:"POST",
-body:formData
-});
-
-const data=await res.json();
-
-await updateDoc(doc(db,"admissions",id),{
-photo:data.data.url
-});
-
-loadAdmissions();
-
-};
-
-input.click();
-
-}
-
-/* EXPORT ALL */
+/* EXPORT */
 
 window.exportAll=function(){
 
@@ -374,53 +319,10 @@ XLSX.writeFile(wb,"all_students.xlsx");
 
 }
 
-/* BULK IMPORT */
-
-document.getElementById("excelImport").addEventListener("change",function(e){
-
-const selectedClass=document.getElementById("classImport").value;
-
-if(!selectedClass){
-alert("Select Class First");
-return;
-}
-
-const reader=new FileReader();
-
-reader.onload=async function(evt){
-
-const data=new Uint8Array(evt.target.result);
-
-const workbook=XLSX.read(data,{type:'array'});
-
-const sheet=workbook.Sheets[workbook.SheetNames[0]];
-
-const json=XLSX.utils.sheet_to_json(sheet);
-
-for(let s of json){
-
-s.class=selectedClass;
-s.schoolId=schoolId;
-s.session=activeSession;
-
-await addDoc(collection(db,"admissions"),s);
-
-}
-
-alert("Bulk Students Added");
-
-loadAdmissions();
-
-}
-
-reader.readAsArrayBuffer(e.target.files[0]);
-
-});
-
 document.getElementById("search").addEventListener("keyup",renderTable);
 document.getElementById("classFilter").addEventListener("change",renderTable);
 
 </script>
 
 </body>
-           </html>
+</html>
