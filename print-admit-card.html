@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta charset="UTF-8">
 <title>Admit Card Print</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -66,17 +67,9 @@ display:grid;
 gap:15px;
 }
 
-.two{
-grid-template-columns:1fr 1fr;
-}
-
-.four{
-grid-template-columns:1fr 1fr;
-}
-
-.six{
-grid-template-columns:1fr 1fr 1fr;
-}
+.two{grid-template-columns:1fr 1fr;}
+.four{grid-template-columns:1fr 1fr;}
+.six{grid-template-columns:1fr 1fr 1fr;}
 
 .admit-card{
 border:2px solid #004aad;
@@ -169,6 +162,10 @@ margin-top:15px;
 font-size:12px;
 }
 
+.bulk{
+margin-bottom:10px;
+}
+
 @media print{
 header,.card{display:none}
 }
@@ -186,19 +183,7 @@ header,.card{display:none}
 
 <select id="sessionSelect"></select>
 
-<select id="classSelect">
-<option value="">Select Class</option>
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-<option>6</option>
-<option>7</option>
-<option>8</option>
-<option>9</option>
-<option>10</option>
-</select>
+<select id="classSelect"></select>
 
 <select id="examSelect"></select>
 
@@ -213,7 +198,7 @@ header,.card{display:none}
 <option value="yes">With Watermark</option>
 </select>
 
-<input id="durationInput" placeholder="Exam Duration (Example 3 Hours)">
+<input id="durationInput" placeholder="Exam Duration Example 3 Hours">
 
 <textarea id="guidelineInput" placeholder="Enter Guidelines"></textarea>
 
@@ -221,15 +206,19 @@ header,.card{display:none}
 
 </div>
 
-
 <div class="card">
+
+<div class="bulk">
+
+<button onclick="selectAll()">Select All</button>
+<button onclick="unselectAll()">Unselect All</button>
+
+</div>
 
 <div id="studentList" class="students"></div>
 
 <button onclick="generateCards()">Generate Admit Card</button>
-
 <button onclick="window.print()">Print</button>
-
 <button onclick="downloadPDF()">Download PDF</button>
 
 </div>
@@ -252,7 +241,6 @@ getDoc,
 query,
 where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -303,7 +291,40 @@ sessionSelect.onchange=function(){
 
 activeSession=this.value;
 
+loadClasses();
+
 loadExams();
+
+}
+
+
+async function loadClasses(){
+
+const q=query(
+collection(db,"admissions"),
+where("schoolId","==",schoolId),
+where("session","==",activeSession)
+);
+
+const snap=await getDocs(q);
+
+let classes=new Set();
+
+snap.forEach(d=>{
+
+classes.add(d.data().class);
+
+});
+
+let html='<option>Select Class</option>';
+
+classes.forEach(c=>{
+
+html+=`<option>${c}</option>`;
+
+});
+
+classSelect.innerHTML=html;
 
 }
 
@@ -361,169 +382,20 @@ ${s.roll||""} - ${s.name}
 
 studentList.innerHTML=html;
 
-loadTimetable();
-
 }
 
 
-async function loadTimetable(){
+window.selectAll=function(){
 
-const examId=examSelect.value;
-const cls=classSelect.value;
-
-const examDoc=await getDoc(doc(db,"exam_sessions",examId));
-
-examName=examDoc.data().examName;
-
-const q=query(
-collection(db,"timetable"),
-where("schoolId","==",schoolId),
-where("session","==",activeSession),
-where("examId","==",examId),
-where("class","==",cls)
-);
-
-const snap=await getDocs(q);
-
-timetable=[];
-
-for(const d of snap.docs){
-
-const data=d.data();
-
-const subDoc=await getDoc(doc(db,"subjects",data.subjectId));
-
-const subject=subDoc.data().name;
-
-timetable.push({
-subject,
-date:data.date,
-day:data.day,
-time:data.time
-});
+document.querySelectorAll("#studentList input").forEach(i=>i.checked=true);
 
 }
 
-}
+window.unselectAll=function(){
 
-
-window.generateCards=function(){
-
-const layout=document.getElementById("layout").value;
-const watermark=document.getElementById("watermarkSelect").value;
-const duration=document.getElementById("durationInput").value;
-const guideline=document.getElementById("guidelineInput").value;
-
-admitArea.className="admit-container "+layout;
-
-const selected=[...document.querySelectorAll("#studentList input:checked")].map(e=>e.value);
-
-let html="";
-
-selected.forEach(id=>{
-
-const s=students.find(x=>x.id==id);
-
-let rows="";
-
-timetable.forEach(t=>{
-
-rows+=`
-<tr>
-<td>${t.subject}</td>
-<td>${t.date}</td>
-<td>${t.day}</td>
-<td>${t.time}</td>
-<td>${duration}</td>
-</tr>
-`;
-
-});
-
-const watermarkHTML = watermark==="yes"
-? `<img src="${schoolData.logo}" class="watermark">`
-: "";
-
-html+=`
-
-<div class="admit-card">
-
-${watermarkHTML}
-
-<div class="school">
-
-<img src="${schoolData.logo}">
-
-<div>
-
-<div class="school-name">${schoolData.name}</div>
-
-<div class="school-address">${schoolData.address}</div>
-
-<div>Session : ${activeSession}</div>
-
-</div>
-
-</div>
-
-<div class="exam-title">${examName}</div>
-
-<div class="title">ADMIT CARD</div>
-
-<div class="student">
-
-<div>
-
-Roll : ${s.roll}<br>
-Name : ${s.name}<br>
-Father : ${s.father}<br>
-Class : ${s.class}
-
-</div>
-
-<img src="${s.photo}">
-
-</div>
-
-<table>
-
-<tr>
-<th>Subject</th>
-<th>Date</th>
-<th>Day</th>
-<th>Time</th>
-<th>Duration</th>
-</tr>
-
-${rows}
-
-</table>
-
-<div class="guideline">
-
-<b>Guidelines:</b><br>
-
-${guideline}
-
-</div>
-
-<div class="sign">
-
-<div>Principal Sign</div>
-<div>Director Sign</div>
-
-</div>
-
-</div>
-
-`;
-
-});
-
-admitArea.innerHTML=html;
+document.querySelectorAll("#studentList input").forEach(i=>i.checked=false);
 
 }
-
 
 window.downloadPDF=function(){
 
@@ -536,4 +408,4 @@ html2pdf().from(element).save("admit-cards.pdf");
 </script>
 
 </body>
-  </html>
+</html>
