@@ -27,6 +27,13 @@ font-size:22px;
 padding:20px;
 }
 
+.topbar{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+margin-bottom:10px;
+}
+
 .topbtn{
 background:#28a745;
 color:white;
@@ -34,14 +41,18 @@ padding:10px 15px;
 border:none;
 border-radius:5px;
 cursor:pointer;
-margin:5px;
+}
+
+.search{
+padding:10px;
+width:200px;
 }
 
 table{
 width:100%;
-margin-top:20px;
 border-collapse:collapse;
 background:white;
+margin-top:10px;
 }
 
 table th{
@@ -86,7 +97,7 @@ width:95%;
 max-width:500px;
 }
 
-.popup input, .popup select{
+.popup input,.popup select{
 width:100%;
 padding:8px;
 margin-top:6px;
@@ -102,10 +113,19 @@ margin-top:6px;
 
 <div class="container">
 
+<div class="topbar">
+
 <button class="topbtn" onclick="addStudent()">+ Add Student</button>
 
-<select id="classSelect">
-<option value="">Select Class</option>
+<select id="sessionFilter">
+<option value="">All Session</option>
+<option>2024-25</option>
+<option>2025-26</option>
+<option>2026-27</option>
+</select>
+
+<select id="classFilter">
+<option value="">All Class</option>
 <option>Nursery</option>
 <option>LKG</option>
 <option>UKG</option>
@@ -123,9 +143,15 @@ margin-top:6px;
 <option>12</option>
 </select>
 
-<button class="topbtn" onclick="exportClass()">Export Class</button>
+<input class="search" id="search" placeholder="Search Name / Mobile">
+
+<button class="topbtn" onclick="exportClass()">Export Excel</button>
 
 <input type="file" id="importExcel">
+
+<button class="topbtn" onclick="bulkPromote()">Bulk Promote</button>
+
+</div>
 
 <h3>Total Students : <span id="total">0</span></h3>
 
@@ -135,6 +161,7 @@ margin-top:6px;
 <tr>
 <th>Name</th>
 <th>Class</th>
+<th>Session</th>
 <th>Mobile</th>
 <th>Photo</th>
 <th>Action</th>
@@ -169,22 +196,42 @@ let students=[];
 
 async function loadStudents(){
 
-const querySnapshot=await getDocs(collection(db,"admissions"));
-
-let html="";
-let count=0;
-
 students=[];
 
-querySnapshot.forEach((docSnap)=>{
+const snapshot=await getDocs(collection(db,"admissions"));
 
-const data=docSnap.data();
+snapshot.forEach(docSnap=>{
+
+let data=docSnap.data();
 
 if(data.schoolId!==schoolId) return;
 
 data.id=docSnap.id;
 
 students.push(data);
+
+});
+
+renderTable();
+
+}
+
+function renderTable(){
+
+let html="";
+let count=0;
+
+let search=document.getElementById("search").value.toLowerCase();
+let classFilter=document.getElementById("classFilter").value;
+let sessionFilter=document.getElementById("sessionFilter").value;
+
+students.forEach(data=>{
+
+if(search && !data.name.toLowerCase().includes(search) && !data.mobile.includes(search)) return;
+
+if(classFilter && data.class!=classFilter) return;
+
+if(sessionFilter && data.session!=sessionFilter) return;
 
 count++;
 
@@ -194,6 +241,7 @@ html+=`
 
 <td>${data.name}</td>
 <td>${data.class}</td>
+<td>${data.session || "-"}</td>
 <td>${data.mobile}</td>
 <td><img src="${data.photo || ''}" width="40"></td>
 
@@ -231,7 +279,7 @@ alert(
 "\nFather : "+s.father+
 "\nMobile : "+s.mobile+
 "\nClass : "+s.class+
-"\nAadhar : "+(s.adhar||"")
+"\nSession : "+(s.session||"")
 );
 
 }
@@ -249,15 +297,9 @@ document.getElementById("popup").innerHTML=`
 <input id="name" value="${s.name}">
 <input id="father" value="${s.father}">
 <input id="mobile" value="${s.mobile}">
-<input id="adhar" value="${s.adhar||""}">
-<input id="village" value="${s.village||""}">
-<input id="city" value="${s.city||""}">
-<input id="district" value="${s.district||""}">
-<input id="state" value="${s.state||""}">
-<input id="roll" value="${s.roll||""}">
-<input id="scholer" value="${s.scholer||""}">
 
 <select id="class">
+<option>${s.class}</option>
 <option>Nursery</option>
 <option>LKG</option>
 <option>UKG</option>
@@ -275,6 +317,8 @@ document.getElementById("popup").innerHTML=`
 <option>12</option>
 </select>
 
+<input id="session" value="${s.session||''}" placeholder="Session">
+
 <br><br>
 
 <button onclick="saveEdit('${id}')">Update</button>
@@ -291,14 +335,8 @@ await updateDoc(doc(db,"admissions",id),{
 name:document.getElementById("name").value,
 father:document.getElementById("father").value,
 mobile:document.getElementById("mobile").value,
-adhar:document.getElementById("adhar").value,
-village:document.getElementById("village").value,
-city:document.getElementById("city").value,
-district:document.getElementById("district").value,
-state:document.getElementById("state").value,
-roll:document.getElementById("roll").value,
-scholer:document.getElementById("scholer").value,
-class:document.getElementById("class").value
+class:document.getElementById("class").value,
+session:document.getElementById("session").value
 
 });
 
@@ -313,13 +351,12 @@ document.getElementById("popup").style.display="block";
 
 document.getElementById("popup").innerHTML=`
 
-<h3>Select Class</h3>
+<h3>Promote Student</h3>
+
+<input id="newSession" placeholder="New Session">
 
 <select id="newClass">
 
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
 <option>1</option>
 <option>2</option>
 <option>3</option>
@@ -346,9 +383,14 @@ document.getElementById("popup").innerHTML=`
 
 window.savePromote=async function(id){
 
-await updateDoc(doc(db,"admissions",id),{
+let s=students.find(x=>x.id==id);
 
-class:document.getElementById("newClass").value
+await addDoc(collection(db,"admissions"),{
+
+...s,
+class:document.getElementById("newClass").value,
+session:document.getElementById("newSession").value,
+schoolId:schoolId
 
 });
 
@@ -362,10 +404,15 @@ window.deleteStudent=async function(id){
 if(confirm("Delete Student?")){
 
 await deleteDoc(doc(db,"admissions",id));
-
 loadStudents();
 
 }
+
+}
+
+window.bulkPromote=function(){
+
+alert("Bulk Promote System Coming");
 
 }
 
@@ -377,20 +424,7 @@ window.location.href="print-form.html?id="+id;
 
 window.exportClass=function(){
 
-let selected=document.getElementById("classSelect").value;
-
-let data=[];
-
-students.forEach(s=>{
-
-if(selected=="" || s.class==selected){
-data.push(s);
-}
-
-});
-
-const ws=XLSX.utils.json_to_sheet(data);
-
+const ws=XLSX.utils.json_to_sheet(students);
 const wb=XLSX.utils.book_new();
 
 XLSX.utils.book_append_sheet(wb,ws,"Students");
@@ -429,6 +463,10 @@ reader.readAsArrayBuffer(e.target.files[0]);
 
 });
 
+document.getElementById("search").addEventListener("keyup",renderTable);
+document.getElementById("classFilter").addEventListener("change",renderTable);
+document.getElementById("sessionFilter").addEventListener("change",renderTable);
+
 window.closePopup=function(){
 document.getElementById("popup").style.display="none";
 }
@@ -438,4 +476,4 @@ loadStudents();
 </script>
 
 </body>
-</html>
+  </html>
