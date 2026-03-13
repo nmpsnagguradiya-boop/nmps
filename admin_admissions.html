@@ -3,27 +3,22 @@
 <head>
 <meta charset="UTF-8">
 <title>Admin Admissions Panel</title>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
 body{font-family:Arial;margin:0;background:#f2f2f2;}
 header{background:#004aad;color:white;padding:16px;text-align:center;font-size:22px;}
 .container{padding:20px;max-width:1200px;margin:auto;}
 .big-buttons{display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;}
-.big-btn{flex:1;min-width:180px;background:white;padding:20px;border-radius:10px;display:flex;align-items:center;gap:15px;font-size:18px;font-weight:bold;cursor:pointer;box-shadow:0 0 8px rgba(0,0,0,0.15);}
+.big-btn{flex:1;min-width:180px;background:white;padding:20px;border-radius:10px;display:flex;align-items:center;gap:15px;font-size:18px;font-weight:bold;cursor:pointer;box-shadow:0 0 8px rgba(0,0,0,0.15);justify-content:center;}
 .big-btn span{font-size:28px;}
 .controls{margin-bottom:15px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
-.controls input, .controls select, .controls button{padding:8px;margin:5px;}
-.controls button{border:none;border-radius:8px;cursor:pointer;font-weight:bold;}
+.controls select, .controls button{padding:10px;margin:5px;font-weight:bold;border-radius:8px;cursor:pointer;border:none;}
 table{width:100%;border-collapse:collapse;background:white;border-radius:8px;box-shadow:0 0 8px rgba(0,0,0,0.1);}
 th,td{padding:10px;border:1px solid #ddd;text-align:center;}
-img{width:50px;border-radius:5px;}
-.edit{background:#ffc107;}
-.photo{background:#6f42c1;color:white;}
-.delete{background:red;color:white;}
-.print{background:#17a2b8;color:white;}
-.export{background:#28a745;color:white;}
 .promote{background:#20c997;color:white;}
+.export{background:#28a745;color:white;color:white;}
+@media(max-width:768px){.big-buttons{flex-direction:column;}.big-btn{justify-content:flex-start;}}
 </style>
 </head>
 <body>
@@ -32,23 +27,18 @@ img{width:50px;border-radius:5px;}
 
 <div class="container">
 
+<!-- Top Buttons -->
 <div class="big-buttons">
-<div class="big-btn" onclick="window.location.href='admission.html'"><span><i class="fa-solid fa-user-plus"></i></span> Add Students</div>
+<div class="big-btn" onclick="window.location.href='admission.html'"><span><i class="fa-solid fa-user-plus"></i></span> Add New Student</div>
 <div class="big-btn" onclick="window.location.href='all-students.html'"><span><i class="fa-solid fa-users"></i></span> All Students</div>
 <div class="big-btn" onclick="window.location.href='print-result.html'"><span><i class="fa-solid fa-file-lines"></i></span> Print Result</div>
 <div class="big-btn" onclick="window.location.href='print-id.html'"><span><i class="fa-solid fa-id-card"></i></span> Print ID</div>
 </div>
 
-<div class="dashboard">
-<div class="box">
-Total Admissions: <span id="total">0</span>
-</div>
-</div>
-
+<!-- Controls -->
 <div class="controls">
-<input type="text" id="search" placeholder="Search Name / Mobile">
 <select id="classFilter">
-<option value="all">All Classes</option>
+<option value="all">Select Class to Promote</option>
 <option>Nursery</option>
 <option>LKG</option>
 <option>UKG</option>
@@ -65,39 +55,17 @@ Total Admissions: <span id="total">0</span>
 <option>11</option>
 <option>12</option>
 </select>
-<select id="classImport">
-<option value="">Select Class For Import</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-<option>6</option>
-<option>7</option>
-<option>8</option>
-<option>9</option>
-<option>10</option>
-<option>11</option>
-<option>12</option>
-</select>
-<input type="file" id="excelImport">
-<button class="export" onclick="exportAll()"><i class="fa-solid fa-file-export"></i> Export All</button>
-<button class="promote" onclick="promoteClass()"><i class="fa-solid fa-arrow-up"></i> Promote Class</button>
+<button class="promote" onclick="promoteClass()"><i class="fa-solid fa-arrow-up"></i> Promote Selected Class</button>
 </div>
 
+<!-- Students Table -->
 <table>
 <thead>
 <tr>
 <th>Name</th>
 <th>Father</th>
 <th>Mobile</th>
-<th>Village</th>
 <th>Class</th>
-<th>Photo</th>
-<th>Actions</th>
 </tr>
 </thead>
 <tbody id="list"></tbody>
@@ -107,7 +75,7 @@ Total Admissions: <span id="total">0</span>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,updateDoc,deleteDoc,addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,collection,getDocs,addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -132,103 +100,33 @@ snapshot.forEach(docSnap=>{
 const data = docSnap.data();
 if(data.schoolId!==schoolId) return;
 if(data.session!==activeSession) return;
-data.id = docSnap.id;
+data.id=docSnap.id;
 admissions.push(data);
 });
 renderTable();
-document.getElementById("total").innerText = admissions.length;
 }
 
 function renderTable(){
-const search=document.getElementById("search").value.toLowerCase();
-const classFilter=document.getElementById("classFilter").value;
 const table=document.getElementById("list");
 table.innerHTML="";
 admissions.forEach(data=>{
-if(search && !data.name.toLowerCase().includes(search) && !data.mobile.includes(search)) return;
-if(classFilter!="all" && data.class!=classFilter) return;
 table.innerHTML+=`
 <tr>
 <td>${data.name}</td>
 <td>${data.father}</td>
 <td>${data.mobile}</td>
-<td>${data.village}</td>
 <td>${data.class}</td>
-<td><img src="${data.photo||""}"></td>
-<td>
-<button class="edit" onclick="editStudent('${data.id}')"><i class="fa-solid fa-pen-to-square"></i> Edit</button>
-<button class="photo" onclick="uploadPhoto('${data.id}')"><i class="fa-solid fa-image"></i> Photo</button>
-<button class="delete" onclick="remove('${data.id}')"><i class="fa-solid fa-trash"></i> Delete</button>
-</td>
 </tr>`;
 });
 }
 
-/* EDIT */
-window.editStudent=function(id){
-window.location.href="admission.html?id="+id;
-}
-
-/* DELETE */
-window.remove=async function(id){
-if(confirm("Delete this student?")){
-await deleteDoc(doc(db,"admissions",id));
-loadAdmissions();
-}
-}
-
-/* PHOTO UPLOAD */
-window.uploadPhoto=function(id){
-const input=document.createElement("input");
-input.type="file";
-input.onchange=async e=>{
-const file=e.target.files[0];
-const formData=new FormData();
-formData.append("image",file);
-const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{method:"POST",body:formData});
-const data=await res.json();
-await updateDoc(doc(db,"admissions",id),{photo:data.data.url});
-loadAdmissions();
-};
-input.click();
-}
-
-/* EXPORT ALL */
-window.exportAll=function(){
-const ws=XLSX.utils.json_to_sheet(admissions);
-const wb=XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,"Students");
-XLSX.writeFile(wb,"all_students.xlsx");
-}
-
-/* BULK IMPORT */
-document.getElementById("excelImport").addEventListener("change",function(e){
-const selectedClass=document.getElementById("classImport").value;
-if(!selectedClass){alert("Select Class First"); return;}
-const reader=new FileReader();
-reader.onload=async function(evt){
-const data=new Uint8Array(evt.target.result);
-const workbook=XLSX.read(data,{type:'array'});
-const sheet=workbook.Sheets[workbook.SheetNames[0]];
-const json=XLSX.utils.sheet_to_json(sheet);
-for(let s of json){
-s.class=selectedClass;
-s.schoolId=schoolId;
-s.session=activeSession;
-await addDoc(collection(db,"admissions"),s);
-}
-alert("Bulk Students Added");
-loadAdmissions();
-}
-reader.readAsArrayBuffer(e.target.files[0]);
-});
-
-/* PROMOTE CLASS */
+/* Promote Class System */
 window.promoteClass=async function(){
-let classToPromote = prompt("Enter class to promote (e.g., 1,2,UKG):");
-if(!classToPromote) return;
-let nextSession = prompt("Enter next session year (e.g., 2026-27):");
+const classToPromote = document.getElementById("classFilter").value;
+if(!classToPromote || classToPromote==="all"){ alert("Select a class first"); return; }
+const nextSession = prompt("Enter next session (e.g., 2026-27):");
 if(!nextSession) return;
+
 for(let student of admissions){
 if(student.class===classToPromote){
 let nextClass;
@@ -237,15 +135,14 @@ else if(student.class==="LKG") nextClass="UKG";
 else if(student.class==="UKG") nextClass="1";
 else if(!isNaN(parseInt(student.class))) nextClass=(parseInt(student.class)+1).toString();
 else nextClass=student.class;
+
 await addDoc(collection(db,"admissions"),{...student,session:nextSession,class:nextClass});
 }
 }
 alert(`Class ${classToPromote} promoted to next session ${nextSession}`);
 }
 
-document.getElementById("search").addEventListener("keyup",renderTable);
-document.getElementById("classFilter").addEventListener("change",renderTable);
-
 </script>
+
 </body>
-</html>
+  </html>
