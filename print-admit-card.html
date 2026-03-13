@@ -3,8 +3,8 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Admit Card Print</title>
-<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admit Card System</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 
@@ -147,13 +147,13 @@ font-size:11px;
 margin-top:5px;
 }
 
+#system{
+display:none;
+}
+
 @media print{
 
 header,.card{display:none}
-
-.admit-container{
-margin:0;
-}
 
 }
 
@@ -163,15 +163,25 @@ margin:0;
 
 <body>
 
-<header>Admit Card Print System</header>
+<header>Admit Card System</header>
 
 <div class="container">
 
 <div class="card">
 
-<h3>Select Details</h3>
+<h3>Select Session</h3>
 
 <select id="sessionSelect"></select>
+
+<button onclick="activateSystem()">Open System</button>
+
+</div>
+
+<div id="system">
+
+<div class="card">
+
+<h3>Select Details</h3>
 
 <select id="classSelect">
 <option value="">Select Class</option>
@@ -207,7 +217,7 @@ margin:0;
 
 <h3>Select Students</h3>
 
-<div class="students" id="studentList"></div>
+<div id="studentList" class="students"></div>
 
 <button onclick="generateCards()">Generate Admit Cards</button>
 <button onclick="window.print()">Print</button>
@@ -215,6 +225,8 @@ margin:0;
 </div>
 
 <div id="admitArea" class="admit-container"></div>
+
+</div>
 
 </div>
 
@@ -233,6 +245,7 @@ query,
 where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
+
 const firebaseConfig = {
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
@@ -243,11 +256,10 @@ const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
 const schoolId = localStorage.getItem("schoolId") || "school_001";
-const activeSession = localStorage.getItem("session");
 
 let students=[];
-let schoolData={};
 let exams=[];
+let schoolData={};
 
 async function loadSchool(){
 
@@ -259,6 +271,7 @@ if(snap.exists()) schoolData=snap.data();
 
 await loadSchool();
 
+
 async function loadSessions(){
 
 const snap = await getDoc(doc(db,"schools",schoolId));
@@ -268,7 +281,7 @@ const data=snap.data();
 let html="";
 
 data.sessions.forEach(s=>{
-html+=`<option ${s===data.currentSession?"selected":""}>${s}</option>`;
+html+=`<option value="${s}">${s}</option>`;
 });
 
 sessionSelect.innerHTML=html;
@@ -278,17 +291,36 @@ sessionSelect.innerHTML=html;
 await loadSessions();
 
 
+window.activateSystem = async function(){
+
+const session=sessionSelect.value;
+
+if(!session) return alert("Select Session");
+
+document.getElementById("system").style.display="block";
+
+loadExams();
+
+}
+
+
 async function loadExams(){
 
-const snap=await getDocs(collection(db,"exam_sessions"));
+const session=sessionSelect.value;
+
+const q=query(
+collection(db,"exam_sessions"),
+where("schoolId","==",schoolId),
+where("session","==",session)
+);
+
+const snap=await getDocs(q);
 
 exams=snap.docs.map(d=>({id:d.id,...d.data()}));
 
 examSelect.innerHTML=exams.map(e=>`<option value="${e.id}">${e.examName}</option>`).join("");
 
 }
-
-await loadExams();
 
 
 window.loadStudents=async function(){
@@ -297,9 +329,11 @@ const cls=classSelect.value;
 
 const session=sessionSelect.value;
 
-const q=query(collection(db,"admissions"),
-where("class","==",cls),
-where("session","==",session)
+const q=query(
+collection(db,"admissions"),
+where("schoolId","==",schoolId),
+where("session","==",session),
+where("class","==",cls)
 );
 
 const snap=await getDocs(q);
@@ -309,12 +343,19 @@ students=snap.docs.map(d=>({id:d.id,...d.data()}));
 let html="";
 
 students.forEach(s=>{
+
 html+=`
+
 <label>
+
 <input type="checkbox" value="${s.id}">
+
 ${s.roll||""} - ${s.name}
+
 </label><br>
+
 `;
+
 });
 
 studentList.innerHTML=html;
@@ -322,7 +363,7 @@ studentList.innerHTML=html;
 }
 
 
-window.generateCards=async function(){
+window.generateCards = async function(){
 
 const selected=[...document.querySelectorAll("#studentList input:checked")].map(e=>e.value);
 
@@ -354,7 +395,7 @@ html+=`
 
 <div>
 
-<h3>${schoolData.name}</h3>
+<h3>${schoolData.name||""}</h3>
 
 <div>${schoolData.address||""}</div>
 
@@ -367,7 +408,9 @@ html+=`
 <div class="title">ADMIT CARD</div>
 
 <div style="text-align:center;font-size:12px">
+
 ${examName}
+
 </div>
 
 <div class="student">
@@ -375,8 +418,11 @@ ${examName}
 <div class="details">
 
 Roll : ${s.roll||""}<br>
+
 Name : ${s.name}<br>
+
 Father : ${s.father||""}<br>
+
 Class : ${s.class}
 
 </div>
@@ -394,24 +440,25 @@ Class : ${s.class}
 </tr>
 
 <tr>
-<td>Subject</td>
-<td>Date</td>
-<td>Day</td>
+<td>-</td>
+<td>-</td>
+<td>-</td>
 </tr>
 
 </table>
 
 <div class="guideline">
 
-• Bring admit card in exam<br>
+• Bring admit card in exam hall<br>
 • Reach 15 minutes early<br>
-• No cheating allowed
+• Follow exam rules
 
 </div>
 
 <div class="sign">
 
 <div>Principal Sign</div>
+
 <div>Director Sign</div>
 
 </div>
