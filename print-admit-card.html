@@ -1,9 +1,8 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta charset="UTF-8">
-<title>Admit Card System</title>
+<title>Admit Card Print</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -20,7 +19,6 @@ color:white;
 padding:15px;
 text-align:center;
 font-size:22px;
-font-weight:bold;
 }
 
 .container{
@@ -32,36 +30,39 @@ margin:auto;
 .card{
 background:white;
 padding:20px;
-border-radius:10px;
+border-radius:8px;
 margin-bottom:20px;
-box-shadow:0 3px 8px rgba(0,0,0,0.1);
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-select,input,button{
+select,input,textarea,button{
 padding:10px;
 margin:5px;
-border-radius:5px;
-border:1px solid #ccc;
+width:100%;
+max-width:300px;
+}
+
+textarea{
+height:80px;
 }
 
 button{
 background:#004aad;
 color:white;
 border:none;
-font-weight:bold;
 cursor:pointer;
 }
 
 .students{
+border:1px solid #ccc;
+padding:10px;
 max-height:250px;
 overflow:auto;
-border:1px solid #ddd;
-padding:10px;
 }
 
 .admit-container{
 display:grid;
-grid-gap:15px;
+gap:15px;
 }
 
 .two{
@@ -75,34 +76,15 @@ grid-template-columns:1fr 1fr;
 .admit-card{
 border:2px solid #004aad;
 padding:10px;
-border-radius:8px;
+border-radius:6px;
 background:white;
-}
-
-.school{
-display:flex;
-align-items:center;
-gap:10px;
-border-bottom:1px solid #ddd;
-padding-bottom:5px;
-}
-
-.school img{
-width:60px;
-height:60px;
-object-fit:cover;
-}
-
-.school h3{
-margin:0;
-color:#004aad;
 }
 
 .title{
 text-align:center;
 font-weight:bold;
 font-size:18px;
-margin:5px 0;
+margin-top:5px;
 }
 
 .student{
@@ -118,14 +100,10 @@ object-fit:cover;
 border:1px solid #ccc;
 }
 
-.details{
-font-size:13px;
-}
-
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:5px;
+margin-top:8px;
 font-size:12px;
 }
 
@@ -138,56 +116,34 @@ text-align:center;
 .sign{
 display:flex;
 justify-content:space-between;
-margin-top:20px;
+margin-top:15px;
 font-size:12px;
 }
 
 .guideline{
+margin-top:10px;
 font-size:11px;
-margin-top:5px;
-}
-
-#system{
-display:none;
 }
 
 @media print{
-
-header,.card{display:none}
-
+header,.card{display:none;}
 }
 
 </style>
-
 </head>
 
 <body>
 
-<header>Admit Card System</header>
+<header>Admit Card Print</header>
 
 <div class="container">
 
 <div class="card">
 
-<h3>Select Session</h3>
-
 <select id="sessionSelect"></select>
-
-<button onclick="activateSystem()">Open System</button>
-
-</div>
-
-<div id="system">
-
-<div class="card">
-
-<h3>Select Details</h3>
 
 <select id="classSelect">
 <option value="">Select Class</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
 <option>1</option>
 <option>2</option>
 <option>3</option>
@@ -203,11 +159,13 @@ header,.card{display:none}
 <select id="examSelect"></select>
 
 <select id="layout">
-<option value="two">1 Page = 2 Admit Card</option>
-<option value="four">1 Page = 4 Admit Card</option>
+<option value="two">2 Card Per Page</option>
+<option value="four">4 Card Per Page</option>
 </select>
 
-<br>
+<input type="text" id="durationInput" placeholder="Exam Duration (Example: 3 Hours)">
+
+<textarea id="guidelineInput" placeholder="Enter Exam Guidelines"></textarea>
 
 <button onclick="loadStudents()">Load Students</button>
 
@@ -215,11 +173,10 @@ header,.card{display:none}
 
 <div class="card">
 
-<h3>Select Students</h3>
-
 <div id="studentList" class="students"></div>
 
-<button onclick="generateCards()">Generate Admit Cards</button>
+<button onclick="generateCards()">Generate Admit Card</button>
+
 <button onclick="window.print()">Print</button>
 
 </div>
@@ -228,97 +185,68 @@ header,.card{display:none}
 
 </div>
 
-</div>
-
-
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-import {
-getFirestore,
-collection,
-getDocs,
-doc,
-getDoc,
-query,
-where
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-
-const firebaseConfig = {
+const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
 projectId:"nmpsnagguradiya-b9b94"
 };
 
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-const schoolId = localStorage.getItem("schoolId") || "school_001";
+const schoolId=localStorage.getItem("schoolId")||"school_001";
 
+let activeSession="";
 let students=[];
-let exams=[];
-let schoolData={};
-
-async function loadSchool(){
-
-const snap = await getDoc(doc(db,"schools",schoolId));
-
-if(snap.exists()) schoolData=snap.data();
-
-}
-
-await loadSchool();
-
+let timetable=[];
 
 async function loadSessions(){
 
-const snap = await getDoc(doc(db,"schools",schoolId));
+const snap=await getDoc(doc(db,"schools",schoolId));
 
-const data=snap.data();
+const sessions=snap.data().sessions||[];
 
-let html="";
+let html="<option>Select Session</option>";
 
-data.sessions.forEach(s=>{
-html+=`<option value="${s}">${s}</option>`;
+sessions.forEach(s=>{
+html+=`<option>${s}</option>`;
 });
 
 sessionSelect.innerHTML=html;
 
 }
 
-await loadSessions();
+loadSessions();
 
 
-window.activateSystem = async function(){
-
-const session=sessionSelect.value;
-
-if(!session) return alert("Select Session");
-
-document.getElementById("system").style.display="block";
-
+sessionSelect.onchange=function(){
+activeSession=this.value;
 loadExams();
-
 }
 
 
 async function loadExams(){
 
-const session=sessionSelect.value;
-
 const q=query(
 collection(db,"exam_sessions"),
 where("schoolId","==",schoolId),
-where("session","==",session)
+where("session","==",activeSession)
 );
 
 const snap=await getDocs(q);
 
-exams=snap.docs.map(d=>({id:d.id,...d.data()}));
+let html="<option>Select Exam</option>";
 
-examSelect.innerHTML=exams.map(e=>`<option value="${e.id}">${e.examName}</option>`).join("");
+snap.forEach(d=>{
+html+=`<option value="${d.id}">${d.data().examName}</option>`;
+});
+
+examSelect.innerHTML=html;
 
 }
 
@@ -327,12 +255,10 @@ window.loadStudents=async function(){
 
 const cls=classSelect.value;
 
-const session=sessionSelect.value;
-
 const q=query(
 collection(db,"admissions"),
 where("schoolId","==",schoolId),
-where("session","==",session),
+where("session","==",activeSession),
 where("class","==",cls)
 );
 
@@ -343,86 +269,102 @@ students=snap.docs.map(d=>({id:d.id,...d.data()}));
 let html="";
 
 students.forEach(s=>{
-
 html+=`
-
 <label>
-
 <input type="checkbox" value="${s.id}">
-
 ${s.roll||""} - ${s.name}
-
 </label><br>
-
 `;
-
 });
 
 studentList.innerHTML=html;
 
+loadTimetable();
+
 }
 
 
-window.generateCards = async function(){
-
-const selected=[...document.querySelectorAll("#studentList input:checked")].map(e=>e.value);
-
-if(selected.length==0) return alert("Select Students");
+async function loadTimetable(){
 
 const examId=examSelect.value;
 
-const examDoc=await getDoc(doc(db,"exam_sessions",examId));
+const cls=classSelect.value;
 
-const examName=examDoc.data().examName;
+const q=query(
+collection(db,"timetable"),
+where("schoolId","==",schoolId),
+where("session","==",activeSession),
+where("examId","==",examId),
+where("class","==",cls)
+);
+
+const snap=await getDocs(q);
+
+timetable=[];
+
+for(const d of snap.docs){
+
+const data=d.data();
+
+const subDoc=await getDoc(doc(db,"subjects",data.subjectId));
+
+const subject=subDoc.exists()?subDoc.data().name:"";
+
+timetable.push({
+subject,
+date:data.date,
+day:data.day,
+time:data.time
+});
+
+}
+
+}
+
+
+window.generateCards=function(){
 
 const layout=document.getElementById("layout").value;
+const duration=document.getElementById("durationInput").value;
+const guideline=document.getElementById("guidelineInput").value;
 
 admitArea.className="admit-container "+layout;
 
+const selected=[...document.querySelectorAll("#studentList input:checked")].map(e=>e.value);
+
 let html="";
 
-for(const id of selected){
+selected.forEach(id=>{
 
 const s=students.find(x=>x.id==id);
+
+let rows="";
+
+timetable.forEach(t=>{
+rows+=`
+<tr>
+<td>${t.subject}</td>
+<td>${t.date}</td>
+<td>${t.day}</td>
+<td>${t.time}</td>
+<td>${duration}</td>
+</tr>
+`;
+});
 
 html+=`
 
 <div class="admit-card">
 
-<div class="school">
-
-<img src="${schoolData.logo||""}">
-
-<div>
-
-<h3>${schoolData.name||""}</h3>
-
-<div>${schoolData.address||""}</div>
-
-<div>Session : ${sessionSelect.value}</div>
-
-</div>
-
-</div>
-
 <div class="title">ADMIT CARD</div>
-
-<div style="text-align:center;font-size:12px">
-
-${examName}
-
-</div>
 
 <div class="student">
 
-<div class="details">
+<div>
 
-Roll : ${s.roll||""}<br>
-
+Roll : ${s.roll}<br>
 Name : ${s.name}<br>
-
-Father : ${s.father||""}<br>
-
+Father : ${s.father}<br>
 Class : ${s.class}
 
 </div>
@@ -437,28 +379,25 @@ Class : ${s.class}
 <th>Subject</th>
 <th>Date</th>
 <th>Day</th>
+<th>Time</th>
+<th>Duration</th>
 </tr>
 
-<tr>
-<td>-</td>
-<td>-</td>
-<td>-</td>
-</tr>
+${rows}
 
 </table>
 
 <div class="guideline">
 
-• Bring admit card in exam hall<br>
-• Reach 15 minutes early<br>
-• Follow exam rules
+<b>Guidelines:</b><br>
+
+${guideline}
 
 </div>
 
 <div class="sign">
 
 <div>Principal Sign</div>
-
 <div>Director Sign</div>
 
 </div>
@@ -467,7 +406,7 @@ Class : ${s.class}
 
 `;
 
-}
+});
 
 admitArea.innerHTML=html;
 
