@@ -6,96 +6,38 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
-
-body{
-font-family:Arial;
-margin:0;
-background:#f2f4f8;
-}
-
-header{
-background:#004aad;
-color:white;
-padding:15px;
-text-align:center;
-font-size:22px;
-font-weight:bold;
-}
-
-.container{
-padding:20px;
-max-width:1200px;
-margin:auto;
-}
-
-.card{
-background:white;
-padding:20px;
-border-radius:10px;
-margin-bottom:20px;
-box-shadow:0 3px 8px rgba(0,0,0,0.1);
-}
-
-select,input,button{
-padding:10px;
-margin:5px;
-width:100%;
-max-width:250px;
-border-radius:5px;
-border:1px solid #ccc;
-}
-
-button{
-cursor:pointer;
-border:none;
-font-weight:bold;
-}
-
+body{font-family:Arial;margin:0;background:#f2f4f8;}
+header{background:#004aad;color:white;padding:15px;text-align:center;font-size:22px;font-weight:bold;}
+.container{padding:20px;max-width:1200px;margin:auto;}
+.card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 3px 8px rgba(0,0,0,0.1);}
+select,input,button{padding:10px;margin:5px;width:100%;max-width:250px;border-radius:5px;border:1px solid #ccc;}
+button{cursor:pointer;font-weight:bold;border:none;}
 .load{background:#28a745;color:white;}
 .save{background:#004aad;color:white;}
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:10px;
-}
-
-th,td{
-border:1px solid #ddd;
-padding:8px;
-text-align:center;
-}
-
-th{
-background:#004aad;
-color:white;
-}
-
-input[type="number"]{
-width:70px;
-text-align:center;
-}
-
-.success{
-background:#d4edda;
-}
-
-@media(max-width:768px){
-table,th,td{font-size:12px;}
-select,input,button{max-width:100%;}
-}
-
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+th,td{border:1px solid #ddd;padding:8px;text-align:center;}
+th{background:#004aad;color:white;}
+input[type="number"]{width:70px;text-align:center;}
+.success{background:#d4edda;}
+@media(max-width:768px){table,th,td{font-size:12px;}select,input,button{max-width:100%;}}
 </style>
 </head>
 
 <body>
-
 <header>Marks Entry System PRO MAX</header>
 
 <div class="container">
 
+<!-- SESSION SELECT -->
 <div class="card">
+<h3>Select Session</h3>
+<select id="sessionSelect" onchange="selectSession()"></select>
+<p id="sessionStatus" style="color:green;font-weight:bold"></p>
+</div>
 
+<div id="marksCard" style="display:none;">
+
+<div class="card">
 <h3>Select Details</h3>
 
 <select id="classSelect">
@@ -126,18 +68,14 @@ select,input,button{max-width:100%;}
 <input type="number" id="maxMarks" placeholder="Maximum Marks">
 
 <br>
-
 <button class="load" onclick="loadStudents()">Load Students</button>
 <button class="save" onclick="saveMarks()">Save All Marks</button>
 
 </div>
 
 <div class="card">
-
 <h3>Student Marks</h3>
-
 <table>
-
 <thead>
 <tr>
 <th>Roll</th>
@@ -150,288 +88,170 @@ select,input,button{max-width:100%;}
 <th>Rank</th>
 </tr>
 </thead>
-
 <tbody id="marksTable"></tbody>
-
 </table>
-
 </div>
 
 </div>
 
+</div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getFirestore,
-collection,
-getDocs,
-doc,
-getDoc,
-setDoc,
-query,
-where
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+import { getFirestore, collection, getDocs, doc, getDoc, setDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
 apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
 projectId: "nmpsnagguradiya-b9b94"
 };
-
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let students=[];
-let exams=[];
-let subjects=[];
-
-let selectedClass="";
-let selectedExam="";
-let selectedSubject="";
-
+let students=[], exams=[], subjects=[];
+let selectedClass="", selectedExam="", selectedSubject="";
+let activeSession = localStorage.getItem("activeSession") || "";
+const schoolId = localStorage.getItem("schoolId") || "school_001";
 
 // GRADE SYSTEM
 function getGrade(p){
-
 if(p>=90) return "A+";
 if(p>=75) return "A";
 if(p>=60) return "B";
 if(p>=45) return "C";
 if(p>=33) return "D";
-
 return "F";
-
 }
+function getResult(p){return p>=33?"PASS":"FAIL";}
 
-// PASS FAIL
-function getResult(p){
-
-if(p>=33) return "PASS";
-
-return "FAIL";
-
+// LOAD SESSIONS
+async function loadSessions(){
+  const snap = await getDoc(doc(db,"schools",schoolId));
+  if(snap.exists()){
+    const data = snap.data();
+    const sessions = data.sessions || [];
+    let options = '<option value="">Select Session</option>';
+    sessions.forEach(s=>{
+      options += `<option value="${s}" ${s===activeSession?'selected':''}>${s}</option>`;
+    });
+    document.getElementById("sessionSelect").innerHTML = options;
+    if(activeSession){
+      selectSession();
+    }
+  }
 }
+loadSessions();
 
+// SESSION SELECT
+window.selectSession = function(){
+  const sel = document.getElementById("sessionSelect").value;
+  if(!sel) return;
+  activeSession = sel;
+  localStorage.setItem("activeSession",sel);
+  document.getElementById("sessionStatus").innerText = "Active Session: "+sel;
+  document.getElementById("marksCard").style.display="block";
+  loadExams();
+  loadSubjects();
+}
 
 // LOAD EXAMS
 async function loadExams(){
-
-const snap=await getDocs(collection(db,"exam_sessions"));
-
-exams=snap.docs.map(d=>({id:d.id,...d.data()}));
-
-document.getElementById("examSelect").innerHTML=
-'<option value="">Select Exam</option>'+
-exams.map(e=>`<option value="${e.id}">${e.examName}</option>`).join("");
-
+  const snap = await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",activeSession)));
+  exams = snap.docs.map(d=>({id:d.id,...d.data()}));
+  document.getElementById("examSelect").innerHTML = '<option value="">Select Exam</option>'+exams.map(e=>`<option value="${e.id}">${e.examName}</option>`).join("");
 }
-
 
 // LOAD SUBJECTS
 async function loadSubjects(){
-
-const snap=await getDocs(collection(db,"subjects"));
-
-subjects=snap.docs.map(d=>({id:d.id,...d.data()}));
-
-document.getElementById("subjectSelect").innerHTML=
-'<option value="">Select Subject</option>'+
-subjects.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
-
+  const snap = await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",activeSession)));
+  subjects = snap.docs.map(d=>({id:d.id,...d.data()}));
+  document.getElementById("subjectSelect").innerHTML = '<option value="">Select Subject</option>'+subjects.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
 }
 
-await loadExams();
-await loadSubjects();
-
-
-// SUBJECT SELECT → AUTO MAX MARKS
+// AUTO MAX MARKS
 document.getElementById("subjectSelect").addEventListener("change",async()=>{
-
-const subjectId=document.getElementById("subjectSelect").value;
-
-const docSnap=await getDoc(doc(db,"subjects",subjectId));
-
-if(docSnap.exists()){
-
-document.getElementById("maxMarks").value=docSnap.data().maxMarks || "";
-
-}
-
+  const subjectId=document.getElementById("subjectSelect").value;
+  if(!subjectId) return;
+  const docSnap=await getDoc(doc(db,"subjects",subjectId));
+  if(docSnap.exists()){
+    document.getElementById("maxMarks").value = docSnap.data().maxMarks || "";
+  }
 });
-
 
 // LOAD STUDENTS
 window.loadStudents=async function(){
-
-selectedClass=document.getElementById("classSelect").value;
-selectedExam=document.getElementById("examSelect").value;
-selectedSubject=document.getElementById("subjectSelect").value;
-
-if(!selectedClass||!selectedExam||!selectedSubject){
-
-alert("Select Class, Exam and Subject");
-
-return;
-
+  selectedClass=document.getElementById("classSelect").value;
+  selectedExam=document.getElementById("examSelect").value;
+  selectedSubject=document.getElementById("subjectSelect").value;
+  if(!selectedClass||!selectedExam||!selectedSubject){alert("Select Class, Exam and Subject");return;}
+  const q=query(collection(db,"admissions"),where("class","==",selectedClass),where("schoolId","==",schoolId),where("session","==",activeSession));
+  const snap = await getDocs(q);
+  students = snap.docs.map(d=>({id:d.id,...d.data()}));
+  renderTable();
 }
-
-const q=query(collection(db,"admissions"),where("class","==",selectedClass));
-
-const snap=await getDocs(q);
-
-students=snap.docs.map(d=>({id:d.id,...d.data()}));
-
-renderTable();
-
-}
-
 
 // RENDER TABLE
 async function renderTable(){
-
-const tbody=document.getElementById("marksTable");
-
-tbody.innerHTML="";
-
-for(const s of students){
-
-const docId=`${s.id}_${selectedExam}_${selectedSubject}`;
-
-const markDoc=await getDoc(doc(db,"marks",docId));
-
-const marks=markDoc.exists()?markDoc.data().marks:"";
-
-const tr=document.createElement("tr");
-
-tr.innerHTML=`
-
-<td>${s.roll||""}</td>
-<td>${s.name}</td>
-<td>${s.father||""}</td>
-
-<td>
-<input type="number" class="markInput"
-data-id="${s.id}"
-value="${marks}" min="0">
-</td>
-
-<td class="percent"></td>
-<td class="grade"></td>
-<td class="result"></td>
-<td class="rank"></td>
-
-`;
-
-tbody.appendChild(tr);
-
+  const tbody=document.getElementById("marksTable");
+  tbody.innerHTML="";
+  for(const s of students){
+    const docId=`${s.id}_${selectedExam}_${selectedSubject}`;
+    const markDoc=await getDoc(doc(db,"marks",docId));
+    const marks=markDoc.exists()?markDoc.data().marks:"";
+    const tr=document.createElement("tr");
+    tr.innerHTML=`
+      <td>${s.roll||""}</td>
+      <td>${s.name}</td>
+      <td>${s.father||""}</td>
+      <td><input type="number" class="markInput" data-id="${s.id}" value="${marks}" min="0"></td>
+      <td class="percent"></td>
+      <td class="grade"></td>
+      <td class="result"></td>
+      <td class="rank"></td>
+    `;
+    tbody.appendChild(tr);
+  }
 }
-
-}
-
 
 // SAVE MARKS
 window.saveMarks=async function(){
-
-const maxMarks=parseInt(document.getElementById("maxMarks").value);
-
-if(!maxMarks){
-
-alert("Enter Maximum Marks");
-
-return;
-
+  const maxMarks=parseInt(document.getElementById("maxMarks").value);
+  if(!maxMarks){alert("Enter Maximum Marks");return;}
+  const inputs=document.querySelectorAll(".markInput");
+  let results=[];
+  for(const input of inputs){
+    const studentId=input.dataset.id;
+    let marks=parseInt(input.value)||0;
+    if(marks>maxMarks) marks=maxMarks;
+    const percent=((marks/maxMarks)*100).toFixed(2);
+    const grade=getGrade(percent);
+    const result=getResult(percent);
+    results.push({studentId,marks,percent,grade,result});
+    await setDoc(doc(db,"marks",`${studentId}_${selectedExam}_${selectedSubject}`),{
+      studentId,examId:selectedExam,subjectId:selectedSubject,marks,maxMarks,percentage:percent,grade,result,class:selectedClass,session:activeSession,schoolId
+    });
+    input.classList.add("success");
+    setTimeout(()=>input.classList.remove("success"),500);
+  }
+  // RANK
+  results.sort((a,b)=>b.marks-a.marks);
+  results.forEach((r,i)=>{r.rank=i+1;});
+  updateTable(results);
+  alert("Marks Saved Successfully");
 }
-
-const inputs=document.querySelectorAll(".markInput");
-
-let results=[];
-
-for(const input of inputs){
-
-const studentId=input.dataset.id;
-
-let marks=parseInt(input.value)||0;
-
-if(marks>maxMarks) marks=maxMarks;
-
-const percent=((marks/maxMarks)*100).toFixed(2);
-
-const grade=getGrade(percent);
-
-const result=getResult(percent);
-
-results.push({
-studentId,
-marks,
-percent,
-grade,
-result
-});
-
-await setDoc(doc(db,"marks",`${studentId}_${selectedExam}_${selectedSubject}`),{
-
-studentId,
-examId:selectedExam,
-subjectId:selectedSubject,
-marks,
-maxMarks,
-percentage:percent,
-grade,
-result,
-class:selectedClass
-
-});
-
-input.classList.add("success");
-
-setTimeout(()=>input.classList.remove("success"),500);
-
-}
-
-
-// TOPPER + RANK
-results.sort((a,b)=>b.marks-a.marks);
-
-results.forEach((r,i)=>{
-
-r.rank=i+1;
-
-});
-
-
-updateTable(results);
-
-alert("Marks Saved Successfully");
-
-}
-
 
 // UPDATE TABLE
 function updateTable(results){
-
-const rows=document.querySelectorAll("#marksTable tr");
-
-rows.forEach((row,i)=>{
-
-const r=results[i];
-
-row.querySelector(".percent").innerText=r.percent+"%";
-
-row.querySelector(".grade").innerText=r.grade;
-
-row.querySelector(".result").innerText=r.result;
-
-row.querySelector(".rank").innerText=r.rank;
-
-});
-
+  const rows=document.querySelectorAll("#marksTable tr");
+  rows.forEach((row,i)=>{
+    const r=results[i];
+    row.querySelector(".percent").innerText=r.percent+"%";
+    row.querySelector(".grade").innerText=r.grade;
+    row.querySelector(".result").innerText=r.result;
+    row.querySelector(".rank").innerText=r.rank;
+  });
 }
-
 </script>
 
 </body>
-  </html>
+</html>
