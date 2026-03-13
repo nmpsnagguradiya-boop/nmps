@@ -1,17 +1,16 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <meta charset="UTF-8">
-<title>Result System</title>
+<title>Student Result</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 
 body{
 font-family:Arial;
 margin:0;
-background:#f2f2f2;
+background:#f2f4f8;
 }
 
 header{
@@ -23,16 +22,17 @@ font-size:22px;
 }
 
 .container{
-padding:20px;
-max-width:1000px;
+max-width:1200px;
 margin:auto;
+padding:20px;
 }
 
 .card{
 background:white;
 padding:20px;
-border-radius:10px;
+border-radius:8px;
 margin-bottom:20px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 select,button{
@@ -40,311 +40,335 @@ padding:10px;
 margin:5px;
 }
 
-#marksheet{
-display:none;
+button{
+background:#004aad;
+color:white;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.marksheet{
 background:white;
+border:2px solid #004aad;
 padding:20px;
-border:4px solid #004aad;
+position:relative;
+}
+
+.watermark-logo{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+opacity:0.07;
+width:200px;
+}
+
+.watermark-text{
+position:absolute;
+top:40%;
+left:10%;
+font-size:40px;
+opacity:0.05;
+transform:rotate(-30deg);
+white-space:nowrap;
+}
+
+.school{
+display:flex;
+gap:10px;
+align-items:center;
+border-bottom:1px solid #ccc;
+padding-bottom:10px;
+margin-bottom:10px;
+}
+
+.school img{
+width:60px;
+height:60px;
+}
+
+.school-name{
+font-size:20px;
+font-weight:bold;
+color:#004aad;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:20px;
+margin-top:10px;
 }
 
 th,td{
 border:1px solid #ccc;
-padding:8px;
+padding:6px;
 text-align:center;
+font-size:13px;
 }
 
-th{
-background:#004aad;
-color:white;
+.result-pass{
+color:green;
+font-weight:bold;
 }
 
-.photo{
-width:120px;
-height:140px;
-object-fit:cover;
-border:2px solid black;
+.result-fail{
+color:red;
+font-weight:bold;
+}
+
+@media print{
+header,.card{display:none;}
+body{background:white;}
 }
 
 </style>
-
 </head>
 
 <body>
 
-<header>School Result System</header>
+<header>Student Result / Marksheet</header>
 
 <div class="container">
 
 <div class="card">
 
-<select id="classSelect">
-
-<option value="">Select Class</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-<option>6</option>
-<option>7</option>
-<option>8</option>
-<option>9</option>
-<option>10</option>
-
-</select>
-
-<button onclick="loadStudents()">Load Students</button>
-
-<br>
-
+<select id="sessionSelect"></select>
+<select id="classSelect"></select>
 <select id="studentSelect"></select>
 
-<br>
+<select id="watermarkType">
+<option value="off">Watermark OFF</option>
+<option value="logo">School Logo Watermark</option>
+<option value="text">School Name Watermark</option>
+</select>
 
-<select id="examSelect" multiple style="height:120px;"></select>
-
-<br>
-
-<button onclick="generateResult()">Generate Result</button>
-
-<button onclick="window.print()">Print</button>
+<button onclick="loadResult()">Generate Result</button>
 
 </div>
 
-
-<div id="marksheet">
-
-<h2>Marksheet</h2>
-
-Name : <span id="name"></span><br>
-Father : <span id="father"></span><br>
-Class : <span id="class"></span><br>
-Roll : <span id="roll"></span><br>
-
-<img id="photo" class="photo">
-
-<table>
-
-<thead id="tableHead"></thead>
-
-<tbody id="resultTable"></tbody>
-
-</table>
-
-Total : <span id="total"></span><br>
-Percentage : <span id="percent"></span><br>
+<div id="resultArea"></div>
 
 </div>
-
-</div>
-
 
 <script type="module">
 
-import { initializeApp } from
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getFirestore,
-collection,
-getDocs,
-query,
-where,
-doc,
-getDoc
-} from
-"https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,getDocs,doc,getDoc,query,where,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
-apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId:"nmpsnagguradiya-b9b94"
+apiKey:"YOUR_KEY",
+authDomain:"YOUR_DOMAIN",
+projectId:"YOUR_PROJECT"
 };
 
 const app=initializeApp(firebaseConfig);
-
 const db=getFirestore(app);
 
-let students=[];
-let subjects=[];
-let exams=[];
+const schoolId=localStorage.getItem("schoolId") || "school_001";
 
+let schoolData={};
 
-/* LOAD EXAMS */
+async function loadSchool(){
 
-async function loadExams(){
+const snap=await getDoc(doc(db,"schools",schoolId));
 
-const snap=await getDocs(collection(db,"exam_sessions"));
+if(snap.exists()){
+schoolData=snap.data();
+}
 
-exams=snap.docs.map(d=>({
-id:d.id,
-...d.data()
-}));
+}
 
-const examSelect=document.getElementById("examSelect");
+loadSchool();
 
-examSelect.innerHTML="";
+async function loadSessions(){
 
-exams.forEach(e=>{
+const snap=await getDoc(doc(db,"schools",schoolId));
 
-const opt=document.createElement("option");
+const sessions=snap.data().sessions || [];
 
-opt.value=e.id;
+let html="<option>Select Session</option>";
 
-opt.text=e.examName;
-
-examSelect.appendChild(opt);
-
+sessions.forEach(s=>{
+html+=`<option value="${s}">${s}</option>`;
 });
 
-}
-
-loadExams();
-
-
-/* LOAD SUBJECTS */
-
-async function loadSubjects(){
-
-const snap=await getDocs(collection(db,"subjects"));
-
-subjects=snap.docs.map(d=>({
-id:d.id,
-...d.data()
-}));
+sessionSelect.innerHTML=html;
 
 }
 
-loadSubjects();
+loadSessions();
 
+async function loadResult(){
 
-/* LOAD STUDENTS */
+const session=sessionSelect.value;
+const studentId=studentSelect.value;
 
-window.loadStudents=async function(){
+const studentDoc=await getDoc(doc(db,"admissions",studentId));
 
-const cls=document.getElementById("classSelect").value;
+const student=studentDoc.data();
 
-const q=query(
-collection(db,"admissions"),
-where("class","==",cls)
+const examQuery=query(
+collection(db,"exams"),
+where("schoolId","==",schoolId),
+where("session","==",session)
 );
 
-const snap=await getDocs(q);
+const examSnap=await getDocs(examQuery);
 
-students=snap.docs.map(d=>({
-id:d.id,
-...d.data()
-}));
-
-const studentSelect=document.getElementById("studentSelect");
-
-studentSelect.innerHTML="";
-
-students.forEach(s=>{
-
-const opt=document.createElement("option");
-
-opt.value=s.id;
-
-opt.text=s.name;
-
-studentSelect.appendChild(opt);
-
-});
-
-}
-
-
-/* RESULT */
-
-window.generateResult=async function(){
-
-const studentId=document.getElementById("studentSelect").value;
-
-const examsSelected=[...document.getElementById("examSelect").selectedOptions]
-.map(o=>o.value);
-
-const student=students.find(s=>s.id==studentId);
-
-name.innerText=student.name;
-father.innerText=student.father;
-class.innerText=student.class;
-roll.innerText=student.roll;
-photo.src=student.photo;
-
+let rows="";
 let total=0;
-let max=0;
+let maxTotal=0;
 
-const head=document.getElementById("tableHead");
-const body=document.getElementById("resultTable");
+for(const exam of examSnap.docs){
 
-head.innerHTML="<tr><th>Subject</th>";
+const examData=exam.data();
 
-examsSelected.forEach(e=>{
-const ex=exams.find(x=>x.id==e);
-head.innerHTML+=`<th>${ex.examName}</th>`;
+const markQuery=query(
+collection(db,"marks"),
+where("examId","==",exam.id),
+where("studentId","==",studentId)
+);
+
+const markSnap=await getDocs(markQuery);
+
+markSnap.forEach(m=>{
+
+const data=m.data();
+
+total+=Number(data.marks);
+maxTotal+=Number(data.max);
+
+rows+=`
+<tr>
+<td>${examData.examName}</td>
+<td>${data.subject}</td>
+<td>${data.marks}</td>
+<td>${data.max}</td>
+<td>${getGrade(data.marks,data.max)}</td>
+</tr>
+`;
+
 });
 
-head.innerHTML+="</tr>";
+}
 
-body.innerHTML="";
+const percent=((total/maxTotal)*100).toFixed(2);
 
-for(const sub of subjects){
+const result=percent>=33?"PASS":"FAIL";
 
-let row=`<tr><td>${sub.name}</td>`;
+const attendanceQuery=query(
+collection(db,"attendance"),
+where("studentId","==",studentId),
+where("session","==",session)
+);
 
-for(const exam of examsSelected){
+const attSnap=await getDocs(attendanceQuery);
 
-const id=`${studentId}_${exam}_${sub.id}`;
+let attendance=0;
 
-const markDoc=await getDoc(doc(db,"marks",id));
+attSnap.forEach(a=>{
+attendance=a.data().percent || 0;
+});
 
-if(markDoc.exists()){
+let watermarkHTML="";
 
-const m=markDoc.data();
+if(watermarkType.value=="logo"){
 
-row+=`<td>${m.marks}</td>`;
-
-total+=m.marks;
-
-max+=m.maxMarks;
-
-}else{
-
-row+="<td>-</td>";
+watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;
 
 }
 
+if(watermarkType.value=="text"){
+
+let txt="";
+for(let i=0;i<6;i++){
+txt+=schoolData.name+" ";
 }
 
-row+="</tr>";
-
-body.innerHTML+=row;
+watermarkHTML=`<div class="watermark-text">${txt}</div>`;
 
 }
 
-percent=((total/max)*100).toFixed(2);
+resultArea.innerHTML=`
 
-document.getElementById("total").innerText=total;
+<div class="marksheet">
 
-document.getElementById("percent").innerText=percent;
+${watermarkHTML}
 
-document.getElementById("marksheet").style.display="block";
+<div class="school">
+
+<img src="${schoolData.logo}">
+
+<div>
+
+<div class="school-name">${schoolData.name}</div>
+
+<div>${schoolData.address}</div>
+
+<div>DISE : ${schoolData.dise}</div>
+
+<div>Session : ${session}</div>
+
+</div>
+
+</div>
+
+<h3>Student Details</h3>
+
+<b>Name :</b> ${student.name}<br>
+<b>Father :</b> ${student.father}<br>
+<b>Class :</b> ${student.class}<br>
+<b>Roll :</b> ${student.roll}
+
+<table>
+
+<tr>
+<th>Exam</th>
+<th>Subject</th>
+<th>Marks</th>
+<th>Max</th>
+<th>Grade</th>
+</tr>
+
+${rows}
+
+</table>
+
+<h3>Total : ${total} / ${maxTotal}</h3>
+
+<h3>Percentage : ${percent}%</h3>
+
+<h3 class="${result=="PASS"?"result-pass":"result-fail"}">
+Result : ${result}
+</h3>
+
+<h3>Attendance : ${attendance}%</h3>
+
+<h3>Sports Grade : A</h3>
+<h3>Activity Grade : B</h3>
+
+</div>
+
+`;
+
+}
+
+function getGrade(marks,max){
+
+const p=(marks/max)*100;
+
+if(p>=90) return "A+";
+if(p>=75) return "A";
+if(p>=60) return "B";
+if(p>=45) return "C";
+if(p>=33) return "D";
+
+return "F";
 
 }
 
 </script>
 
 </body>
-
-</html>
+  </html>
