@@ -8,9 +8,9 @@
 
 <style>
 
-body {font-family:Arial; margin:0; background:#f2f2f2;}
+body{font-family:Arial;margin:0;background:#f2f2f2;}
 
-header {
+header{
 background:#004aad;
 color:white;
 padding:15px;
@@ -18,13 +18,13 @@ text-align:center;
 font-size:22px;
 }
 
-.container {
+.container{
 padding:20px;
 max-width:1000px;
 margin:auto;
 }
 
-.card {
+.card{
 background:white;
 padding:20px;
 border-radius:8px;
@@ -32,46 +32,47 @@ margin-bottom:20px;
 box-shadow:0 2px 5px rgba(0,0,0,0.1);
 }
 
-select,input,button {
+select,input,button{
 padding:10px;
 margin:5px;
 width:100%;
 max-width:300px;
 }
 
-button {
+button{
 cursor:pointer;
 border:none;
 border-radius:5px;
 }
 
-.save {background:#004aad;color:white;}
-.delete {background:#dc3545;color:white;}
-.edit {background:#ffc107;color:white;}
+.save{background:#004aad;color:white;}
+.delete{background:#dc3545;color:white;}
+.edit{background:#ffc107;color:white;}
 
-table {
+table{
 width:100%;
 border-collapse:collapse;
 margin-top:10px;
 }
 
-th, td {
+th,td{
 border:1px solid #ccc;
 padding:8px;
 text-align:center;
 }
 
-th {
+th{
 background:#004aad;
 color:white;
 }
 
-@media (max-width:768px){
-table, th, td {font-size:12px;}
-select,input,button {max-width:100%;}
+@media(max-width:768px){
+table,th,td{font-size:12px;}
+select,input,button{max-width:100%;}
 }
 
 </style>
+
 </head>
 
 <body>
@@ -80,8 +81,9 @@ select,input,button {max-width:100%;}
 
 <div class="container">
 
-<!-- Exam -->
+<!-- EXAM -->
 <div class="card">
+
 <h3>Exam Management</h3>
 
 <select id="examSelect"></select>
@@ -95,7 +97,7 @@ select,input,button {max-width:100%;}
 </div>
 
 
-<!-- Subject -->
+<!-- SUBJECT -->
 <div class="card">
 
 <h3>Subject Management</h3>
@@ -112,7 +114,7 @@ select,input,button {max-width:100%;}
 
 
 
-<!-- Timetable -->
+<!-- TIMETABLE -->
 <div class="card">
 
 <h3>Timetable Creation</h3>
@@ -163,7 +165,8 @@ select,input,button {max-width:100%;}
 </div>
 
 
-<!-- Filter -->
+
+<!-- FILTER -->
 <div class="card">
 
 <h3>Timetable Preview</h3>
@@ -187,13 +190,10 @@ select,input,button {max-width:100%;}
 
 </select>
 
-
 <table>
 
 <thead>
-
 <tr>
-
 <th>Exam</th>
 <th>Subject</th>
 <th>Class</th>
@@ -202,9 +202,7 @@ select,input,button {max-width:100%;}
 <th>Time</th>
 <th>Edit</th>
 <th>Delete</th>
-
 </tr>
-
 </thead>
 
 <tbody id="timetablePreview"></tbody>
@@ -212,7 +210,6 @@ select,input,button {max-width:100%;}
 </table>
 
 </div>
-
 
 </div>
 
@@ -222,11 +219,9 @@ select,input,button {max-width:100%;}
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-import { getFirestore, collection, addDoc, getDocs, doc, updateDoc, deleteDoc, getDoc, query, where }
+import { getFirestore,collection,addDoc,getDocs,doc,updateDoc,deleteDoc,getDoc,query,where }
 
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -234,18 +229,10 @@ authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
 projectId:"nmpsnagguradiya-b9b94"
 };
 
-
 const app=initializeApp(firebaseConfig);
-
 const db=getFirestore(app);
 
-
-
-/* MULTI SCHOOL */
-
-const schoolId = localStorage.getItem("schoolId") || "school_001";
-
-
+const schoolId=localStorage.getItem("schoolId")||"school_001";
 
 let editExamId=null;
 let editSubjectId=null;
@@ -254,14 +241,11 @@ let editTimetableId=null;
 let timetableCache=[];
 
 
-
 /* LOAD DATA */
 
 async function loadData(){
 
-const examQuery=query(collection(db,"exam_sessions"),where("schoolId","==",schoolId));
-
-const examSnap=await getDocs(examQuery);
+const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId)));
 
 let examHTML='<option value="">Select Exam</option>';
 
@@ -274,9 +258,7 @@ document.getElementById("ttExam").innerHTML=examHTML;
 
 
 
-const subQuery=query(collection(db,"subjects"),where("schoolId","==",schoolId));
-
-const subSnap=await getDocs(subQuery);
+const subSnap=await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId)));
 
 let subHTML='<option value="">Select Subject</option>';
 
@@ -297,7 +279,7 @@ loadData();
 
 
 
-/* SAVE EXAM */
+/* EXAM */
 
 window.saveExam=async function(){
 
@@ -305,34 +287,31 @@ const name=document.getElementById("examInput").value;
 
 if(!name) return alert("Enter exam name");
 
+if(editExamId){
 
+await updateDoc(doc(db,"exam_sessions",editExamId),{examName:name});
 
-await addDoc(collection(db,"exam_sessions"),{
+editExamId=null;
 
-examName:name,
-schoolId:schoolId
+}else{
 
-});
+await addDoc(collection(db,"exam_sessions"),{examName:name,schoolId});
+
+}
 
 document.getElementById("examInput").value="";
 
 loadData();
 
-alert("Exam saved");
-
 }
 
 
-
-/* DELETE EXAM */
 
 window.deleteExam=async function(){
 
 const id=document.getElementById("examSelect").value;
 
 if(!id) return alert("Select exam");
-
-
 
 await deleteDoc(doc(db,"exam_sessions",id));
 
@@ -350,14 +329,17 @@ const name=document.getElementById("subjectInput").value;
 
 if(!name) return alert("Enter subject name");
 
+if(editSubjectId){
 
+await updateDoc(doc(db,"subjects",editSubjectId),{name});
 
-await addDoc(collection(db,"subjects"),{
+editSubjectId=null;
 
-name:name,
-schoolId:schoolId
+}else{
 
-});
+await addDoc(collection(db,"subjects"),{name,schoolId});
+
+}
 
 document.getElementById("subjectInput").value="";
 
@@ -367,15 +349,11 @@ loadData();
 
 
 
-/* DELETE SUBJECT */
-
 window.deleteSubject=async function(){
 
 const id=document.getElementById("subjectList").value;
 
 if(!id) return alert("Select subject");
-
-
 
 await deleteDoc(doc(db,"subjects",id));
 
@@ -385,43 +363,31 @@ loadData();
 
 
 
-/* SAVE TIMETABLE */
+/* TIMETABLE */
 
 window.saveTimetable=async function(){
 
 const examId=document.getElementById("ttExam").value;
-
 const subjectId=document.getElementById("ttSubject").value;
-
 const cls=document.getElementById("ttClass").value;
-
 const date=document.getElementById("ttDate").value;
-
 const day=document.getElementById("ttDay").value;
-
 const time=document.getElementById("ttTime").value;
 
-
-
 if(!examId||!subjectId||!cls||!date||!day||!time)
-
 return alert("Fill all fields");
 
+if(editTimetableId){
 
+await updateDoc(doc(db,"timetable",editTimetableId),{examId,subjectId,class:cls,date,day,time});
 
-await addDoc(collection(db,"timetable"),{
+editTimetableId=null;
 
-examId,
-subjectId,
-class:cls,
-date,
-day,
-time,
-schoolId
+}else{
 
-});
+await addDoc(collection(db,"timetable"),{examId,subjectId,class:cls,date,day,time,schoolId});
 
-document.getElementById("ttStatus").innerText="Timetable saved";
+}
 
 loadTimetablePreview();
 
@@ -433,9 +399,7 @@ loadTimetablePreview();
 
 async function loadTimetablePreview(){
 
-const q=query(collection(db,"timetable"),where("schoolId","==",schoolId));
-
-const snap=await getDocs(q);
+const snap=await getDocs(query(collection(db,"timetable"),where("schoolId","==",schoolId)));
 
 timetableCache=[];
 
@@ -453,7 +417,7 @@ renderTimetablePreview();
 
 /* RENDER TABLE */
 
-async function renderTimetablePreview(){
+window.renderTimetablePreview=async function(){
 
 const filter=document.getElementById("classFilter").value;
 
@@ -466,48 +430,28 @@ const data=item.data;
 if(filter!="all" && data.class!=filter) continue;
 
 const examDoc=await getDoc(doc(db,"exam_sessions",data.examId));
-
-const subjectDoc=await getDoc(doc(db,"subjects",data.subjectId));
+const subDoc=await getDoc(doc(db,"subjects",data.subjectId));
 
 const examName=examDoc.exists()?examDoc.data().examName:"";
-
-const subjectName=subjectDoc.exists()?subjectDoc.data().name:"";
-
-
+const subName=subDoc.exists()?subDoc.data().name:"";
 
 html+=`
 
 <tr>
 
 <td>${examName}</td>
-<td>${subjectName}</td>
+<td>${subName}</td>
 <td>${data.class}</td>
 <td>${data.date}</td>
 <td>${data.day}</td>
 <td>${data.time}</td>
 
 <td>
-
-<button class="edit"
-
-onclick="editTimetable('${item.id}')">
-
-Edit
-
-</button>
-
+<button class="edit" onclick="editTimetable('${item.id}')">Edit</button>
 </td>
 
 <td>
-
-<button class="delete"
-
-onclick="deleteTimetable('${item.id}')">
-
-Delete
-
-</button>
-
+<button class="delete" onclick="deleteTimetable('${item.id}')">Delete</button>
 </td>
 
 </tr>
@@ -529,8 +473,6 @@ window.editTimetable=async function(id){
 const docSnap=await getDoc(doc(db,"timetable",id));
 
 const d=docSnap.data();
-
-
 
 document.getElementById("ttExam").value=d.examId;
 document.getElementById("ttSubject").value=d.subjectId;
@@ -562,4 +504,4 @@ loadTimetablePreview();
 </script>
 
 </body>
-</html>
+  </html>
