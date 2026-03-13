@@ -79,6 +79,27 @@ display:none;
 <option>12</option>
 </select>
 
+<select id="classImport">
+<option value="">Select Class For Import</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+<option>11</option>
+<option>12</option>
+</select>
+
+<input type="file" id="excelImport">
+
 <button class="export" onclick="exportAll()">Export All Students</button>
 
 </div>
@@ -110,7 +131,7 @@ display:none;
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,updateDoc,deleteDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,collection,getDocs,doc,updateDoc,deleteDoc,addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -182,6 +203,7 @@ table.innerHTML+=`
 
 <button class="edit" onclick="editStudent('${data.id}')">Edit</button>
 <button class="print" onclick="printForm('${data.id}')">Print</button>
+<button class="photo" onclick="uploadPhoto('${data.id}')">Photo</button>
 <button class="delete" onclick="remove('${data.id}')">Delete</button>
 
 </td>
@@ -194,7 +216,83 @@ table.innerHTML+=`
 
 }
 
-/* EDIT POPUP */
+/* PHOTO UPLOAD */
+
+window.uploadPhoto=function(id){
+
+const input=document.createElement("input");
+input.type="file";
+
+input.onchange=async e=>{
+
+const file=e.target.files[0];
+
+const formData=new FormData();
+formData.append("image",file);
+
+const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+method:"POST",
+body:formData
+});
+
+const data=await res.json();
+
+await updateDoc(doc(db,"admissions",id),{
+photo:data.data.url
+});
+
+loadAdmissions();
+
+};
+
+input.click();
+
+}
+
+/* BULK IMPORT */
+
+document.getElementById("excelImport").addEventListener("change",function(e){
+
+const selectedClass=document.getElementById("classImport").value;
+
+if(!selectedClass){
+alert("Select Class First");
+return;
+}
+
+const reader=new FileReader();
+
+reader.onload=async function(evt){
+
+const data=new Uint8Array(evt.target.result);
+
+const workbook=XLSX.read(data,{type:'array'});
+
+const sheet=workbook.Sheets[workbook.SheetNames[0]];
+
+const json=XLSX.utils.sheet_to_json(sheet);
+
+for(let s of json){
+
+s.class=selectedClass;
+s.schoolId=schoolId;
+s.session=activeSession;
+
+await addDoc(collection(db,"admissions"),s);
+
+}
+
+alert("Bulk Students Added");
+
+loadAdmissions();
+
+}
+
+reader.readAsArrayBuffer(e.target.files[0]);
+
+});
+
+/* EDIT POPUP (same as before) */
 
 window.editStudent=function(id){
 
@@ -202,80 +300,57 @@ const s=admissions.find(x=>x.id==id);
 
 document.getElementById("popup").style.display="block";
 
-document.getElementById("popup").innerHTML=`
+document.getElementById("popup").innerHTML=`<h3>Edit Student</h3>
 
-<h3>Edit Student</h3>
-
-<input id="name" value="${s.name||""}" placeholder="Name">
-<input id="father" value="${s.father||""}" placeholder="Father">
-<input id="mobile" value="${s.mobile||""}" placeholder="Mobile">
-
-<input id="village" value="${s.village||""}" placeholder="Village">
-<input id="post" value="${s.post||""}" placeholder="Post">
-<input id="district" value="${s.district||""}" placeholder="District">
-<input id="state" value="${s.state||""}" placeholder="State">
-
+<input id="name" value="${s.name||""}">
+<input id="father" value="${s.father||""}">
+<input id="mobile" value="${s.mobile||""}">
+<input id="village" value="${s.village||""}">
+<input id="post" value="${s.post||""}">
+<input id="district" value="${s.district||""}">
+<input id="state" value="${s.state||""}">
 <input id="dob" value="${s.dob||""}" type="date">
-
-<input id="adhar" value="${s.adhar||""}" placeholder="Aadhar">
-<input id="apar" value="${s.apar||""}" placeholder="APAR">
-<input id="sssm" value="${s.sssm||""}" placeholder="SSSM">
-
-<input id="category" value="${s.category||""}" placeholder="Category">
-
-<input id="roll" value="${s.roll||""}" placeholder="Roll">
-<input id="scholer" value="${s.scholer||""}" placeholder="Scholar">
-
-<input id="national" value="${s.national||""}" placeholder="National ID">
+<input id="adhar" value="${s.adhar||""}">
+<input id="apar" value="${s.apar||""}">
+<input id="sssm" value="${s.sssm||""}">
+<input id="category" value="${s.category||""}">
+<input id="roll" value="${s.roll||""}">
+<input id="scholer" value="${s.scholer||""}">
+<input id="national" value="${s.national||""}">
 
 <select id="class">
-<option ${s.class=="Nursery"?"selected":""}>Nursery</option>
-<option ${s.class=="LKG"?"selected":""}>LKG</option>
 <option ${s.class=="UKG"?"selected":""}>UKG</option>
+<option ${s.class=="LKG"?"selected":""}>LKG</option>
 <option ${s.class=="1"?"selected":""}>1</option>
 <option ${s.class=="2"?"selected":""}>2</option>
-<option ${s.class=="3"?"selected":""}>3</option>
-<option ${s.class=="4"?"selected":""}>4</option>
-<option ${s.class=="5"?"selected":""}>5</option>
-<option ${s.class=="6"?"selected":""}>6</option>
-<option ${s.class=="7"?"selected":""}>7</option>
-<option ${s.class=="8"?"selected":""}>8</option>
-<option ${s.class=="9"?"selected":""}>9</option>
-<option ${s.class=="10"?"selected":""}>10</option>
-<option ${s.class=="11"?"selected":""}>11</option>
-<option ${s.class=="12"?"selected":""}>12</option>
 </select>
 
 <br><br>
 
 <button onclick="saveEdit('${id}')">Update</button>
-<button onclick="closePopup()">Cancel</button>
-
-`;
+<button onclick="closePopup()">Cancel</button>`;
 
 }
 
 window.saveEdit=async function(id){
 
 await updateDoc(doc(db,"admissions",id),{
-
-name:document.getElementById("name").value,
-father:document.getElementById("father").value,
-mobile:document.getElementById("mobile").value,
-village:document.getElementById("village").value,
-post:document.getElementById("post").value,
-district:document.getElementById("district").value,
-state:document.getElementById("state").value,
-dob:document.getElementById("dob").value,
-adhar:document.getElementById("adhar").value,
-apar:document.getElementById("apar").value,
-sssm:document.getElementById("sssm").value,
-category:document.getElementById("category").value,
-roll:document.getElementById("roll").value,
-scholer:document.getElementById("scholer").value,
-national:document.getElementById("national").value,
+name:name.value,
+father:father.value,
+mobile:mobile.value,
+village:village.value,
+post:post.value,
+district:district.value,
+state:state.value,
+dob:dob.value,
+adhar:adhar.value,
+apar:apar.value,
+sssm:sssm.value,
+category:category.value,
+roll:roll.value,
+scholer:scholer.value,
+national:national.value,
 class:document.getElementById("class").value
-
 });
 
 closePopup();
@@ -287,36 +362,22 @@ window.closePopup=function(){
 document.getElementById("popup").style.display="none";
 }
 
-/* PRINT */
-
 window.printForm=function(id){
 window.open("print-form.html?id="+id);
 }
 
-/* DELETE */
-
 window.remove=async function(id){
-
 if(confirm("Delete admission?")){
-
 await deleteDoc(doc(db,"admissions",id));
 loadAdmissions();
-
 }
-
 }
-
-/* EXPORT */
 
 window.exportAll=function(){
-
 const ws=XLSX.utils.json_to_sheet(admissions);
 const wb=XLSX.utils.book_new();
-
 XLSX.utils.book_append_sheet(wb,ws,"Students");
-
 XLSX.writeFile(wb,"all_students.xlsx");
-
 }
 
 document.getElementById("search").addEventListener("keyup",renderTable);
