@@ -10,7 +10,7 @@ body{font-family:Arial;margin:0;background:#f2f2f2;}
 header{background:#004aad;color:white;padding:16px;text-align:center;font-size:22px;}
 .container{padding:20px;}
 .big-buttons{display:flex;gap:15px;flex-wrap:wrap;margin-bottom:20px;}
-.big-btn{flex:1;min-width:180px;background:#007bff;color:white;padding:15px;border-radius:10px;display:flex;align-items:center;gap:10px;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 0 6px rgba(0,0,0,0.15);}
+.big-btn{flex:1;min-width:200px;background:#007bff;color:white;padding:15px;border-radius:10px;display:flex;align-items:center;gap:10px;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 0 6px rgba(0,0,0,0.15);}
 .big-btn i{font-size:20px;}
 .controls{margin-bottom:15px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
 input,select{padding:10px;margin:5px;border-radius:5px;border:1px solid #ccc;}
@@ -18,12 +18,9 @@ button{padding:10px 15px;border:none;border-radius:5px;cursor:pointer;margin:2px
 button i{margin-right:5px;}
 .promote{background:#28aadc;color:white;}
 .export{background:#28a745;color:white;}
-.print-result{background:#17a2b8;color:white;}
-.print-id{background:#6f42c1;color:white;}
-.photo{background:#6f42c1;color:white;}
-.edit{background:#ffc107;color:white;}
-.delete{background:red;color:white;}
-table{width:100%;border-collapse:collapse;background:white;}
+.print-result-btn{background:#17a2b8;color:white;}
+.print-id-btn{background:#6f42c1;color:white;}
+table{width:100%;border-collapse:collapse;background:white;margin-top:10px;}
 th,td{padding:8px;border:1px solid #ddd;text-align:center;}
 img{width:50px;border-radius:5px;}
 @media(max-width:768px){.big-buttons{flex-direction:column;}.controls{flex-direction:column;}}
@@ -35,11 +32,15 @@ img{width:50px;border-radius:5px;}
 
 <div class="container">
 
+<!-- TOP BIG BUTTONS -->
 <div class="big-buttons">
 <div class="big-btn" onclick="window.location.href='admission.html'"><i class="fas fa-user-plus"></i>Add Student</div>
 <div class="big-btn" onclick="window.location.href='all-students.html'"><i class="fas fa-users"></i>All Students</div>
+<div class="big-btn print-result-btn" onclick="window.open('print-result.html')"><i class="fas fa-print"></i>Print Result</div>
+<div class="big-btn print-id-btn" onclick="window.open('print-id.html')"><i class="fas fa-id-card"></i>Print ID</div>
 </div>
 
+<!-- CONTROLS -->
 <div class="controls">
 <input type="text" id="search" placeholder="Search Name / Mobile">
 <select id="classFilter">
@@ -84,6 +85,7 @@ img{width:50px;border-radius:5px;}
 
 <h3>Total Students: <span id="total">0</span></h3>
 
+<!-- STUDENT TABLE -->
 <table>
 <thead>
 <tr>
@@ -93,7 +95,6 @@ img{width:50px;border-radius:5px;}
 <th>Village</th>
 <th>Class</th>
 <th>Photo</th>
-<th>Actions</th>
 </tr>
 </thead>
 <tbody id="list"></tbody>
@@ -103,7 +104,7 @@ img{width:50px;border-radius:5px;}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, addDoc, doc, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -116,10 +117,7 @@ const db = getFirestore(app);
 
 const schoolId = localStorage.getItem("schoolId") || "school_001";
 const activeSession = localStorage.getItem("activeSession") || "2025-26";
-const nextSession = (() => {
-  let [start,end] = activeSession.split('-'); 
-  return `${parseInt(start)+1}-${parseInt(end)+1}`;
-})();
+const nextSession = (() => {let [start,end]=activeSession.split('-'); return `${parseInt(start)+1}-${parseInt(end)+1}`;})();
 
 let admissions = [];
 
@@ -130,8 +128,8 @@ admissions=[];
 const snapshot = await getDocs(collection(db,"admissions"));
 snapshot.forEach(docSnap=>{
   const data = docSnap.data();
-  if(data.schoolId !== schoolId) return;
-  if(data.session !== activeSession) return;
+  if(data.schoolId!==schoolId) return;
+  if(data.session!==activeSession) return;
   data.id = docSnap.id;
   admissions.push(data);
 });
@@ -155,57 +153,25 @@ admissions.forEach(data=>{
     <td>${data.village || ""}</td>
     <td>${data.class}</td>
     <td><img src="${data.photo||""}"></td>
-    <td>
-      <button class="edit" onclick="editStudent('${data.id}')"><i class="fas fa-edit"></i>Edit</button>
-      <button class="print-result" onclick="window.open('print-result.html?id=${data.id}')"><i class="fas fa-print"></i>Print Result</button>
-      <button class="print-id" onclick="window.open('print-id.html?id=${data.id}')"><i class="fas fa-id-card"></i>Print ID</button>
-      <button class="delete" onclick="remove('${data.id}')"><i class="fas fa-trash"></i>Delete</button>
-      <button class="photo" onclick="uploadPhoto('${data.id}')"><i class="fas fa-camera"></i>Photo</button>
-    </td>
   </tr>
   `;
 });
 }
 
-/* EDIT */
-window.editStudent = function(id){
-const s = admissions.find(x=>x.id==id);
-const formHTML = prompt("Edit Name", s.name);
-if(formHTML !== null){
-  updateDoc(doc(db,"admissions",id),{name:formHTML}).then(()=>loadAdmissions());
+/* PROMOTE TO NEXT SESSION */
+window.promoteClass = async function(){
+const cls = document.getElementById("promoteClass").value;
+if(!cls){ alert("Select class to promote!"); return;}
+for(let s of admissions){
+  if(s.class !== cls) continue;
+  const newData = {...s};
+  newData.session = nextSession;
+  const nextClassMap = {Nursery:"LKG",LKG:"UKG",UKG:"1","1":"2","2":"3","3":"4","4":"5","5":"6","6":"7","7":"8","8":"9","9":"10","10":"11","11":"12"};
+  newData.class = nextClassMap[cls] || cls;
+  delete newData.id;
+  await addDoc(collection(db,"admissions"), newData);
 }
-}
-
-/* DELETE */
-window.remove = async function(id){
-if(confirm("Delete Student?")){
-await deleteDoc(doc(db,"admissions",id));
-loadAdmissions();
-}
-}
-
-/* PHOTO */
-window.uploadPhoto = function(id){
-const input = document.createElement("input");
-input.type = "file";
-input.onchange = async e=>{
-  const file = e.target.files[0];
-  const formData = new FormData();
-  formData.append("image", file);
-  const res = await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{method:"POST",body:formData});
-  const data = await res.json();
-  await updateDoc(doc(db,"admissions",id),{photo:data.data.url});
-  loadAdmissions();
-};
-input.click();
-}
-
-/* EXPORT ALL */
-window.exportAll = function(){
-const ws = XLSX.utils.json_to_sheet(admissions);
-const wb = XLSX.utils.book_new();
-XLSX.utils.book_append_sheet(wb,ws,"Students");
-XLSX.writeFile(wb,"all_students.xlsx");
+alert(`Class ${cls} promoted to ${nextSession}`);
 }
 
 /* BULK IMPORT */
@@ -230,20 +196,12 @@ reader.onload = async function(evt){
 reader.readAsArrayBuffer(e.target.files[0]);
 });
 
-/* PROMOTE TO NEXT SESSION */
-window.promoteClass = async function(){
-const cls = document.getElementById("promoteClass").value;
-if(!cls){ alert("Select class to promote!"); return;}
-for(let s of admissions){
-  if(s.class !== cls) continue;
-  const newData = {...s};
-  newData.session = nextSession;
-  const nextClassMap = {Nursery:"LKG",LKG:"UKG",UKG:"1", "1":"2","2":"3","3":"4","4":"5","5":"6","6":"7","7":"8","8":"9","9":"10","10":"11","11":"12"};
-  newData.class = nextClassMap[cls] || cls;
-  delete newData.id;
-  await addDoc(collection(db,"admissions"), newData);
-}
-alert(`Class ${cls} promoted to ${nextSession}`);
+/* EXPORT ALL */
+window.exportAll = function(){
+const ws = XLSX.utils.json_to_sheet(admissions);
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"Students");
+XLSX.writeFile(wb,"all_students.xlsx");
 }
 
 document.getElementById("search").addEventListener("keyup",renderTable);
