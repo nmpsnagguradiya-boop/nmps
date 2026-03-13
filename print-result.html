@@ -2,44 +2,36 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Class Result / Marksheet</title>
+<title>Print Result</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 
-body{
-font-family:Arial;
-margin:0;
-background:#f2f4f8;
-}
+body{font-family:Arial;margin:0;background:#f2f4f8}
 
 header{
 background:#004aad;
 color:white;
 padding:15px;
 text-align:center;
-font-size:22px;
+font-size:22px
 }
 
-.container{
-max-width:1200px;
-margin:auto;
-padding:20px;
-}
+.container{padding:20px;max-width:1200px;margin:auto}
 
 .card{
 background:white;
 padding:20px;
 border-radius:8px;
 margin-bottom:20px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
+box-shadow:0 2px 6px rgba(0,0,0,0.1)
 }
 
 select,button{
 padding:10px;
-margin:5px;
+margin:5px
 }
 
 button{
@@ -47,15 +39,24 @@ background:#004aad;
 color:white;
 border:none;
 border-radius:6px;
-cursor:pointer;
+cursor:pointer
 }
 
 .marksheet{
 border:2px solid #004aad;
 padding:20px;
 margin-bottom:40px;
-position:relative;
 background:white;
+position:relative
+}
+
+.watermark{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+opacity:0.08;
+width:200px
 }
 
 .school{
@@ -64,58 +65,39 @@ gap:10px;
 align-items:center;
 border-bottom:1px solid #ccc;
 padding-bottom:10px;
-margin-bottom:10px;
+margin-bottom:10px
 }
 
 .school img{
 width:60px;
-height:60px;
+height:60px
 }
 
 .school-name{
 font-size:20px;
 font-weight:bold;
-color:#004aad;
+color:#004aad
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:10px;
+margin-top:10px
 }
 
 th,td{
 border:1px solid #ccc;
-padding:6px;
+padding:5px;
 text-align:center;
-font-size:13px;
+font-size:13px
 }
 
-.pass{color:green;font-weight:bold;}
-.fail{color:red;font-weight:bold;}
-
-.watermark-logo{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-opacity:0.08;
-width:200px;
-}
-
-.watermark-text{
-position:absolute;
-top:40%;
-left:10%;
-font-size:40px;
-opacity:0.05;
-transform:rotate(-30deg);
-white-space:nowrap;
-}
+.pass{color:green;font-weight:bold}
+.fail{color:red;font-weight:bold}
 
 @media print{
-header,.card{display:none;}
-body{background:white;}
+header,.card{display:none}
+body{background:white}
 }
 
 </style>
@@ -123,7 +105,7 @@ body{background:white;}
 
 <body>
 
-<header>Student Result / Marksheet</header>
+<header>Print Result</header>
 
 <div class="container">
 
@@ -133,6 +115,9 @@ body{background:white;}
 
 <select id="classSelect">
 <option value="">Select Class</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
 <option>1</option>
 <option>2</option>
 <option>3</option>
@@ -145,13 +130,12 @@ body{background:white;}
 <option>10</option>
 </select>
 
-<select id="watermarkType">
+<select id="watermarkSelect">
 <option value="off">Watermark OFF</option>
-<option value="logo">Logo Watermark</option>
-<option value="text">Name Watermark</option>
+<option value="on">Watermark ON</option>
 </select>
 
-<button onclick="generateClassResult()">Generate Result</button>
+<button onclick="generateResult()">Generate Result</button>
 <button onclick="printResult()">Print</button>
 <button onclick="downloadPDF()">Download PDF</button>
 
@@ -164,89 +148,90 @@ body{background:white;}
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,getDoc,query,where,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
-apiKey:"YOUR_KEY",
-authDomain:"YOUR_DOMAIN",
-projectId:"YOUR_PROJECT"
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94"
 };
 
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-const schoolId=localStorage.getItem("schoolId") || "school_001";
+const schoolId=localStorage.getItem("schoolId")||"school_001";
 
-let schoolData={};
+let schoolData={}
 
 async function loadSchool(){
 
-const snap=await getDoc(doc(db,"schools",schoolId));
+const snap=await getDoc(doc(db,"schools",schoolId))
 
-if(snap.exists()){
-schoolData=snap.data();
+if(snap.exists()) schoolData=snap.data()
+
+loadSessions()
+
 }
 
-}
-
-loadSchool();
+loadSchool()
 
 async function loadSessions(){
 
-const snap=await getDoc(doc(db,"schools",schoolId));
+const sessions=schoolData.sessions||[]
 
-const sessions=snap.data().sessions || [];
-
-let html="<option value=''>Select Session</option>";
+let html='<option value="">Select Session</option>'
 
 sessions.forEach(s=>{
-html+=`<option value="${s}">${s}</option>`;
-});
+html+=`<option value="${s}">${s}</option>`
+})
 
-sessionSelect.innerHTML=html;
+sessionSelect.innerHTML=html
 
 }
 
-loadSessions();
+async function generateResult(){
 
-async function generateClassResult(){
+const session=sessionSelect.value
+const cls=classSelect.value
 
-const session=sessionSelect.value;
-const cls=classSelect.value;
+if(!session||!cls){
+alert("Select Session and Class")
+return
+}
 
-const studentQuery=query(
+const q=query(
 collection(db,"admissions"),
 where("schoolId","==",schoolId),
 where("session","==",session),
 where("class","==",cls)
-);
+)
 
-const studentSnap=await getDocs(studentQuery);
+const snap=await getDocs(q)
 
-let html="";
+let html=""
 
-for(const s of studentSnap.docs){
+for(const docSnap of snap.docs){
 
-const student=s.data();
+const student=docSnap.data()
 
-const markQuery=query(
+const marksQuery=query(
 collection(db,"marks"),
-where("studentId","==",s.id),
+where("studentId","==",docSnap.id),
 where("session","==",session)
-);
+)
 
-const markSnap=await getDocs(markQuery);
+const marksSnap=await getDocs(marksQuery)
 
-let rows="";
-let total=0;
-let maxTotal=0;
+let rows=""
+let total=0
+let maxTotal=0
 
-markSnap.forEach(m=>{
+marksSnap.forEach(m=>{
 
-const d=m.data();
+const d=m.data()
 
-total+=Number(d.marks);
-maxTotal+=Number(d.max);
+total+=Number(d.marks)
+maxTotal+=Number(d.max)
 
 rows+=`
 <tr>
@@ -256,67 +241,35 @@ rows+=`
 <td>${d.max}</td>
 <td>${grade(d.marks,d.max)}</td>
 </tr>
-`;
+`
 
-});
+})
 
-let percent=0;
-
+let percent=0
 if(maxTotal>0){
-percent=((total/maxTotal)*100).toFixed(2);
+percent=((total/maxTotal)*100).toFixed(2)
 }
 
-const result=percent>=33?"PASS":"FAIL";
+const result=percent>=33?"PASS":"FAIL"
 
-const attQuery=query(
-collection(db,"attendance"),
-where("studentId","==",s.id),
-where("session","==",session)
-);
-
-const attSnap=await getDocs(attQuery);
-
-let attendance=0;
-
-attSnap.forEach(a=>{
-attendance=a.data().percent || 0;
-});
-
-let watermarkHTML="";
-
-if(watermarkType.value=="logo"){
-watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;
-}
-
-if(watermarkType.value=="text"){
-
-let txt="";
-
-for(let i=0;i<8;i++){
-txt+=schoolData.name+" ";
-}
-
-watermarkHTML=`<div class="watermark-text">${txt}</div>`;
-}
+const watermark=watermarkSelect.value==="on"
+? `<img class="watermark" src="${schoolData.logo||""}">`
+: ""
 
 html+=`
 
 <div class="marksheet">
 
-${watermarkHTML}
+${watermark}
 
 <div class="school">
 
-<img src="${schoolData.logo}">
+<img src="${schoolData.logo||""}">
 
 <div>
 
-<div class="school-name">${schoolData.name}</div>
-
-<div>${schoolData.address}</div>
-
-<div>DISE : ${schoolData.dise || ""}</div>
-
+<div class="school-name">${schoolData.name||""}</div>
+<div>${schoolData.address||""}</div>
 <div>Session : ${session}</div>
 
 </div>
@@ -343,60 +296,51 @@ ${rows}
 </table>
 
 <h3>Total : ${total} / ${maxTotal}</h3>
-
 <h3>Percentage : ${percent}%</h3>
-
-<h3 class="${result=="PASS"?"pass":"fail"}">Result : ${result}</h3>
-
-<h3>Attendance : ${attendance}%</h3>
-
-<h3>Sports Grade : A</h3>
-<h3>Activity Grade : B</h3>
+<h3 class="${result==="PASS"?"pass":"fail"}">Result : ${result}</h3>
 
 </div>
 
-`;
+`
 
 }
 
-resultArea.innerHTML=html;
+resultArea.innerHTML=html
 
 }
 
 function grade(m,max){
 
-let p=(m/max)*100;
+let p=(m/max)*100
 
-if(p>=90) return "A+";
-if(p>=75) return "A";
-if(p>=60) return "B";
-if(p>=45) return "C";
-if(p>=33) return "D";
+if(p>=90)return"A+"
+if(p>=75)return"A"
+if(p>=60)return"B"
+if(p>=45)return"C"
+if(p>=33)return"D"
 
-return "F";
+return"F"
 
 }
 
 window.printResult=function(){
-
-window.print();
-
+window.print()
 }
 
 window.downloadPDF=function(){
 
-const element=document.getElementById("resultArea");
+const element=document.getElementById("resultArea")
 
 html2pdf(element,{
 margin:5,
-filename:"class-result.pdf",
+filename:"result.pdf",
 html2canvas:{scale:2},
-jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
-});
+jsPDF:{unit:"mm",format:"a4"}
+})
 
 }
 
 </script>
 
 </body>
-</html>
+  </html>
