@@ -2,36 +2,40 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Print Result</title>
+<title>Student Result</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 
-body{font-family:Arial;margin:0;background:#f2f4f8;}
+body{font-family:Arial;margin:0;background:#f2f4f8}
 
 header{
 background:#004aad;
 color:white;
 padding:15px;
 text-align:center;
-font-size:22px;
+font-size:22px
 }
 
-.container{padding:20px;max-width:1200px;margin:auto;}
+.container{
+max-width:1200px;
+margin:auto;
+padding:20px
+}
 
 .card{
 background:white;
 padding:20px;
 border-radius:8px;
 margin-bottom:20px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
+box-shadow:0 2px 6px rgba(0,0,0,0.1)
 }
 
-select,button,input{
+select,button{
 padding:10px;
-margin:5px;
+margin:5px
 }
 
 button{
@@ -39,35 +43,76 @@ background:#004aad;
 color:white;
 border:none;
 border-radius:5px;
-cursor:pointer;
+cursor:pointer
 }
 
+/* MARKSHEET */
+
 .marksheet{
-border:2px solid #004aad;
+width:210mm;
+min-height:297mm;
 padding:20px;
-margin-bottom:40px;
+margin:auto;
 background:white;
+border:2px solid #004aad;
 position:relative;
+page-break-after:always
 }
 
 .school{
 display:flex;
-gap:10px;
 align-items:center;
-border-bottom:1px solid #ccc;
+gap:10px;
+border-bottom:2px solid #004aad;
 padding-bottom:10px;
-margin-bottom:10px;
+margin-bottom:10px
 }
 
 .school img{
-width:60px;
-height:60px;
+width:45px;
+height:45px;
 }
 
 .school-name{
 font-size:20px;
 font-weight:bold;
-color:#004aad;
+color:#004aad
+}
+
+.exam-title{
+text-align:center;
+font-size:18px;
+font-weight:bold;
+margin:10px 0
+}
+
+.student{
+display:flex;
+justify-content:space-between;
+margin-top:10px
+}
+
+.student img{
+width:80px;
+height:100px;
+border:1px solid #ccc;
+object-fit:cover
+}
+
+.details{
+font-size:14px
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:15px
+}
+
+th,td{
+border:1px solid #ccc;
+padding:6px;
+text-align:center
 }
 
 .watermark-logo{
@@ -75,39 +120,26 @@ position:absolute;
 top:50%;
 left:50%;
 transform:translate(-50%,-50%);
-opacity:0.08;
-width:200px;
+opacity:0.06;
+width:200px
 }
 
 .watermark-text{
 position:absolute;
-top:40%;
-left:10%;
-font-size:40px;
+top:30%;
+left:5%;
+font-size:50px;
 opacity:0.05;
 transform:rotate(-30deg);
 white-space:nowrap;
 }
 
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:10px;
-}
-
-th,td{
-border:1px solid #ccc;
-padding:6px;
-text-align:center;
-font-size:13px;
-}
-
-.pass{color:green;font-weight:bold;}
-.fail{color:red;font-weight:bold;}
+.result-pass{color:green;font-weight:bold}
+.result-fail{color:red;font-weight:bold}
 
 @media print{
-header,.card{display:none;}
-body{background:white;}
+header,.card{display:none}
+body{background:white}
 }
 
 </style>
@@ -115,7 +147,7 @@ body{background:white;}
 
 <body>
 
-<header>Print Result</header>
+<header>Student Result</header>
 
 <div class="container">
 
@@ -142,12 +174,12 @@ body{background:white;}
 
 <select id="watermarkType">
 <option value="off">Watermark OFF</option>
-<option value="logo">School Logo Watermark</option>
+<option value="logo">Logo Watermark</option>
 <option value="text">School Name Watermark</option>
 </select>
 
-<button onclick="loadStudents()">Load Students</button>
-<button onclick="printResult()">Print</button>
+<button onclick="loadStudents()">Generate Result</button>
+<button onclick="window.print()">Print</button>
 <button onclick="downloadPDF()">PDF</button>
 
 </div>
@@ -159,7 +191,7 @@ body{background:white;}
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,getDoc,query,where,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -175,31 +207,35 @@ const schoolId=localStorage.getItem("schoolId")||"school_001";
 let schoolData={};
 
 async function loadSchool(){
+
 const snap=await getDoc(doc(db,"schools",schoolId));
+
 if(snap.exists()) schoolData=snap.data();
+
 loadSessions();
+
 }
 
 loadSchool();
 
 function loadSessions(){
+
 const sessions=schoolData.sessions||[];
+
 let html='<option value="">Select Session</option>';
+
 sessions.forEach(s=>{
 html+=`<option value="${s}">${s}</option>`;
 });
+
 sessionSelect.innerHTML=html;
+
 }
 
 window.loadStudents=async function(){
 
 const session=sessionSelect.value;
 const cls=classSelect.value;
-
-if(!session||!cls){
-alert("Select Session and Class");
-return;
-}
 
 const q=query(
 collection(db,"admissions"),
@@ -216,19 +252,19 @@ for(const d of snap.docs){
 
 const s=d.data();
 
-const marksQuery=query(
+const markQuery=query(
 collection(db,"marks"),
 where("studentId","==",d.id),
 where("session","==",session)
 );
 
-const marksSnap=await getDocs(marksQuery);
+const markSnap=await getDocs(markQuery);
 
 let rows="";
 let total=0;
 let maxTotal=0;
 
-marksSnap.forEach(m=>{
+markSnap.forEach(m=>{
 
 const data=m.data();
 
@@ -237,7 +273,6 @@ maxTotal+=Number(data.max);
 
 rows+=`
 <tr>
-<td>${data.exam}</td>
 <td>${data.subject}</td>
 <td>${data.marks}</td>
 <td>${data.max}</td>
@@ -247,39 +282,21 @@ rows+=`
 
 });
 
-let percent=0;
-
-if(maxTotal>0){
-percent=((total/maxTotal)*100).toFixed(2);
-}
+let percent=((total/maxTotal)*100).toFixed(2);
 
 const result=percent>=33?"PASS":"FAIL";
-
-const attQuery=query(
-collection(db,"attendance"),
-where("studentId","==",d.id),
-where("session","==",session)
-);
-
-const attSnap=await getDocs(attQuery);
-
-let attendance=0;
-
-attSnap.forEach(a=>{
-attendance=a.data().percent||0;
-});
 
 let watermarkHTML="";
 
 if(watermarkType.value==="logo"){
-watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo||""}">`;
+watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;
 }
 
 if(watermarkType.value==="text"){
 
 let txt="";
 
-for(let i=0;i<10;i++){
+for(let i=0;i<8;i++){
 txt+=schoolData.name+" ";
 }
 
@@ -297,24 +314,37 @@ ${watermarkHTML}
 <img src="${schoolData.logo||""}">
 
 <div>
-
 <div class="school-name">${schoolData.name||""}</div>
 <div>${schoolData.address||""}</div>
 <div>Session : ${session}</div>
-
 </div>
 
 </div>
 
-<b>Name :</b> ${s.name}<br>
-<b>Father :</b> ${s.father}<br>
-<b>Class :</b> ${s.class}<br>
-<b>Roll :</b> ${s.roll}
+<div class="exam-title">ANNUAL EXAMINATION RESULT</div>
+
+<div class="student">
+
+<div class="details">
+
+Name : ${s.name}<br>
+Father : ${s.father}<br>
+Class : ${s.class}<br>
+Roll : ${s.roll}<br>
+DOB : ${s.dob||""}<br>
+Aadhaar : ${s.aadhaar||""}<br>
+SSSM ID : ${s.sssm||""}<br>
+Village : ${s.village||""}
+
+</div>
+
+<img src="${s.photo||""}">
+
+</div>
 
 <table>
 
 <tr>
-<th>Exam</th>
 <th>Subject</th>
 <th>Marks</th>
 <th>Max</th>
@@ -327,9 +357,10 @@ ${rows}
 
 <h3>Total : ${total}/${maxTotal}</h3>
 <h3>Percentage : ${percent}%</h3>
-<h3 class="${result==="PASS"?"pass":"fail"}">Result : ${result}</h3>
 
-<h3>Attendance : ${attendance}%</h3>
+<h3 class="${result==="PASS"?"result-pass":"result-fail"}">
+Result : ${result}
+</h3>
 
 </div>
 
@@ -353,10 +384,6 @@ if(p>=33)return"D";
 
 return"F";
 
-}
-
-window.printResult=function(){
-window.print();
 }
 
 window.downloadPDF=function(){
