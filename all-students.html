@@ -106,6 +106,7 @@ margin:2px;
 .photo{background:#6f42c1;color:white;}
 .delete{background:red;color:white;}
 .print{background:#17a2b8;color:white;}
+.export{background:#28a745;color:white;}
 
 </style>
 </head>
@@ -180,6 +181,8 @@ Total Admissions
 </select>
 
 <input type="file" id="excelImport">
+
+<button class="export" onclick="exportAll()">Export All Students</button>
 
 </div>
 
@@ -295,7 +298,7 @@ table.innerHTML+=`
 
 }
 
-/* EDIT */
+/* EDIT FULL FORM */
 
 window.edit=function(id){
 
@@ -358,6 +361,19 @@ input.click();
 
 }
 
+/* EXPORT ALL */
+
+window.exportAll=function(){
+
+const ws=XLSX.utils.json_to_sheet(admissions);
+const wb=XLSX.utils.book_new();
+
+XLSX.utils.book_append_sheet(wb,ws,"Students");
+
+XLSX.writeFile(wb,"all_students.xlsx");
+
+}
+
 /* BULK IMPORT */
 
 document.getElementById("excelImport").addEventListener("change",function(e){
@@ -407,4 +423,4 @@ document.getElementById("classFilter").addEventListener("change",renderTable);
 </script>
 
 </body>
-</html>
+           </html>
