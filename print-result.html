@@ -2,8 +2,10 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Student Result</title>
+<title>Class Result / Marksheet</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 
@@ -49,29 +51,11 @@ cursor:pointer;
 }
 
 .marksheet{
-background:white;
 border:2px solid #004aad;
 padding:20px;
+margin-bottom:40px;
 position:relative;
-}
-
-.watermark-logo{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-opacity:0.07;
-width:200px;
-}
-
-.watermark-text{
-position:absolute;
-top:40%;
-left:10%;
-font-size:40px;
-opacity:0.05;
-transform:rotate(-30deg);
-white-space:nowrap;
+background:white;
 }
 
 .school{
@@ -107,14 +91,26 @@ text-align:center;
 font-size:13px;
 }
 
-.result-pass{
-color:green;
-font-weight:bold;
+.pass{color:green;font-weight:bold;}
+.fail{color:red;font-weight:bold;}
+
+.watermark-logo{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+opacity:0.08;
+width:200px;
 }
 
-.result-fail{
-color:red;
-font-weight:bold;
+.watermark-text{
+position:absolute;
+top:40%;
+left:10%;
+font-size:40px;
+opacity:0.05;
+transform:rotate(-30deg);
+white-space:nowrap;
 }
 
 @media print{
@@ -134,16 +130,30 @@ body{background:white;}
 <div class="card">
 
 <select id="sessionSelect"></select>
-<select id="classSelect"></select>
-<select id="studentSelect"></select>
+
+<select id="classSelect">
+<option value="">Select Class</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
 
 <select id="watermarkType">
 <option value="off">Watermark OFF</option>
-<option value="logo">School Logo Watermark</option>
-<option value="text">School Name Watermark</option>
+<option value="logo">Logo Watermark</option>
+<option value="text">Name Watermark</option>
 </select>
 
-<button onclick="loadResult()">Generate Result</button>
+<button onclick="generateClassResult()">Generate Result</button>
+<button onclick="printResult()">Print</button>
+<button onclick="downloadPDF()">Download PDF</button>
 
 </div>
 
@@ -187,7 +197,7 @@ const snap=await getDoc(doc(db,"schools",schoolId));
 
 const sessions=snap.data().sessions || [];
 
-let html="<option>Select Session</option>";
+let html="<option value=''>Select Session</option>";
 
 sessions.forEach(s=>{
 html+=`<option value="${s}">${s}</option>`;
@@ -199,71 +209,72 @@ sessionSelect.innerHTML=html;
 
 loadSessions();
 
-async function loadResult(){
+async function generateClassResult(){
 
 const session=sessionSelect.value;
-const studentId=studentSelect.value;
+const cls=classSelect.value;
 
-const studentDoc=await getDoc(doc(db,"admissions",studentId));
-
-const student=studentDoc.data();
-
-const examQuery=query(
-collection(db,"exams"),
+const studentQuery=query(
+collection(db,"admissions"),
 where("schoolId","==",schoolId),
+where("session","==",session),
+where("class","==",cls)
+);
+
+const studentSnap=await getDocs(studentQuery);
+
+let html="";
+
+for(const s of studentSnap.docs){
+
+const student=s.data();
+
+const markQuery=query(
+collection(db,"marks"),
+where("studentId","==",s.id),
 where("session","==",session)
 );
 
-const examSnap=await getDocs(examQuery);
+const markSnap=await getDocs(markQuery);
 
 let rows="";
 let total=0;
 let maxTotal=0;
 
-for(const exam of examSnap.docs){
-
-const examData=exam.data();
-
-const markQuery=query(
-collection(db,"marks"),
-where("examId","==",exam.id),
-where("studentId","==",studentId)
-);
-
-const markSnap=await getDocs(markQuery);
-
 markSnap.forEach(m=>{
 
-const data=m.data();
+const d=m.data();
 
-total+=Number(data.marks);
-maxTotal+=Number(data.max);
+total+=Number(d.marks);
+maxTotal+=Number(d.max);
 
 rows+=`
 <tr>
-<td>${examData.examName}</td>
-<td>${data.subject}</td>
-<td>${data.marks}</td>
-<td>${data.max}</td>
-<td>${getGrade(data.marks,data.max)}</td>
+<td>${d.exam}</td>
+<td>${d.subject}</td>
+<td>${d.marks}</td>
+<td>${d.max}</td>
+<td>${grade(d.marks,d.max)}</td>
 </tr>
 `;
 
 });
 
-}
+let percent=0;
 
-const percent=((total/maxTotal)*100).toFixed(2);
+if(maxTotal>0){
+percent=((total/maxTotal)*100).toFixed(2);
+}
 
 const result=percent>=33?"PASS":"FAIL";
 
-const attendanceQuery=query(
+const attQuery=query(
 collection(db,"attendance"),
-where("studentId","==",studentId),
+where("studentId","==",s.id),
 where("session","==",session)
 );
 
-const attSnap=await getDocs(attendanceQuery);
+const attSnap=await getDocs(attQuery);
 
 let attendance=0;
 
@@ -274,23 +285,21 @@ attendance=a.data().percent || 0;
 let watermarkHTML="";
 
 if(watermarkType.value=="logo"){
-
 watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;
-
 }
 
 if(watermarkType.value=="text"){
 
 let txt="";
-for(let i=0;i<6;i++){
+
+for(let i=0;i<8;i++){
 txt+=schoolData.name+" ";
 }
 
 watermarkHTML=`<div class="watermark-text">${txt}</div>`;
-
 }
 
-resultArea.innerHTML=`
+html+=`
 
 <div class="marksheet">
 
@@ -306,15 +315,13 @@ ${watermarkHTML}
 
 <div>${schoolData.address}</div>
 
-<div>DISE : ${schoolData.dise}</div>
+<div>DISE : ${schoolData.dise || ""}</div>
 
 <div>Session : ${session}</div>
 
 </div>
 
 </div>
-
-<h3>Student Details</h3>
 
 <b>Name :</b> ${student.name}<br>
 <b>Father :</b> ${student.father}<br>
@@ -339,9 +346,7 @@ ${rows}
 
 <h3>Percentage : ${percent}%</h3>
 
-<h3 class="${result=="PASS"?"result-pass":"result-fail"}">
-Result : ${result}
-</h3>
+<h3 class="${result=="PASS"?"pass":"fail"}">Result : ${result}</h3>
 
 <h3>Attendance : ${attendance}%</h3>
 
@@ -354,9 +359,13 @@ Result : ${result}
 
 }
 
-function getGrade(marks,max){
+resultArea.innerHTML=html;
 
-const p=(marks/max)*100;
+}
+
+function grade(m,max){
+
+let p=(m/max)*100;
 
 if(p>=90) return "A+";
 if(p>=75) return "A";
@@ -368,7 +377,26 @@ return "F";
 
 }
 
+window.printResult=function(){
+
+window.print();
+
+}
+
+window.downloadPDF=function(){
+
+const element=document.getElementById("resultArea");
+
+html2pdf(element,{
+margin:5,
+filename:"class-result.pdf",
+html2canvas:{scale:2},
+jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
+});
+
+}
+
 </script>
 
 </body>
-  </html>
+</html>
