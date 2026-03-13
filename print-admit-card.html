@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta charset="UTF-8">
 <title>Admit Card Print</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -36,8 +37,6 @@ width:100%;
 max-width:300px;
 }
 
-textarea{height:80px;}
-
 button{
 background:#004aad;
 color:white;
@@ -69,21 +68,11 @@ background:white;
 position:relative;
 }
 
-.watermark{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-opacity:0.08;
-width:180px;
-}
-
 .school{
 display:flex;
 align-items:center;
 gap:10px;
 border-bottom:1px solid #ccc;
-padding-bottom:5px;
 margin-bottom:5px;
 }
 
@@ -91,30 +80,6 @@ margin-bottom:5px;
 width:50px;
 height:50px;
 object-fit:cover;
-}
-
-.school-name{
-font-weight:bold;
-font-size:16px;
-color:#004aad;
-}
-
-.school-address{
-font-size:12px;
-}
-
-.exam-title{
-text-align:center;
-font-weight:bold;
-font-size:16px;
-margin-top:5px;
-}
-
-.title{
-text-align:center;
-font-weight:bold;
-font-size:18px;
-margin-bottom:5px;
 }
 
 .student{
@@ -154,10 +119,6 @@ margin-top:15px;
 font-size:12px;
 }
 
-@media print{
-header,.card{display:none;}
-}
-
 </style>
 </head>
 
@@ -173,9 +134,6 @@ header,.card{display:none;}
 
 <select id="classSelect">
 <option value="">Select Class</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
 <option>1</option>
 <option>2</option>
 <option>3</option>
@@ -196,12 +154,7 @@ header,.card{display:none;}
 <option value="six">6 Card Per Page</option>
 </select>
 
-<select id="watermarkSelect">
-<option value="off">Watermark OFF</option>
-<option value="on">Watermark ON</option>
-</select>
-
-<input type="text" id="durationInput" placeholder="Exam Duration Example: 3 Hours">
+<input id="durationInput" placeholder="Exam Duration Example: 3 Hours">
 
 <textarea id="guidelineInput" placeholder="Enter Exam Guidelines"></textarea>
 
@@ -254,8 +207,13 @@ loadSchool();
 async function loadSessions(){
 const snap=await getDoc(doc(db,"schools",schoolId));
 const sessions=snap.data().sessions||[];
+
 let html='<option value="">Select Session</option>';
-sessions.forEach(s=>html+=`<option value="${s}">${s}</option>`);
+
+sessions.forEach(s=>{
+html+=`<option value="${s}">${s}</option>`;
+});
+
 sessionSelect.innerHTML=html;
 }
 loadSessions();
@@ -319,45 +277,54 @@ await loadTimetable();
 
 async function loadTimetable(){
 
-const examId=examSelect.value;
-const cls=classSelect.value;
-
 timetable=[];
+
+const examId=examSelect.value;
 
 const q=query(
 collection(db,"timetable"),
 where("schoolId","==",schoolId),
 where("session","==",activeSession),
 where("examId","==",examId),
-where("class","==",cls)
+where("class","==",classSelect.value)
 );
 
 const snap=await getDocs(q);
 
-snap.forEach(d=>{
+for(const d of snap.docs){
+
 const data=d.data();
 
+let subject="";
+
+if(data.subjectId){
+
+const subDoc=await getDoc(doc(db,"subjects",data.subjectId));
+
+if(subDoc.exists()){
+subject=subDoc.data().name;
+}
+
+}
+
 timetable.push({
-subject:data.subjectName || "",
+subject:subject,
 date:data.date,
 day:data.day,
 time:data.time
 });
-});
+
+}
 
 const examDoc=await getDoc(doc(db,"exam_sessions",examId));
-examName=examDoc.exists()?examDoc.data().examName:"";
+
+if(examDoc.exists()){
+examName=examDoc.data().examName;
+}
 
 }
 
 window.generateCards=function(){
-
-const layout=document.getElementById("layout").value;
-const duration=document.getElementById("durationInput").value;
-const guideline=document.getElementById("guidelineInput").value;
-const watermark=document.getElementById("watermarkSelect").value;
-
-admitArea.className="admit-container "+layout;
 
 const selected=[...document.querySelectorAll("#studentList input:checked")].map(e=>e.value);
 
@@ -376,36 +343,29 @@ rows+=`
 <td>${t.date}</td>
 <td>${t.day}</td>
 <td>${t.time}</td>
-<td>${duration}</td>
+<td>${durationInput.value}</td>
 </tr>
 `;
 });
 
-const watermarkHTML = watermark==="on"
-? `<img src="${schoolData.logo||""}" class="watermark">`
-: "";
-
 html+=`
 
 <div class="admit-card">
-
-${watermarkHTML}
 
 <div class="school">
 
 <img src="${schoolData.logo||""}">
 
 <div>
-<div class="school-name">${schoolData.name||""}</div>
-<div class="school-address">${schoolData.address||""}</div>
-<div>Session : ${activeSession}</div>
+<b>${schoolData.name||""}</b><br>
+${schoolData.address||""}<br>
+Session : ${activeSession}
 </div>
 
 </div>
 
-<div class="exam-title">${examName}</div>
-
-<div class="title">ADMIT CARD</div>
+<center><b>${examName}</b></center>
+<center><b>ADMIT CARD</b></center>
 
 <div class="student">
 
@@ -435,13 +395,17 @@ ${rows}
 </table>
 
 <div class="guideline">
+
 <b>Guidelines:</b><br>
-${guideline}
+${guidelineInput.value}
+
 </div>
 
 <div class="sign">
+
 <div>Principal Sign</div>
 <div>Director Sign</div>
+
 </div>
 
 </div>
@@ -458,9 +422,15 @@ window.printCards=function(){
 
 generateCards();
 
-setTimeout(()=>{
-window.print();
-},500);
+let printContents=document.getElementById("admitArea").innerHTML;
+
+let win=window.open("","","width=900,height=700");
+
+win.document.write("<html><head><title>Print</title></head><body>"+printContents+"</body></html>");
+
+win.document.close();
+
+win.print();
 
 }
 
@@ -472,18 +442,13 @@ setTimeout(()=>{
 
 const element=document.getElementById("admitArea");
 
-html2pdf().set({
-margin:5,
-filename:"admit-cards.pdf",
-html2canvas:{scale:2},
-jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
-}).from(element).save();
+html2pdf().from(element).save("AdmitCards.pdf");
 
-},600);
+},800);
 
 }
 
 </script>
 
 </body>
-</html>
+  </html>
