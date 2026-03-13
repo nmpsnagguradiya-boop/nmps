@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta charset="UTF-8">
 <title>Admit Card Print</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -10,11 +9,7 @@
 
 <style>
 
-body{
-font-family:Arial;
-margin:0;
-background:#f2f4f8;
-}
+body{font-family:Arial;margin:0;background:#f2f4f8;}
 
 header{
 background:#004aad;
@@ -24,16 +19,12 @@ text-align:center;
 font-size:22px;
 }
 
-.container{
-padding:20px;
-max-width:1200px;
-margin:auto;
-}
+.container{padding:20px;max-width:1200px;margin:auto;}
 
 .card{
 background:white;
 padding:20px;
-border-radius:10px;
+border-radius:8px;
 margin-bottom:20px;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
@@ -45,12 +36,13 @@ width:100%;
 max-width:300px;
 }
 
+textarea{height:80px;}
+
 button{
 background:#004aad;
 color:white;
 border:none;
 cursor:pointer;
-border-radius:5px;
 }
 
 .students{
@@ -72,8 +64,19 @@ gap:15px;
 .admit-card{
 border:2px solid #004aad;
 padding:10px;
-border-radius:8px;
+border-radius:6px;
 background:white;
+position:relative;
+overflow:hidden;
+}
+
+.watermark{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+opacity:0.08;
+width:180px;
 }
 
 .school{
@@ -81,6 +84,7 @@ display:flex;
 align-items:center;
 gap:10px;
 border-bottom:1px solid #ccc;
+padding-bottom:5px;
 margin-bottom:5px;
 }
 
@@ -88,6 +92,30 @@ margin-bottom:5px;
 width:50px;
 height:50px;
 object-fit:cover;
+}
+
+.school-name{
+font-weight:bold;
+font-size:16px;
+color:#004aad;
+}
+
+.school-address{
+font-size:12px;
+}
+
+.exam-title{
+text-align:center;
+font-weight:bold;
+font-size:16px;
+margin-top:5px;
+}
+
+.title{
+text-align:center;
+font-weight:bold;
+font-size:18px;
+margin-bottom:5px;
 }
 
 .student{
@@ -127,8 +155,11 @@ margin-top:15px;
 font-size:12px;
 }
 
-</style>
+@media print{
+header,.card{display:none;}
+}
 
+</style>
 </head>
 
 <body>
@@ -143,6 +174,9 @@ font-size:12px;
 
 <select id="classSelect">
 <option value="">Select Class</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
 <option>1</option>
 <option>2</option>
 <option>3</option>
@@ -163,7 +197,12 @@ font-size:12px;
 <option value="six">6 Card Per Page</option>
 </select>
 
-<input id="durationInput" placeholder="Exam Duration Example: 3 Hours">
+<select id="watermarkSelect">
+<option value="off">Watermark OFF</option>
+<option value="on">Watermark ON</option>
+</select>
+
+<input type="text" id="durationInput" placeholder="Exam Duration Example: 3 Hours">
 
 <textarea id="guidelineInput" placeholder="Enter Exam Guidelines"></textarea>
 
@@ -176,7 +215,7 @@ font-size:12px;
 <div id="studentList" class="students"></div>
 
 <button onclick="generateCards()">Generate Admit Cards</button>
-<button onclick="printCards()">Print</button>
+<button onclick="window.print()">Print</button>
 <button onclick="downloadPDF()">Download PDF</button>
 
 </div>
@@ -199,7 +238,7 @@ projectId:"nmpsnagguradiya-b9b94"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-const schoolId=localStorage.getItem("schoolId") || "school_001";
+const schoolId=localStorage.getItem("schoolId")||"school_001";
 
 let activeSession="";
 let students=[];
@@ -208,57 +247,38 @@ let schoolData={};
 let examName="";
 
 async function loadSchool(){
-
 const snap=await getDoc(doc(db,"schools",schoolId));
-
-if(snap.exists()){
-schoolData=snap.data();
-}
-
+if(snap.exists()) schoolData=snap.data();
 }
 loadSchool();
 
 async function loadSessions(){
-
 const snap=await getDoc(doc(db,"schools",schoolId));
-
-const sessions=snap.data().sessions || [];
-
+const sessions=snap.data().sessions||[];
 let html='<option value="">Select Session</option>';
-
-sessions.forEach(s=>{
-html+=`<option value="${s}">${s}</option>`;
-});
-
+sessions.forEach(s=>html+=`<option value="${s}">${s}</option>`);
 sessionSelect.innerHTML=html;
-
 }
-
 loadSessions();
 
 sessionSelect.onchange=function(){
 activeSession=this.value;
+localStorage.setItem("activeSession",activeSession);
 loadExams();
 }
 
 async function loadExams(){
-
 const q=query(
 collection(db,"exam_sessions"),
 where("schoolId","==",schoolId),
 where("session","==",activeSession)
 );
-
 const snap=await getDocs(q);
-
 let html='<option value="">Select Exam</option>';
-
 snap.forEach(d=>{
 html+=`<option value="${d.id}">${d.data().examName}</option>`;
 });
-
 examSelect.innerHTML=html;
-
 }
 
 window.loadStudents=async function(){
@@ -273,11 +293,9 @@ where("class","==",cls)
 );
 
 const snap=await getDocs(q);
-
 students=snap.docs.map(d=>({id:d.id,...d.data()}));
 
 let html="";
-
 students.forEach(s=>{
 html+=`
 <label>
@@ -289,47 +307,56 @@ ${s.roll||""} - ${s.name}
 
 studentList.innerHTML=html;
 
-await loadTimetable();
-
+loadTimetable();
 }
 
 async function loadTimetable(){
 
-timetable=[];
-
 const examId=examSelect.value;
+const cls=classSelect.value;
+
+const examDoc=await getDoc(doc(db,"exam_sessions",examId));
+examName=examDoc.exists()?examDoc.data().examName:"";
 
 const q=query(
 collection(db,"timetable"),
 where("schoolId","==",schoolId),
 where("session","==",activeSession),
 where("examId","==",examId),
-where("class","==",classSelect.value)
+where("class","==",cls)
 );
 
 const snap=await getDocs(q);
 
-snap.forEach(d=>{
+timetable=[];
+
+for(const d of snap.docs){
+
 const data=d.data();
 
+const subDoc=await getDoc(doc(db,"subjects",data.subjectId));
+
+const subject=subDoc.exists()?subDoc.data().name:"";
+
 timetable.push({
-subject:data.subject,
+subject,
 date:data.date,
 day:data.day,
 time:data.time
 });
 
-});
-
-const examDoc=await getDoc(doc(db,"exam_sessions",examId));
-
-if(examDoc.exists()){
-examName=examDoc.data().examName;
 }
 
 }
 
 window.generateCards=function(){
+
+const layout=document.getElementById("layout").value;
+const duration=document.getElementById("durationInput").value;
+const guideline=document.getElementById("guidelineInput").value;
+const watermark=document.getElementById("watermarkSelect").value;
+
+admitArea.className="admit-container "+layout;
 
 const selected=[...document.querySelectorAll("#studentList input:checked")].map(e=>e.value);
 
@@ -348,37 +375,46 @@ rows+=`
 <td>${t.date}</td>
 <td>${t.day}</td>
 <td>${t.time}</td>
-<td>${durationInput.value}</td>
+<td>${duration}</td>
 </tr>
 `;
 });
 
+const watermarkHTML = watermark==="on"
+? `<img src="${schoolData.logo||""}" class="watermark">`
+: "";
+
 html+=`
 
 <div class="admit-card">
+
+${watermarkHTML}
 
 <div class="school">
 
 <img src="${schoolData.logo||""}">
 
 <div>
-<b>${schoolData.name||""}</b><br>
-${schoolData.address||""}<br>
-Session : ${activeSession}
+<div class="school-name">${schoolData.name||""}</div>
+<div class="school-address">${schoolData.address||""}</div>
+<div>Session : ${activeSession}</div>
 </div>
 
 </div>
 
-<center><b>${examName}</b></center>
-<center><b>ADMIT CARD</b></center>
+<div class="exam-title">${examName}</div>
+
+<div class="title">ADMIT CARD</div>
 
 <div class="student">
 
 <div>
+
 Roll : ${s.roll||""}<br>
 Name : ${s.name||""}<br>
 Father : ${s.father||""}<br>
 Class : ${s.class||""}
+
 </div>
 
 <img src="${s.photo||""}">
@@ -400,13 +436,17 @@ ${rows}
 </table>
 
 <div class="guideline">
+
 <b>Guidelines:</b><br>
-${guidelineInput.value}
+${guideline}
+
 </div>
 
 <div class="sign">
+
 <div>Principal Sign</div>
 <div>Director Sign</div>
+
 </div>
 
 </div>
@@ -419,32 +459,11 @@ admitArea.innerHTML=html;
 
 }
 
-window.printCards=function(){
-
-generateCards();
-
-setTimeout(()=>{
-window.print();
-},500);
-
-}
-
 window.downloadPDF=function(){
-
-generateCards();
-
-setTimeout(()=>{
 
 const element=document.getElementById("admitArea");
 
-html2pdf(element,{
-margin:5,
-filename:"AdmitCards.pdf",
-html2canvas:{scale:2},
-jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
-});
-
-},700);
+html2pdf().from(element).save("admit-cards.pdf");
 
 }
 
