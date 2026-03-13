@@ -3,35 +3,23 @@
 <head>
 <meta charset="UTF-8">
 <title>Admission Admin Panel</title>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 
 <style>
-
 body{font-family:Arial;margin:0;background:#f2f2f2;}
-
 header{background:#004aad;color:white;padding:16px;text-align:center;font-size:22px;}
-
 .container{padding:20px;}
-
 .controls{margin-bottom:15px;}
-
 input,select{padding:8px;margin:5px;width:100%;}
-
 table{width:100%;background:white;border-collapse:collapse;}
-
 th,td{padding:8px;border:1px solid #ddd;text-align:center;}
-
 img{width:50px;border-radius:5px;}
-
 button{padding:6px 10px;border:none;border-radius:5px;cursor:pointer;margin:2px;}
-
 .edit{background:#ffc107;}
 .photo{background:#6f42c1;color:white;}
 .delete{background:red;color:white;}
 .print{background:#17a2b8;color:white;}
 .export{background:#28a745;color:white;}
-
 .popup{
 position:fixed;
 top:50%;
@@ -45,11 +33,10 @@ max-height:80vh;
 overflow:auto;
 box-shadow:0 0 10px rgba(0,0,0,0.3);
 display:none;
+z-index:1000;
 }
-
 </style>
 </head>
-
 <body>
 
 <header>Admission Admin Panel</header>
@@ -107,7 +94,6 @@ display:none;
 <h3>Total Admissions : <span id="total">0</span></h3>
 
 <table>
-
 <thead>
 <tr>
 <th>Name</th>
@@ -119,9 +105,7 @@ display:none;
 <th>Actions</th>
 </tr>
 </thead>
-
 <tbody id="list"></tbody>
-
 </table>
 
 </div>
@@ -129,9 +113,8 @@ display:none;
 <div class="popup" id="popup"></div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,updateDoc,deleteDoc,addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -142,6 +125,7 @@ projectId:"nmpsnagguradiya-b9b94"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
+// Multi-school and multi-session
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 const activeSession=localStorage.getItem("activeSession")||"2025-26";
 
@@ -150,190 +134,134 @@ let admissions=[];
 loadAdmissions();
 
 async function loadAdmissions(){
-
 admissions=[];
-
 const snapshot=await getDocs(collection(db,"admissions"));
-
 snapshot.forEach(docSnap=>{
-
-const data=docSnap.data();
-
-if(data.schoolId!==schoolId) return;
-if(data.session!==activeSession) return;
-
-data.id=docSnap.id;
-
-admissions.push(data);
-
+    const data=docSnap.data();
+    if(data.schoolId!==schoolId) return;
+    if(data.session!==activeSession) return;
+    data.id=docSnap.id;
+    admissions.push(data);
 });
-
 renderTable();
-
 document.getElementById("total").innerText=admissions.length;
-
 }
 
 function renderTable(){
-
 const search=document.getElementById("search").value.toLowerCase();
 const classFilter=document.getElementById("classFilter").value;
-
 const table=document.getElementById("list");
 table.innerHTML="";
-
 admissions.forEach(data=>{
-
-if(search && !data.name.toLowerCase().includes(search) && !data.mobile.includes(search)) return;
-if(classFilter!="all" && data.class!=classFilter) return;
-
-table.innerHTML+=`
-
-<tr>
-
-<td>${data.name}</td>
-<td>${data.father}</td>
-<td>${data.mobile}</td>
-<td>${data.village}</td>
-<td>${data.class}</td>
-
-<td><img src="${data.photo||""}"></td>
-
-<td>
-
-<button class="edit" onclick="editStudent('${data.id}')">Edit</button>
-<button class="print" onclick="printForm('${data.id}')">Print</button>
-<button class="photo" onclick="uploadPhoto('${data.id}')">Photo</button>
-<button class="delete" onclick="remove('${data.id}')">Delete</button>
-
-</td>
-
-</tr>
-
-`;
-
+    if(search && !data.name.toLowerCase().includes(search) && !data.mobile.includes(search)) return;
+    if(classFilter!="all" && data.class!=classFilter) return;
+    table.innerHTML+=`
+    <tr>
+    <td>${data.name}</td>
+    <td>${data.father}</td>
+    <td>${data.mobile}</td>
+    <td>${data.village}</td>
+    <td>${data.class}</td>
+    <td><img src="${data.photo||""}"></td>
+    <td>
+    <button class="edit" onclick="editStudent('${data.id}')">Edit</button>
+    <button class="print" onclick="printForm('${data.id}')">Print</button>
+    <button class="photo" onclick="uploadPhoto('${data.id}')">Photo</button>
+    <button class="delete" onclick="remove('${data.id}')">Delete</button>
+    </td>
+    </tr>
+    `;
 });
-
 }
 
 /* PHOTO UPLOAD */
-
 window.uploadPhoto=function(id){
-
 const input=document.createElement("input");
 input.type="file";
-
 input.onchange=async e=>{
-
-const file=e.target.files[0];
-
-const formData=new FormData();
-formData.append("image",file);
-
-const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
-method:"POST",
-body:formData
-});
-
-const data=await res.json();
-
-await updateDoc(doc(db,"admissions",id),{
-photo:data.data.url
-});
-
-loadAdmissions();
-
+    const file=e.target.files[0];
+    const formData=new FormData();
+    formData.append("image",file);
+    const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+        method:"POST",
+        body:formData
+    });
+    const data=await res.json();
+    await updateDoc(doc(db,"admissions",id),{photo:data.data.url});
+    loadAdmissions();
 };
-
 input.click();
-
 }
 
-/* BULK IMPORT */
-
+/* BULK IMPORT EXCEL */
 document.getElementById("excelImport").addEventListener("change",function(e){
-
 const selectedClass=document.getElementById("classImport").value;
-
-if(!selectedClass){
-alert("Select Class First");
-return;
-}
-
+if(!selectedClass){alert("Select Class First"); return;}
 const reader=new FileReader();
-
 reader.onload=async function(evt){
-
-const data=new Uint8Array(evt.target.result);
-
-const workbook=XLSX.read(data,{type:'array'});
-
-const sheet=workbook.Sheets[workbook.SheetNames[0]];
-
-const json=XLSX.utils.sheet_to_json(sheet);
-
-for(let s of json){
-
-s.class=selectedClass;
-s.schoolId=schoolId;
-s.session=activeSession;
-
-await addDoc(collection(db,"admissions"),s);
-
+    const data=new Uint8Array(evt.target.result);
+    const workbook=XLSX.read(data,{type:'array'});
+    const sheet=workbook.Sheets[workbook.SheetNames[0]];
+    const json=XLSX.utils.sheet_to_json(sheet);
+    for(let s of json){
+        s.class=selectedClass;
+        s.schoolId=schoolId;
+        s.session=activeSession;
+        await addDoc(collection(db,"admissions"),s);
+    }
+    alert("Bulk Students Added");
+    loadAdmissions();
 }
-
-alert("Bulk Students Added");
-
-loadAdmissions();
-
-}
-
 reader.readAsArrayBuffer(e.target.files[0]);
-
 });
 
-/* EDIT POPUP (same as before) */
-
+/* EDIT POPUP */
 window.editStudent=function(id){
-
 const s=admissions.find(x=>x.id==id);
-
 document.getElementById("popup").style.display="block";
-
-document.getElementById("popup").innerHTML=`<h3>Edit Student</h3>
-
-<input id="name" value="${s.name||""}">
-<input id="father" value="${s.father||""}">
-<input id="mobile" value="${s.mobile||""}">
-<input id="village" value="${s.village||""}">
-<input id="post" value="${s.post||""}">
-<input id="district" value="${s.district||""}">
-<input id="state" value="${s.state||""}">
-<input id="dob" value="${s.dob||""}" type="date">
-<input id="adhar" value="${s.adhar||""}">
-<input id="apar" value="${s.apar||""}">
-<input id="sssm" value="${s.sssm||""}">
-<input id="category" value="${s.category||""}">
-<input id="roll" value="${s.roll||""}">
-<input id="scholer" value="${s.scholer||""}">
-<input id="national" value="${s.national||""}">
+document.getElementById("popup").innerHTML=`
+<h3>Edit Student</h3>
+<input id="name" value="${s.name||''}" placeholder="Name">
+<input id="father" value="${s.father||''}" placeholder="Father">
+<input id="mobile" value="${s.mobile||''}" placeholder="Mobile">
+<input id="village" value="${s.village||''}" placeholder="Village">
+<input id="post" value="${s.post||''}" placeholder="Post">
+<input id="district" value="${s.district||''}" placeholder="District">
+<input id="state" value="${s.state||''}" placeholder="State">
+<input id="dob" type="date" value="${s.dob||''}">
+<input id="adhar" value="${s.adhar||''}" placeholder="Aadhar">
+<input id="apar" value="${s.apar||''}" placeholder="APAR">
+<input id="sssm" value="${s.sssm||''}" placeholder="SSSM">
+<input id="category" value="${s.category||''}" placeholder="Category">
+<input id="roll" value="${s.roll||''}" placeholder="Roll">
+<input id="scholer" value="${s.scholer||''}" placeholder="Scholar">
+<input id="national" value="${s.national||''}" placeholder="National ID">
 
 <select id="class">
-<option ${s.class=="UKG"?"selected":""}>UKG</option>
+<option ${s.class=="Nursery"?"selected":""}>Nursery</option>
 <option ${s.class=="LKG"?"selected":""}>LKG</option>
+<option ${s.class=="UKG"?"selected":""}>UKG</option>
 <option ${s.class=="1"?"selected":""}>1</option>
 <option ${s.class=="2"?"selected":""}>2</option>
+<option ${s.class=="3"?"selected":""}>3</option>
+<option ${s.class=="4"?"selected":""}>4</option>
+<option ${s.class=="5"?"selected":""}>5</option>
+<option ${s.class=="6"?"selected":""}>6</option>
+<option ${s.class=="7"?"selected":""}>7</option>
+<option ${s.class=="8"?"selected":""}>8</option>
+<option ${s.class=="9"?"selected":""}>9</option>
+<option ${s.class=="10"?"selected":""}>10</option>
+<option ${s.class=="11"?"selected":""}>11</option>
+<option ${s.class=="12"?"selected":""}>12</option>
 </select>
 
 <br><br>
-
 <button onclick="saveEdit('${id}')">Update</button>
-<button onclick="closePopup()">Cancel</button>`;
-
+<button onclick="closePopup()">Cancel</button>
+`;
 }
 
 window.saveEdit=async function(id){
-
 await updateDoc(doc(db,"admissions",id),{
 name:name.value,
 father:father.value,
@@ -352,19 +280,13 @@ scholer:scholer.value,
 national:national.value,
 class:document.getElementById("class").value
 });
-
 closePopup();
 loadAdmissions();
-
 }
 
-window.closePopup=function(){
-document.getElementById("popup").style.display="none";
-}
+window.closePopup=function(){document.getElementById("popup").style.display="none";}
 
-window.printForm=function(id){
-window.open("print-form.html?id="+id);
-}
+window.printForm=function(id){window.open("print-form.html?id="+id);}
 
 window.remove=async function(id){
 if(confirm("Delete admission?")){
@@ -384,6 +306,5 @@ document.getElementById("search").addEventListener("keyup",renderTable);
 document.getElementById("classFilter").addEventListener("change",renderTable);
 
 </script>
-
 </body>
 </html>
