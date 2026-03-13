@@ -10,7 +10,11 @@
 
 <style>
 
-body{font-family:Arial;margin:0;background:#f2f4f8;}
+body{
+font-family:Arial;
+margin:0;
+background:#f2f4f8;
+}
 
 header{
 background:#004aad;
@@ -20,12 +24,16 @@ text-align:center;
 font-size:22px;
 }
 
-.container{padding:20px;max-width:1200px;margin:auto;}
+.container{
+padding:20px;
+max-width:1200px;
+margin:auto;
+}
 
 .card{
 background:white;
 padding:20px;
-border-radius:8px;
+border-radius:10px;
 margin-bottom:20px;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
@@ -42,6 +50,7 @@ background:#004aad;
 color:white;
 border:none;
 cursor:pointer;
+border-radius:5px;
 }
 
 .students{
@@ -63,9 +72,8 @@ gap:15px;
 .admit-card{
 border:2px solid #004aad;
 padding:10px;
-border-radius:6px;
+border-radius:8px;
 background:white;
-position:relative;
 }
 
 .school{
@@ -120,6 +128,7 @@ font-size:12px;
 }
 
 </style>
+
 </head>
 
 <body>
@@ -190,7 +199,7 @@ projectId:"nmpsnagguradiya-b9b94"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-const schoolId=localStorage.getItem("schoolId")||"school_001";
+const schoolId=localStorage.getItem("schoolId") || "school_001";
 
 let activeSession="";
 let students=[];
@@ -199,14 +208,21 @@ let schoolData={};
 let examName="";
 
 async function loadSchool(){
+
 const snap=await getDoc(doc(db,"schools",schoolId));
-if(snap.exists()) schoolData=snap.data();
+
+if(snap.exists()){
+schoolData=snap.data();
+}
+
 }
 loadSchool();
 
 async function loadSessions(){
+
 const snap=await getDoc(doc(db,"schools",schoolId));
-const sessions=snap.data().sessions||[];
+
+const sessions=snap.data().sessions || [];
 
 let html='<option value="">Select Session</option>';
 
@@ -215,7 +231,9 @@ html+=`<option value="${s}">${s}</option>`;
 });
 
 sessionSelect.innerHTML=html;
+
 }
+
 loadSessions();
 
 sessionSelect.onchange=function(){
@@ -291,30 +309,17 @@ where("class","==",classSelect.value)
 
 const snap=await getDocs(q);
 
-for(const d of snap.docs){
-
+snap.forEach(d=>{
 const data=d.data();
 
-let subject="";
-
-if(data.subjectId){
-
-const subDoc=await getDoc(doc(db,"subjects",data.subjectId));
-
-if(subDoc.exists()){
-subject=subDoc.data().name;
-}
-
-}
-
 timetable.push({
-subject:subject,
+subject:data.subject,
 date:data.date,
 day:data.day,
 time:data.time
 });
 
-}
+});
 
 const examDoc=await getDoc(doc(db,"exam_sessions",examId));
 
@@ -395,17 +400,13 @@ ${rows}
 </table>
 
 <div class="guideline">
-
 <b>Guidelines:</b><br>
 ${guidelineInput.value}
-
 </div>
 
 <div class="sign">
-
 <div>Principal Sign</div>
 <div>Director Sign</div>
-
 </div>
 
 </div>
@@ -422,15 +423,9 @@ window.printCards=function(){
 
 generateCards();
 
-let printContents=document.getElementById("admitArea").innerHTML;
-
-let win=window.open("","","width=900,height=700");
-
-win.document.write("<html><head><title>Print</title></head><body>"+printContents+"</body></html>");
-
-win.document.close();
-
-win.print();
+setTimeout(()=>{
+window.print();
+},500);
 
 }
 
@@ -442,13 +437,18 @@ setTimeout(()=>{
 
 const element=document.getElementById("admitArea");
 
-html2pdf().from(element).save("AdmitCards.pdf");
+html2pdf(element,{
+margin:5,
+filename:"AdmitCards.pdf",
+html2canvas:{scale:2},
+jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
+});
 
-},800);
+},700);
 
 }
 
 </script>
 
 </body>
-  </html>
+</html>
