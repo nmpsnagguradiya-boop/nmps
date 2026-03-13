@@ -90,6 +90,13 @@ color:#004aad;
 font-size:12px;
 }
 
+.exam-title{
+text-align:center;
+font-weight:bold;
+font-size:16px;
+margin-top:5px;
+}
+
 .title{
 text-align:center;
 font-weight:bold;
@@ -196,7 +203,6 @@ header,.card{display:none;}
 
 </div>
 
-
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -217,81 +223,42 @@ let activeSession="";
 let students=[];
 let timetable=[];
 let schoolData={};
-
-
-// LOAD SCHOOL DATA
+let examName="";
 
 async function loadSchool(){
-
 const snap=await getDoc(doc(db,"schools",schoolId));
-
 if(snap.exists()) schoolData=snap.data();
-
 }
-
 loadSchool();
 
-
-// LOAD SESSIONS
-
 async function loadSessions(){
-
 const snap=await getDoc(doc(db,"schools",schoolId));
-
-if(!snap.exists()) return;
-
 const sessions=snap.data().sessions||[];
-
 let html='<option value="">Select Session</option>';
-
-sessions.forEach(s=>{
-html+=`<option value="${s}">${s}</option>`;
-});
-
+sessions.forEach(s=>html+=`<option value="${s}">${s}</option>`);
 sessionSelect.innerHTML=html;
-
 }
-
 loadSessions();
 
-
-// SESSION SELECT
-
 sessionSelect.onchange=function(){
-
 activeSession=this.value;
-
 localStorage.setItem("activeSession",activeSession);
-
 loadExams();
-
 }
 
-
-// LOAD EXAMS
-
 async function loadExams(){
-
 const q=query(
 collection(db,"exam_sessions"),
 where("schoolId","==",schoolId),
 where("session","==",activeSession)
 );
-
 const snap=await getDocs(q);
-
 let html='<option value="">Select Exam</option>';
-
 snap.forEach(d=>{
 html+=`<option value="${d.id}">${d.data().examName}</option>`;
 });
-
 examSelect.innerHTML=html;
-
 }
-
-
-// LOAD STUDENTS
 
 window.loadStudents=async function(){
 
@@ -305,11 +272,9 @@ where("class","==",cls)
 );
 
 const snap=await getDocs(q);
-
 students=snap.docs.map(d=>({id:d.id,...d.data()}));
 
 let html="";
-
 students.forEach(s=>{
 html+=`
 <label>
@@ -322,16 +287,15 @@ ${s.roll||""} - ${s.name}
 studentList.innerHTML=html;
 
 loadTimetable();
-
 }
-
-
-// LOAD TIMETABLE
 
 async function loadTimetable(){
 
 const examId=examSelect.value;
 const cls=classSelect.value;
+
+const examDoc=await getDoc(doc(db,"exam_sessions",examId));
+examName=examDoc.exists()?examDoc.data().examName:"";
 
 const q=query(
 collection(db,"timetable"),
@@ -363,9 +327,6 @@ time:data.time
 }
 
 }
-
-
-// GENERATE ADMIT CARD
 
 window.generateCards=function(){
 
@@ -406,14 +367,14 @@ html+=`
 <img src="${schoolData.logo||""}">
 
 <div>
-
 <div class="school-name">${schoolData.name||""}</div>
 <div class="school-address">${schoolData.address||""}</div>
 <div>Session : ${activeSession}</div>
-
 </div>
 
 </div>
+
+<div class="exam-title">${examName}</div>
 
 <div class="title">ADMIT CARD</div>
 
