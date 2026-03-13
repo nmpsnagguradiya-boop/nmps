@@ -67,7 +67,6 @@ padding:10px;
 border-radius:6px;
 background:white;
 position:relative;
-overflow:hidden;
 }
 
 .watermark{
@@ -215,7 +214,7 @@ header,.card{display:none;}
 <div id="studentList" class="students"></div>
 
 <button onclick="generateCards()">Generate Admit Cards</button>
-<button onclick="printSelected()">Print</button>
+<button onclick="printCards()">Print</button>
 <button onclick="downloadPDF()">Download PDF</button>
 
 </div>
@@ -263,22 +262,27 @@ loadSessions();
 
 sessionSelect.onchange=function(){
 activeSession=this.value;
-localStorage.setItem("activeSession",activeSession);
 loadExams();
 }
 
 async function loadExams(){
+
 const q=query(
 collection(db,"exam_sessions"),
 where("schoolId","==",schoolId),
 where("session","==",activeSession)
 );
+
 const snap=await getDocs(q);
+
 let html='<option value="">Select Exam</option>';
+
 snap.forEach(d=>{
 html+=`<option value="${d.id}">${d.data().examName}</option>`;
 });
+
 examSelect.innerHTML=html;
+
 }
 
 window.loadStudents=async function(){
@@ -293,9 +297,11 @@ where("class","==",cls)
 );
 
 const snap=await getDocs(q);
+
 students=snap.docs.map(d=>({id:d.id,...d.data()}));
 
 let html="";
+
 students.forEach(s=>{
 html+=`
 <label>
@@ -307,7 +313,8 @@ ${s.roll||""} - ${s.name}
 
 studentList.innerHTML=html;
 
-loadTimetable();
+await loadTimetable();
+
 }
 
 async function loadTimetable(){
@@ -315,8 +322,7 @@ async function loadTimetable(){
 const examId=examSelect.value;
 const cls=classSelect.value;
 
-const examDoc=await getDoc(doc(db,"exam_sessions",examId));
-examName=examDoc.exists()?examDoc.data().examName:"";
+timetable=[];
 
 const q=query(
 collection(db,"timetable"),
@@ -328,24 +334,19 @@ where("class","==",cls)
 
 const snap=await getDocs(q);
 
-timetable=[];
-
-for(const d of snap.docs){
-
+snap.forEach(d=>{
 const data=d.data();
 
-const subDoc=await getDoc(doc(db,"subjects",data.subjectId));
-
-const subject=subDoc.exists()?subDoc.data().name:"";
-
 timetable.push({
-subject,
+subject:data.subjectName || "",
 date:data.date,
 day:data.day,
 time:data.time
 });
+});
 
-}
+const examDoc=await getDoc(doc(db,"exam_sessions",examId));
+examName=examDoc.exists()?examDoc.data().examName:"";
 
 }
 
@@ -409,12 +410,10 @@ ${watermarkHTML}
 <div class="student">
 
 <div>
-
 Roll : ${s.roll||""}<br>
 Name : ${s.name||""}<br>
 Father : ${s.father||""}<br>
 Class : ${s.class||""}
-
 </div>
 
 <img src="${s.photo||""}">
@@ -436,17 +435,13 @@ ${rows}
 </table>
 
 <div class="guideline">
-
 <b>Guidelines:</b><br>
 ${guideline}
-
 </div>
 
 <div class="sign">
-
 <div>Principal Sign</div>
 <div>Director Sign</div>
-
 </div>
 
 </div>
@@ -459,29 +454,17 @@ admitArea.innerHTML=html;
 
 }
 
-window.printSelected=function(){
-
-const selected=[...document.querySelectorAll("#studentList input:checked")];
-
-if(selected.length===0){
-alert("Please select students");
-return;
-}
+window.printCards=function(){
 
 generateCards();
 
-setTimeout(()=>window.print(),300);
+setTimeout(()=>{
+window.print();
+},500);
 
 }
 
 window.downloadPDF=function(){
-
-const selected=[...document.querySelectorAll("#studentList input:checked")];
-
-if(selected.length===0){
-alert("Please select students");
-return;
-}
 
 generateCards();
 
@@ -489,13 +472,18 @@ setTimeout(()=>{
 
 const element=document.getElementById("admitArea");
 
-html2pdf().from(element).save("selected-admit-cards.pdf");
+html2pdf().set({
+margin:5,
+filename:"admit-cards.pdf",
+html2canvas:{scale:2},
+jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
+}).from(element).save();
 
-},300);
+},600);
 
 }
 
 </script>
 
 </body>
-  </html>
+</html>
