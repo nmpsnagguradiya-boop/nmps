@@ -5,9 +5,15 @@
 <title>Admit Card Print</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <style>
 
-body{font-family:Arial;margin:0;background:#f2f4f8;}
+body{
+font-family:Arial;
+margin:0;
+background:#f2f4f8;
+}
 
 header{
 background:#004aad;
@@ -17,29 +23,34 @@ text-align:center;
 font-size:22px;
 }
 
-.container{padding:20px;max-width:1200px;margin:auto;}
+.container{
+padding:20px;
+max-width:1200px;
+margin:auto;
+}
 
 .card{
 background:white;
 padding:20px;
-border-radius:8px;
+border-radius:10px;
 margin-bottom:20px;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
 select,input,textarea,button{
 padding:10px;
-margin:5px;
+margin:6px;
 width:100%;
-max-width:300px;
+max-width:280px;
 }
 
-textarea{height:80px;}
+textarea{height:70px}
 
 button{
 background:#004aad;
 color:white;
 border:none;
+border-radius:6px;
 cursor:pointer;
 }
 
@@ -55,19 +66,38 @@ display:grid;
 gap:15px;
 }
 
-.two{grid-template-columns:1fr 1fr;}
-.four{grid-template-columns:1fr 1fr;}
+.two{
+grid-template-columns:1fr 1fr;
+}
+
+.four{
+grid-template-columns:1fr 1fr;
+}
+
+.six{
+grid-template-columns:1fr 1fr 1fr;
+}
 
 .admit-card{
 border:2px solid #004aad;
 padding:10px;
 border-radius:6px;
 background:white;
+position:relative;
+overflow:hidden;
+}
+
+.watermark{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+opacity:0.07;
+width:180px;
 }
 
 .school{
 display:flex;
-align-items:center;
 gap:10px;
 border-bottom:1px solid #ccc;
 padding-bottom:5px;
@@ -82,8 +112,8 @@ object-fit:cover;
 
 .school-name{
 font-weight:bold;
-font-size:16px;
 color:#004aad;
+font-size:16px;
 }
 
 .school-address{
@@ -93,15 +123,13 @@ font-size:12px;
 .exam-title{
 text-align:center;
 font-weight:bold;
-font-size:16px;
-margin-top:5px;
+margin-top:4px;
 }
 
 .title{
 text-align:center;
 font-weight:bold;
 font-size:18px;
-margin-bottom:5px;
 }
 
 .student{
@@ -119,7 +147,7 @@ border:1px solid #ccc;
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:8px;
+margin-top:6px;
 font-size:12px;
 }
 
@@ -130,8 +158,8 @@ text-align:center;
 }
 
 .guideline{
-margin-top:10px;
 font-size:11px;
+margin-top:8px;
 }
 
 .sign{
@@ -142,7 +170,7 @@ font-size:12px;
 }
 
 @media print{
-header,.card{display:none;}
+header,.card{display:none}
 }
 
 </style>
@@ -160,9 +188,6 @@ header,.card{display:none;}
 
 <select id="classSelect">
 <option value="">Select Class</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
 <option>1</option>
 <option>2</option>
 <option>3</option>
@@ -180,22 +205,32 @@ header,.card{display:none;}
 <select id="layout">
 <option value="two">2 Card Per Page</option>
 <option value="four">4 Card Per Page</option>
+<option value="six">6 Card Per Page</option>
 </select>
 
-<input type="text" id="durationInput" placeholder="Exam Duration Example: 3 Hours">
+<select id="watermarkSelect">
+<option value="no">Without Watermark</option>
+<option value="yes">With Watermark</option>
+</select>
 
-<textarea id="guidelineInput" placeholder="Enter Exam Guidelines"></textarea>
+<input id="durationInput" placeholder="Exam Duration (Example 3 Hours)">
+
+<textarea id="guidelineInput" placeholder="Enter Guidelines"></textarea>
 
 <button onclick="loadStudents()">Load Students</button>
 
 </div>
 
+
 <div class="card">
 
 <div id="studentList" class="students"></div>
 
-<button onclick="generateCards()">Generate Admit Cards</button>
+<button onclick="generateCards()">Generate Admit Card</button>
+
 <button onclick="window.print()">Print</button>
+
+<button onclick="downloadPDF()">Download PDF</button>
 
 </div>
 
@@ -203,10 +238,21 @@ header,.card{display:none;}
 
 </div>
 
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+getFirestore,
+collection,
+getDocs,
+doc,
+getDoc,
+query,
+where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -226,39 +272,64 @@ let schoolData={};
 let examName="";
 
 async function loadSchool(){
+
 const snap=await getDoc(doc(db,"schools",schoolId));
+
 if(snap.exists()) schoolData=snap.data();
+
 }
+
 loadSchool();
 
+
 async function loadSessions(){
+
 const snap=await getDoc(doc(db,"schools",schoolId));
+
 const sessions=snap.data().sessions||[];
-let html='<option value="">Select Session</option>';
-sessions.forEach(s=>html+=`<option value="${s}">${s}</option>`);
+
+let html='<option>Select Session</option>';
+
+sessions.forEach(s=>html+=`<option>${s}</option>`);
+
 sessionSelect.innerHTML=html;
+
 }
+
 loadSessions();
 
+
 sessionSelect.onchange=function(){
+
 activeSession=this.value;
-localStorage.setItem("activeSession",activeSession);
+
 loadExams();
+
 }
 
+
 async function loadExams(){
+
 const q=query(
 collection(db,"exam_sessions"),
 where("schoolId","==",schoolId),
 where("session","==",activeSession)
 );
+
 const snap=await getDocs(q);
-let html='<option value="">Select Exam</option>';
+
+let html='<option>Select Exam</option>';
+
 snap.forEach(d=>{
+
 html+=`<option value="${d.id}">${d.data().examName}</option>`;
+
 });
+
 examSelect.innerHTML=html;
+
 }
+
 
 window.loadStudents=async function(){
 
@@ -272,22 +343,28 @@ where("class","==",cls)
 );
 
 const snap=await getDocs(q);
+
 students=snap.docs.map(d=>({id:d.id,...d.data()}));
 
 let html="";
+
 students.forEach(s=>{
+
 html+=`
 <label>
 <input type="checkbox" value="${s.id}">
 ${s.roll||""} - ${s.name}
 </label><br>
 `;
+
 });
 
 studentList.innerHTML=html;
 
 loadTimetable();
+
 }
+
 
 async function loadTimetable(){
 
@@ -295,7 +372,8 @@ const examId=examSelect.value;
 const cls=classSelect.value;
 
 const examDoc=await getDoc(doc(db,"exam_sessions",examId));
-examName=examDoc.exists()?examDoc.data().examName:"";
+
+examName=examDoc.data().examName;
 
 const q=query(
 collection(db,"timetable"),
@@ -315,7 +393,7 @@ const data=d.data();
 
 const subDoc=await getDoc(doc(db,"subjects",data.subjectId));
 
-const subject=subDoc.exists()?subDoc.data().name:"";
+const subject=subDoc.data().name;
 
 timetable.push({
 subject,
@@ -328,9 +406,11 @@ time:data.time
 
 }
 
+
 window.generateCards=function(){
 
 const layout=document.getElementById("layout").value;
+const watermark=document.getElementById("watermarkSelect").value;
 const duration=document.getElementById("durationInput").value;
 const guideline=document.getElementById("guidelineInput").value;
 
@@ -347,6 +427,7 @@ const s=students.find(x=>x.id==id);
 let rows="";
 
 timetable.forEach(t=>{
+
 rows+=`
 <tr>
 <td>${t.subject}</td>
@@ -356,20 +437,31 @@ rows+=`
 <td>${duration}</td>
 </tr>
 `;
+
 });
+
+const watermarkHTML = watermark==="yes"
+? `<img src="${schoolData.logo}" class="watermark">`
+: "";
 
 html+=`
 
 <div class="admit-card">
 
+${watermarkHTML}
+
 <div class="school">
 
-<img src="${schoolData.logo||""}">
+<img src="${schoolData.logo}">
 
 <div>
-<div class="school-name">${schoolData.name||""}</div>
-<div class="school-address">${schoolData.address||""}</div>
+
+<div class="school-name">${schoolData.name}</div>
+
+<div class="school-address">${schoolData.address}</div>
+
 <div>Session : ${activeSession}</div>
+
 </div>
 
 </div>
@@ -382,14 +474,14 @@ html+=`
 
 <div>
 
-Roll : ${s.roll||""}<br>
-Name : ${s.name||""}<br>
-Father : ${s.father||""}<br>
-Class : ${s.class||""}
+Roll : ${s.roll}<br>
+Name : ${s.name}<br>
+Father : ${s.father}<br>
+Class : ${s.class}
 
 </div>
 
-<img src="${s.photo||""}">
+<img src="${s.photo}">
 
 </div>
 
@@ -410,6 +502,7 @@ ${rows}
 <div class="guideline">
 
 <b>Guidelines:</b><br>
+
 ${guideline}
 
 </div>
@@ -428,6 +521,15 @@ ${guideline}
 });
 
 admitArea.innerHTML=html;
+
+}
+
+
+window.downloadPDF=function(){
+
+const element=document.getElementById("admitArea");
+
+html2pdf().from(element).save("admit-cards.pdf");
 
 }
 
