@@ -7,11 +7,7 @@
 
 <style>
 
-body{
-font-family:Arial;
-margin:0;
-background:#f2f4f8;
-}
+body{font-family:Arial;margin:0;background:#f2f4f8;}
 
 header{
 background:#004aad;
@@ -21,11 +17,7 @@ text-align:center;
 font-size:22px;
 }
 
-.container{
-padding:20px;
-max-width:1200px;
-margin:auto;
-}
+.container{padding:20px;max-width:1200px;margin:auto;}
 
 .card{
 background:white;
@@ -42,9 +34,7 @@ width:100%;
 max-width:300px;
 }
 
-textarea{
-height:80px;
-}
+textarea{height:80px;}
 
 button{
 background:#004aad;
@@ -65,13 +55,8 @@ display:grid;
 gap:15px;
 }
 
-.two{
-grid-template-columns:1fr 1fr;
-}
-
-.four{
-grid-template-columns:1fr 1fr;
-}
+.two{grid-template-columns:1fr 1fr;}
+.four{grid-template-columns:1fr 1fr;}
 
 .admit-card{
 border:2px solid #004aad;
@@ -84,13 +69,12 @@ background:white;
 text-align:center;
 font-weight:bold;
 font-size:18px;
-margin-top:5px;
+margin-bottom:5px;
 }
 
 .student{
 display:flex;
 justify-content:space-between;
-margin-top:10px;
 }
 
 .student img{
@@ -113,16 +97,16 @@ padding:4px;
 text-align:center;
 }
 
+.guideline{
+margin-top:10px;
+font-size:11px;
+}
+
 .sign{
 display:flex;
 justify-content:space-between;
 margin-top:15px;
 font-size:12px;
-}
-
-.guideline{
-margin-top:10px;
-font-size:11px;
 }
 
 @media print{
@@ -144,6 +128,9 @@ header,.card{display:none;}
 
 <select id="classSelect">
 <option value="">Select Class</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
 <option>1</option>
 <option>2</option>
 <option>3</option>
@@ -163,7 +150,7 @@ header,.card{display:none;}
 <option value="four">4 Card Per Page</option>
 </select>
 
-<input type="text" id="durationInput" placeholder="Exam Duration (Example: 3 Hours)">
+<input type="text" id="durationInput" placeholder="Exam Duration Example: 3 Hours">
 
 <textarea id="guidelineInput" placeholder="Enter Exam Guidelines"></textarea>
 
@@ -175,8 +162,7 @@ header,.card{display:none;}
 
 <div id="studentList" class="students"></div>
 
-<button onclick="generateCards()">Generate Admit Card</button>
-
+<button onclick="generateCards()">Generate Admit Cards</button>
 <button onclick="window.print()">Print</button>
 
 </div>
@@ -185,10 +171,21 @@ header,.card{display:none;}
 
 </div>
 
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+getFirestore,
+collection,
+getDocs,
+doc,
+getDoc,
+query,
+where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -205,16 +202,21 @@ let activeSession="";
 let students=[];
 let timetable=[];
 
+
+// LOAD SESSIONS
+
 async function loadSessions(){
 
 const snap=await getDoc(doc(db,"schools",schoolId));
 
+if(!snap.exists()) return;
+
 const sessions=snap.data().sessions||[];
 
-let html="<option>Select Session</option>";
+let html='<option value="">Select Session</option>';
 
 sessions.forEach(s=>{
-html+=`<option>${s}</option>`;
+html+=`<option value="${s}">${s}</option>`;
 });
 
 sessionSelect.innerHTML=html;
@@ -224,11 +226,20 @@ sessionSelect.innerHTML=html;
 loadSessions();
 
 
+// SESSION SELECT
+
 sessionSelect.onchange=function(){
+
 activeSession=this.value;
+
+localStorage.setItem("activeSession",activeSession);
+
 loadExams();
+
 }
 
+
+// LOAD EXAMS
 
 async function loadExams(){
 
@@ -240,7 +251,7 @@ where("session","==",activeSession)
 
 const snap=await getDocs(q);
 
-let html="<option>Select Exam</option>";
+let html='<option value="">Select Exam</option>';
 
 snap.forEach(d=>{
 html+=`<option value="${d.id}">${d.data().examName}</option>`;
@@ -251,9 +262,13 @@ examSelect.innerHTML=html;
 }
 
 
+// LOAD STUDENTS
+
 window.loadStudents=async function(){
 
 const cls=classSelect.value;
+
+if(!cls || !activeSession) return alert("Select Session and Class");
 
 const q=query(
 collection(db,"admissions"),
@@ -284,11 +299,15 @@ loadTimetable();
 }
 
 
+// LOAD TIMETABLE
+
 async function loadTimetable(){
 
 const examId=examSelect.value;
 
 const cls=classSelect.value;
+
+if(!examId) return;
 
 const q=query(
 collection(db,"timetable"),
@@ -321,6 +340,8 @@ time:data.time
 
 }
 
+
+// GENERATE ADMIT CARD
 
 window.generateCards=function(){
 
@@ -362,10 +383,10 @@ html+=`
 
 <div>
 
-Roll : ${s.roll}<br>
-Name : ${s.name}<br>
-Father : ${s.father}<br>
-Class : ${s.class}
+Roll : ${s.roll||""}<br>
+Name : ${s.name||""}<br>
+Father : ${s.father||""}<br>
+Class : ${s.class||""}
 
 </div>
 
@@ -390,7 +411,6 @@ ${rows}
 <div class="guideline">
 
 <b>Guidelines:</b><br>
-
 ${guideline}
 
 </div>
@@ -415,4 +435,4 @@ admitArea.innerHTML=html;
 </script>
 
 </body>
-    </html>
+</html>
