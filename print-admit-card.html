@@ -65,6 +65,31 @@ border-radius:6px;
 background:white;
 }
 
+.school{
+display:flex;
+align-items:center;
+gap:10px;
+border-bottom:1px solid #ccc;
+padding-bottom:5px;
+margin-bottom:5px;
+}
+
+.school img{
+width:50px;
+height:50px;
+object-fit:cover;
+}
+
+.school-name{
+font-weight:bold;
+font-size:16px;
+color:#004aad;
+}
+
+.school-address{
+font-size:12px;
+}
+
 .title{
 text-align:center;
 font-weight:bold;
@@ -175,17 +200,7 @@ header,.card{display:none;}
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getFirestore,
-collection,
-getDocs,
-doc,
-getDoc,
-query,
-where
-} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
+import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -201,6 +216,20 @@ const schoolId=localStorage.getItem("schoolId")||"school_001";
 let activeSession="";
 let students=[];
 let timetable=[];
+let schoolData={};
+
+
+// LOAD SCHOOL DATA
+
+async function loadSchool(){
+
+const snap=await getDoc(doc(db,"schools",schoolId));
+
+if(snap.exists()) schoolData=snap.data();
+
+}
+
+loadSchool();
 
 
 // LOAD SESSIONS
@@ -268,8 +297,6 @@ window.loadStudents=async function(){
 
 const cls=classSelect.value;
 
-if(!cls || !activeSession) return alert("Select Session and Class");
-
 const q=query(
 collection(db,"admissions"),
 where("schoolId","==",schoolId),
@@ -304,10 +331,7 @@ loadTimetable();
 async function loadTimetable(){
 
 const examId=examSelect.value;
-
 const cls=classSelect.value;
-
-if(!examId) return;
 
 const q=query(
 collection(db,"timetable"),
@@ -377,6 +401,20 @@ html+=`
 
 <div class="admit-card">
 
+<div class="school">
+
+<img src="${schoolData.logo||""}">
+
+<div>
+
+<div class="school-name">${schoolData.name||""}</div>
+<div class="school-address">${schoolData.address||""}</div>
+<div>Session : ${activeSession}</div>
+
+</div>
+
+</div>
+
 <div class="title">ADMIT CARD</div>
 
 <div class="student">
@@ -435,4 +473,4 @@ admitArea.innerHTML=html;
 </script>
 
 </body>
-</html>
+  </html>
