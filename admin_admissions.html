@@ -1,116 +1,109 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
 <meta charset="UTF-8">
-<title>Promote Students</title>
-
+<title>Admin Admissions Panel</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
 <style>
-
-body{
-font-family:Arial;
-margin:0;
-background:#f2f2f2;
-}
-
-header{
-background:#004aad;
-color:white;
-padding:16px;
-text-align:center;
-font-size:22px;
-}
-
-.container{
-max-width:1100px;
-margin:auto;
-padding:20px;
-}
-
-.controls{
-background:white;
-padding:15px;
-border-radius:10px;
-box-shadow:0 0 8px rgba(0,0,0,0.2);
-margin-bottom:20px;
-}
-
-input,select{
-padding:10px;
-margin:5px;
-}
-
-button{
-padding:10px 15px;
-background:#004aad;
-color:white;
-border:none;
-border-radius:6px;
-cursor:pointer;
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-background:white;
-}
-
-th,td{
-border:1px solid #ddd;
-padding:8px;
-text-align:center;
-}
-
-@media(max-width:700px){
-table{
-font-size:12px;
-}
-}
-
+body{font-family:Arial;margin:0;background:#f2f2f2;}
+header{background:#004aad;color:white;padding:16px;text-align:center;font-size:22px;}
+.container{padding:20px;}
+.big-buttons{display:flex;gap:15px;flex-wrap:wrap;margin-bottom:20px;}
+.big-btn{flex:1;min-width:180px;background:#007bff;color:white;padding:15px;border-radius:10px;display:flex;align-items:center;gap:10px;font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 0 6px rgba(0,0,0,0.15);}
+.big-btn i{font-size:20px;}
+.controls{margin-bottom:15px;display:flex;flex-wrap:wrap;gap:10px;align-items:center;}
+input,select{padding:10px;margin:5px;border-radius:5px;border:1px solid #ccc;}
+button{padding:10px 15px;border:none;border-radius:5px;cursor:pointer;margin:2px;font-size:14px;}
+button i{margin-right:5px;}
+.promote{background:#28aadc;color:white;}
+.export{background:#28a745;color:white;}
+.print-result{background:#17a2b8;color:white;}
+.print-id{background:#6f42c1;color:white;}
+.photo{background:#6f42c1;color:white;}
+.edit{background:#ffc107;color:white;}
+.delete{background:red;color:white;}
+table{width:100%;border-collapse:collapse;background:white;}
+th,td{padding:8px;border:1px solid #ddd;text-align:center;}
+img{width:50px;border-radius:5px;}
+@media(max-width:768px){.big-buttons{flex-direction:column;}.controls{flex-direction:column;}}
 </style>
 </head>
-
 <body>
 
-<header>Promote Students To Next Session</header>
+<header>Admin Admissions Panel</header>
 
 <div class="container">
 
-<div class="controls">
-
-Current Session  
-<input type="text" id="currentSession" placeholder="2025-26">
-
-Next Session  
-<input type="text" id="nextSession" placeholder="2026-27">
-
-<button onclick="loadStudents()">Load Students</button>
-<button onclick="promoteAll()">Promote All</button>
-
+<div class="big-buttons">
+<div class="big-btn" onclick="window.location.href='admission.html'"><i class="fas fa-user-plus"></i>Add Student</div>
+<div class="big-btn" onclick="window.location.href='all-students.html'"><i class="fas fa-users"></i>All Students</div>
 </div>
 
+<div class="controls">
+<input type="text" id="search" placeholder="Search Name / Mobile">
+<select id="classFilter">
+<option value="all">All Classes</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+<option>11</option>
+<option>12</option>
+</select>
+<select id="promoteClass">
+<option value="">Select Class to Promote</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+<option>11</option>
+</select>
+<button class="promote" onclick="promoteClass()"><i class="fas fa-level-up-alt"></i>Promote to Next Session</button>
+<input type="file" id="excelImport">
+<button class="export" onclick="exportAll()"><i class="fas fa-file-excel"></i>Export All</button>
+</div>
+
+<h3>Total Students: <span id="total">0</span></h3>
+
 <table>
-
 <thead>
-
 <tr>
 <th>Name</th>
+<th>Father</th>
+<th>Mobile</th>
+<th>Village</th>
 <th>Class</th>
-<th>Next Class</th>
-<th>Action</th>
+<th>Photo</th>
+<th>Actions</th>
 </tr>
-
 </thead>
-
-<tbody id="studentList"></tbody>
-
+<tbody id="list"></tbody>
 </table>
 
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, deleteDoc, addDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -118,156 +111,143 @@ authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
 projectId:"nmpsnagguradiya-b9b94"
 };
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
 
 const schoolId = localStorage.getItem("schoolId") || "school_001";
+const activeSession = localStorage.getItem("activeSession") || "2025-26";
+const nextSession = (() => {
+  let [start,end] = activeSession.split('-'); 
+  return `${parseInt(start)+1}-${parseInt(end)+1}`;
+})();
 
-let students=[];
+let admissions = [];
 
-/* CLASS PROMOTE MAP */
+loadAdmissions();
 
-function nextClass(cls){
-
-const map={
-"Nursery":"LKG",
-"LKG":"UKG",
-"UKG":"1",
-"1":"2",
-"2":"3",
-"3":"4",
-"4":"5",
-"5":"6",
-"6":"7",
-"7":"8",
-"8":"9",
-"9":"10",
-"10":"11",
-"11":"12",
-"12":"Pass"
-};
-
-return map[cls] || cls;
-
-}
-
-/* LOAD STUDENTS */
-
-window.loadStudents=async function(){
-
-students=[];
-
-const session=document.getElementById("currentSession").value;
-
-const snapshot=await getDocs(collection(db,"admissions"));
-
+async function loadAdmissions(){
+admissions=[];
+const snapshot = await getDocs(collection(db,"admissions"));
 snapshot.forEach(docSnap=>{
-
-const data=docSnap.data();
-
-if(data.schoolId!==schoolId) return;
-
-if(data.session!==session) return;
-
-data.id=docSnap.id;
-
-students.push(data);
-
+  const data = docSnap.data();
+  if(data.schoolId !== schoolId) return;
+  if(data.session !== activeSession) return;
+  data.id = docSnap.id;
+  admissions.push(data);
 });
-
 renderTable();
-
+document.getElementById("total").innerText = admissions.length;
 }
-
-/* RENDER TABLE */
 
 function renderTable(){
+const search = document.getElementById("search").value.toLowerCase();
+const classFilter = document.getElementById("classFilter").value;
+const table = document.getElementById("list");
+table.innerHTML = "";
+admissions.forEach(data=>{
+  if(search && !data.name.toLowerCase().includes(search) && !data.mobile.includes(search)) return;
+  if(classFilter != "all" && data.class != classFilter) return;
+  table.innerHTML += `
+  <tr>
+    <td>${data.name}</td>
+    <td>${data.father}</td>
+    <td>${data.mobile}</td>
+    <td>${data.village || ""}</td>
+    <td>${data.class}</td>
+    <td><img src="${data.photo||""}"></td>
+    <td>
+      <button class="edit" onclick="editStudent('${data.id}')"><i class="fas fa-edit"></i>Edit</button>
+      <button class="print-result" onclick="window.open('print-result.html?id=${data.id}')"><i class="fas fa-print"></i>Print Result</button>
+      <button class="print-id" onclick="window.open('print-id.html?id=${data.id}')"><i class="fas fa-id-card"></i>Print ID</button>
+      <button class="delete" onclick="remove('${data.id}')"><i class="fas fa-trash"></i>Delete</button>
+      <button class="photo" onclick="uploadPhoto('${data.id}')"><i class="fas fa-camera"></i>Photo</button>
+    </td>
+  </tr>
+  `;
+});
+}
 
-let html="";
+/* EDIT */
+window.editStudent = function(id){
+const s = admissions.find(x=>x.id==id);
+const formHTML = prompt("Edit Name", s.name);
+if(formHTML !== null){
+  updateDoc(doc(db,"admissions",id),{name:formHTML}).then(()=>loadAdmissions());
+}
+}
 
-students.forEach(s=>{
+/* DELETE */
+window.remove = async function(id){
+if(confirm("Delete Student?")){
+await deleteDoc(doc(db,"admissions",id));
+loadAdmissions();
+}
+}
 
-html+=`
+/* PHOTO */
+window.uploadPhoto = function(id){
+const input = document.createElement("input");
+input.type = "file";
+input.onchange = async e=>{
+  const file = e.target.files[0];
+  const formData = new FormData();
+  formData.append("image", file);
+  const res = await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{method:"POST",body:formData});
+  const data = await res.json();
+  await updateDoc(doc(db,"admissions",id),{photo:data.data.url});
+  loadAdmissions();
+};
+input.click();
+}
 
-<tr>
+/* EXPORT ALL */
+window.exportAll = function(){
+const ws = XLSX.utils.json_to_sheet(admissions);
+const wb = XLSX.utils.book_new();
+XLSX.utils.book_append_sheet(wb,ws,"Students");
+XLSX.writeFile(wb,"all_students.xlsx");
+}
 
-<td>${s.name}</td>
-<td>${s.class}</td>
-<td>${nextClass(s.class)}</td>
-
-<td>
-
-<button onclick="promoteStudent('${s.id}')">
-Promote
-</button>
-
-</td>
-
-</tr>
-
-`;
-
+/* BULK IMPORT */
+document.getElementById("excelImport").addEventListener("change",function(e){
+const reader = new FileReader();
+const selectedClass = document.getElementById("classFilter").value;
+if(!selectedClass){ alert("Select class first!"); return;}
+reader.onload = async function(evt){
+  const data = new Uint8Array(evt.target.result);
+  const workbook = XLSX.read(data,{type:'array'});
+  const sheet = workbook.Sheets[workbook.SheetNames[0]];
+  const json = XLSX.utils.sheet_to_json(sheet);
+  for(let s of json){
+    s.schoolId = schoolId;
+    s.session = activeSession;
+    s.class = selectedClass;
+    await addDoc(collection(db,"admissions"), s);
+  }
+  alert("Bulk Import Completed");
+  loadAdmissions();
+}
+reader.readAsArrayBuffer(e.target.files[0]);
 });
 
-document.getElementById("studentList").innerHTML=html;
-
+/* PROMOTE TO NEXT SESSION */
+window.promoteClass = async function(){
+const cls = document.getElementById("promoteClass").value;
+if(!cls){ alert("Select class to promote!"); return;}
+for(let s of admissions){
+  if(s.class !== cls) continue;
+  const newData = {...s};
+  newData.session = nextSession;
+  const nextClassMap = {Nursery:"LKG",LKG:"UKG",UKG:"1", "1":"2","2":"3","3":"4","4":"5","5":"6","6":"7","7":"8","8":"9","9":"10","10":"11","11":"12"};
+  newData.class = nextClassMap[cls] || cls;
+  delete newData.id;
+  await addDoc(collection(db,"admissions"), newData);
+}
+alert(`Class ${cls} promoted to ${nextSession}`);
 }
 
-/* SINGLE PROMOTE */
-
-window.promoteStudent=async function(id){
-
-const nextSession=document.getElementById("nextSession").value;
-
-const student=students.find(s=>s.id===id);
-
-const newClass=nextClass(student.class);
-
-if(newClass==="Pass"){
-alert("Class 12 Student Passed");
-return;
-}
-
-const newStudent={...student};
-
-delete newStudent.id;
-
-newStudent.class=newClass;
-newStudent.session=nextSession;
-
-await addDoc(collection(db,"admissions"),newStudent);
-
-alert("Student Promoted");
-
-}
-
-/* BULK PROMOTE */
-
-window.promoteAll=async function(){
-
-const nextSession=document.getElementById("nextSession").value;
-
-for(let s of students){
-
-const newClass=nextClass(s.class);
-
-if(newClass==="Pass") continue;
-
-const newStudent={...s};
-
-delete newStudent.id;
-
-newStudent.class=newClass;
-newStudent.session=nextSession;
-
-await addDoc(collection(db,"admissions"),newStudent);
-
-}
-
-alert("All Students Promoted");
-
-}
-
+document.getElementById("search").addEventListener("keyup",renderTable);
+document.getElementById("classFilter").addEventListener("change",renderTable);
 </script>
 
 </body>
