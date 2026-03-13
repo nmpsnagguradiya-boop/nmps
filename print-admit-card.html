@@ -5,6 +5,8 @@
 <title>Admit Card Print</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <style>
 
 body{font-family:Arial;margin:0;background:#f2f4f8;}
@@ -17,11 +19,7 @@ text-align:center;
 font-size:22px;
 }
 
-.container{
-padding:20px;
-max-width:1200px;
-margin:auto;
-}
+.container{padding:20px;max-width:1200px;margin:auto;}
 
 .card{
 background:white;
@@ -38,13 +36,14 @@ width:100%;
 max-width:300px;
 }
 
+textarea{height:80px;}
+
 button{
 background:#004aad;
 color:white;
 border:none;
 cursor:pointer;
-border-radius:6px;
-font-weight:bold;
+border-radius:5px;
 }
 
 .students{
@@ -68,11 +67,23 @@ border:2px solid #004aad;
 padding:10px;
 border-radius:6px;
 background:white;
-height:260px;
+position:relative;
+overflow:hidden;
+page-break-inside:avoid;
+}
+
+.watermark{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+opacity:0.08;
+width:180px;
 }
 
 .school{
 display:flex;
+align-items:center;
 gap:10px;
 border-bottom:1px solid #ccc;
 padding-bottom:5px;
@@ -87,18 +98,26 @@ object-fit:cover;
 
 .school-name{
 font-weight:bold;
-color:#004aad;
 font-size:16px;
+color:#004aad;
 }
 
 .school-address{
 font-size:12px;
 }
 
+.exam-title{
+text-align:center;
+font-weight:bold;
+font-size:16px;
+margin-top:5px;
+}
+
 .title{
 text-align:center;
 font-weight:bold;
 font-size:18px;
+margin-bottom:5px;
 }
 
 .student{
@@ -109,32 +128,33 @@ justify-content:space-between;
 .student img{
 width:70px;
 height:80px;
-border:1px solid #ccc;
 object-fit:cover;
+border:1px solid #ccc;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-font-size:11px;
+margin-top:8px;
+font-size:12px;
 }
 
 th,td{
 border:1px solid #ccc;
-padding:3px;
+padding:4px;
 text-align:center;
+}
+
+.guideline{
+margin-top:10px;
+font-size:11px;
 }
 
 .sign{
 display:flex;
 justify-content:space-between;
-margin-top:8px;
-font-size:11px;
-}
-
-@media print{
-header,.card{display:none;}
-body{background:white;}
+margin-top:15px;
+font-size:12px;
 }
 
 </style>
@@ -148,49 +168,12 @@ body{background:white;}
 
 <div class="card">
 
-<select id="sessionSelect"></select>
-
-<select id="classSelect">
-<option value="">Select Class</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-<option>6</option>
-<option>7</option>
-<option>8</option>
-<option>9</option>
-<option>10</option>
-</select>
-
-<select id="examSelect"></select>
-
 <select id="layout">
 <option value="two">2 Card Per Page</option>
 <option value="four">4 Card Per Page</option>
 <option value="six">6 Card Per Page</option>
 </select>
 
-<input id="durationInput" placeholder="Exam Duration Example: 3 Hours">
-
-<textarea id="guidelineInput" placeholder="Enter Guidelines"></textarea>
-
-<button onclick="loadStudents()">Load Students</button>
-
-</div>
-
-<div class="card">
-
-<button onclick="selectAllStudents()">Select All Students</button>
-<button onclick="unselectStudents()">Unselect All</button>
-
-<div id="studentList" class="students"></div>
-
-<button onclick="generateCards()">Generate Admit Cards</button>
 <button onclick="printCards()">Print</button>
 <button onclick="downloadPDF()">Download PDF</button>
 
@@ -200,164 +183,168 @@ body{background:white;}
 
 </div>
 
-<script type="module">
+<script>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+function generateCards(){
 
-const firebaseConfig={
-apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId:"nmpsnagguradiya-b9b94"
-};
+const layout=document.getElementById("layout").value;
 
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
-
-const schoolId=localStorage.getItem("schoolId")||"school_001";
-
-let students=[];
-let timetable=[];
-let activeSession="";
-let examName="";
-let schoolData={};
-
-async function loadSchool(){
-const snap=await getDoc(doc(db,"schools",schoolId));
-if(snap.exists()) schoolData=snap.data();
-}
-loadSchool();
-
-async function loadSessions(){
-const snap=await getDoc(doc(db,"schools",schoolId));
-const sessions=snap.data().sessions||[];
-let html='<option value="">Select Session</option>';
-sessions.forEach(s=>html+=`<option value="${s}">${s}</option>`);
-sessionSelect.innerHTML=html;
-}
-loadSessions();
-
-sessionSelect.onchange=()=>{
-activeSession=sessionSelect.value;
-loadExams();
-};
-
-async function loadExams(){
-
-const q=query(
-collection(db,"exam_sessions"),
-where("schoolId","==",schoolId),
-where("session","==",activeSession)
-);
-
-const snap=await getDocs(q);
-
-let html='<option value="">Select Exam</option>';
-
-snap.forEach(d=>{
-html+=`<option value="${d.id}">${d.data().examName}</option>`;
-});
-
-examSelect.innerHTML=html;
-
-}
-
-window.loadStudents=async function(){
-
-const q=query(
-collection(db,"admissions"),
-where("schoolId","==",schoolId),
-where("session","==",activeSession),
-where("class","==",classSelect.value)
-);
-
-const snap=await getDocs(q);
-
-students=snap.docs.map(d=>({id:d.id,...d.data()}));
+admitArea.className="admit-container "+layout;
 
 let html="";
 
-students.forEach(s=>{
-html+=`
-<label>
-<input type="checkbox" value="${s.id}">
-${s.roll} - ${s.name}
-</label><br>
-`;
-});
-
-studentList.innerHTML=html;
-
-}
-
-window.selectAllStudents=function(){
-document.querySelectorAll("#studentList input").forEach(e=>e.checked=true);
-}
-
-window.unselectStudents=function(){
-document.querySelectorAll("#studentList input").forEach(e=>e.checked=false);
-}
-
-window.generateCards=function(){
-
-admitArea.className="admit-container "+layout.value;
-
-const selected=[...document.querySelectorAll("#studentList input:checked")].map(e=>e.value);
-
-let html="";
-
-selected.forEach(id=>{
-
-const s=students.find(x=>x.id==id);
+for(let i=1;i<=4;i++){
 
 html+=`
 
 <div class="admit-card">
 
 <div class="school">
-<img src="${schoolData.logo||""}">
+
+<img src="https://via.placeholder.com/50">
+
 <div>
-<div class="school-name">${schoolData.name||""}</div>
-<div class="school-address">${schoolData.address||""}</div>
+<div class="school-name">Sample School</div>
+<div class="school-address">Sample Address</div>
 </div>
+
 </div>
+
+<div class="exam-title">Annual Exam</div>
 
 <div class="title">ADMIT CARD</div>
 
 <div class="student">
 
 <div>
-Roll : ${s.roll}<br>
-Name : ${s.name}<br>
-Father : ${s.father}<br>
-Class : ${s.class}
+
+Roll : 10${i}<br>
+Name : Student ${i}<br>
+Father : Parent ${i}<br>
+Class : 5
+
 </div>
 
-<img src="${s.photo||""}">
+<img src="https://via.placeholder.com/70">
 
+</div>
+
+<table>
+
+<tr>
+<th>Subject</th>
+<th>Date</th>
+<th>Day</th>
+<th>Time</th>
+<th>Duration</th>
+</tr>
+
+<tr>
+<td>Math</td>
+<td>10-03-2026</td>
+<td>Monday</td>
+<td>10 AM</td>
+<td>3 Hours</td>
+</tr>
+
+</table>
+
+<div class="guideline">
+<b>Guidelines:</b><br>
+Carry Admit Card to exam hall
+</div>
+
+<div class="sign">
+<div>Principal Sign</div>
+<div>Director Sign</div>
 </div>
 
 </div>
 
 `;
 
-});
+}
 
 admitArea.innerHTML=html;
 
 }
 
-window.printCards=function(){
+
+
+window.printCards=async function(){
+
 generateCards();
-setTimeout(()=>{window.print();},500);
+
+await new Promise(r=>setTimeout(r,800));
+
+const layout=document.getElementById("layout").value;
+
+const content=document.getElementById("admitArea").innerHTML;
+
+const win=window.open("","","width=900,height=800");
+
+win.document.write(`
+<html>
+<head>
+<title>Print</title>
+
+<style>
+
+body{font-family:Arial}
+
+.admit-container{display:grid;gap:15px}
+
+.two{grid-template-columns:1fr 1fr}
+.four{grid-template-columns:1fr 1fr}
+.six{grid-template-columns:1fr 1fr 1fr}
+
+.admit-card{
+border:2px solid #004aad;
+padding:10px;
+border-radius:6px;
+page-break-inside:avoid
 }
 
-window.downloadPDF=function(){
+</style>
+
+</head>
+
+<body>
+
+<div class="admit-container ${layout}">
+${content}
+</div>
+
+</body>
+</html>
+`);
+
+win.document.close();
+
+setTimeout(()=>win.print(),500);
+
+};
+
+
+
+window.downloadPDF=async function(){
+
 generateCards();
-setTimeout(()=>{window.print();},500);
-}
+
+await new Promise(r=>setTimeout(r,900));
+
+const element=document.getElementById("admitArea");
+
+html2pdf().set({
+margin:5,
+filename:"admit-cards.pdf",
+html2canvas:{scale:2,useCORS:true},
+jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
+}).from(element).save();
+
+};
 
 </script>
 
 </body>
-  </html>
+</html>
