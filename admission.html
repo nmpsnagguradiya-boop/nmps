@@ -110,7 +110,6 @@ text-align:center;
 <input type="text" id="admissionDate" placeholder="Admission Date (dd/mm/yyyy)">
 
 <select id="class">
-
 <option>Nursery</option>
 <option>LKG</option>
 <option>UKG</option>
@@ -126,7 +125,6 @@ text-align:center;
 <option>10</option>
 <option>11</option>
 <option>12</option>
-
 </select>
 
 <input type="text" id="dob" placeholder="Date Of Birth (dd/mm/yyyy)">
@@ -142,7 +140,9 @@ text-align:center;
 
 </form>
 
-<h3>Total Students : <span id="total">0</span></h3>
+<h3>
+Total Students : <span id="total">0</span>
+</h3>
 
 <table>
 
@@ -178,6 +178,9 @@ const db=getFirestore(app);
 
 const schoolId = localStorage.getItem("schoolId") || "school_001";
 
+/* ACTIVE SESSION */
+const session = localStorage.getItem("session") || "2025-26";
+
 async function uploadImgBB(file){
 
 const formData=new FormData();
@@ -211,6 +214,7 @@ photoURL=await uploadImgBB(photoFile);
 await addDoc(collection(db,"admissions"),{
 
 schoolId:schoolId,
+session:session,
 
 name:document.getElementById("name").value,
 father:document.getElementById("father").value,
@@ -265,7 +269,10 @@ querySnapshot.forEach((docSnap)=>{
 
 const data=docSnap.data();
 
+/* MULTI SCHOOL + SESSION FILTER */
+
 if(data.schoolId!==schoolId) return;
+if(data.session!==session) return;
 
 count++;
 
@@ -310,4 +317,4 @@ loadStudents();
 </script>
 
 </body>
-  </html>
+</html>
