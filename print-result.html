@@ -9,37 +9,37 @@
 
 <style>
 
-body{font-family:Arial;margin:0;background:#f2f4f8}
+body{font-family:Arial;margin:0;background:#f2f4f8;}
 
 header{
 background:#004aad;
 color:white;
 padding:15px;
 text-align:center;
-font-size:22px
+font-size:22px;
 }
 
-.container{padding:20px;max-width:1200px;margin:auto}
+.container{padding:20px;max-width:1200px;margin:auto;}
 
 .card{
 background:white;
 padding:20px;
 border-radius:8px;
 margin-bottom:20px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1)
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-select,button{
+select,button,input{
 padding:10px;
-margin:5px
+margin:5px;
 }
 
 button{
 background:#004aad;
 color:white;
 border:none;
-border-radius:6px;
-cursor:pointer
+border-radius:5px;
+cursor:pointer;
 }
 
 .marksheet{
@@ -47,16 +47,7 @@ border:2px solid #004aad;
 padding:20px;
 margin-bottom:40px;
 background:white;
-position:relative
-}
-
-.watermark{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-opacity:0.08;
-width:200px
+position:relative;
 }
 
 .school{
@@ -65,39 +56,58 @@ gap:10px;
 align-items:center;
 border-bottom:1px solid #ccc;
 padding-bottom:10px;
-margin-bottom:10px
+margin-bottom:10px;
 }
 
 .school img{
 width:60px;
-height:60px
+height:60px;
 }
 
 .school-name{
 font-size:20px;
 font-weight:bold;
-color:#004aad
+color:#004aad;
+}
+
+.watermark-logo{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+opacity:0.08;
+width:200px;
+}
+
+.watermark-text{
+position:absolute;
+top:40%;
+left:10%;
+font-size:40px;
+opacity:0.05;
+transform:rotate(-30deg);
+white-space:nowrap;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:10px
+margin-top:10px;
 }
 
 th,td{
 border:1px solid #ccc;
-padding:5px;
+padding:6px;
 text-align:center;
-font-size:13px
+font-size:13px;
 }
 
-.pass{color:green;font-weight:bold}
-.fail{color:red;font-weight:bold}
+.pass{color:green;font-weight:bold;}
+.fail{color:red;font-weight:bold;}
 
 @media print{
-header,.card{display:none}
-body{background:white}
+header,.card{display:none;}
+body{background:white;}
 }
 
 </style>
@@ -130,14 +140,15 @@ body{background:white}
 <option>10</option>
 </select>
 
-<select id="watermarkSelect">
+<select id="watermarkType">
 <option value="off">Watermark OFF</option>
-<option value="on">Watermark ON</option>
+<option value="logo">School Logo Watermark</option>
+<option value="text">School Name Watermark</option>
 </select>
 
-<button onclick="generateResult()">Generate Result</button>
+<button onclick="loadStudents()">Load Students</button>
 <button onclick="printResult()">Print</button>
-<button onclick="downloadPDF()">Download PDF</button>
+<button onclick="downloadPDF()">PDF</button>
 
 </div>
 
@@ -148,7 +159,7 @@ body{background:white}
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,collection,getDocs,doc,getDoc,query,where,updateDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -161,42 +172,33 @@ const db=getFirestore(app);
 
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 
-let schoolData={}
+let schoolData={};
 
 async function loadSchool(){
-
-const snap=await getDoc(doc(db,"schools",schoolId))
-
-if(snap.exists()) schoolData=snap.data()
-
-loadSessions()
-
+const snap=await getDoc(doc(db,"schools",schoolId));
+if(snap.exists()) schoolData=snap.data();
+loadSessions();
 }
 
-loadSchool()
+loadSchool();
 
-async function loadSessions(){
-
-const sessions=schoolData.sessions||[]
-
-let html='<option value="">Select Session</option>'
-
+function loadSessions(){
+const sessions=schoolData.sessions||[];
+let html='<option value="">Select Session</option>';
 sessions.forEach(s=>{
-html+=`<option value="${s}">${s}</option>`
-})
-
-sessionSelect.innerHTML=html
-
+html+=`<option value="${s}">${s}</option>`;
+});
+sessionSelect.innerHTML=html;
 }
 
-async function generateResult(){
+window.loadStudents=async function(){
 
-const session=sessionSelect.value
-const cls=classSelect.value
+const session=sessionSelect.value;
+const cls=classSelect.value;
 
 if(!session||!cls){
-alert("Select Session and Class")
-return
+alert("Select Session and Class");
+return;
 }
 
 const q=query(
@@ -204,63 +206,91 @@ collection(db,"admissions"),
 where("schoolId","==",schoolId),
 where("session","==",session),
 where("class","==",cls)
-)
+);
 
-const snap=await getDocs(q)
+const snap=await getDocs(q);
 
-let html=""
+let html="";
 
-for(const docSnap of snap.docs){
+for(const d of snap.docs){
 
-const student=docSnap.data()
+const s=d.data();
 
 const marksQuery=query(
 collection(db,"marks"),
-where("studentId","==",docSnap.id),
+where("studentId","==",d.id),
 where("session","==",session)
-)
+);
 
-const marksSnap=await getDocs(marksQuery)
+const marksSnap=await getDocs(marksQuery);
 
-let rows=""
-let total=0
-let maxTotal=0
+let rows="";
+let total=0;
+let maxTotal=0;
 
 marksSnap.forEach(m=>{
 
-const d=m.data()
+const data=m.data();
 
-total+=Number(d.marks)
-maxTotal+=Number(d.max)
+total+=Number(data.marks);
+maxTotal+=Number(data.max);
 
 rows+=`
 <tr>
-<td>${d.exam}</td>
-<td>${d.subject}</td>
-<td>${d.marks}</td>
-<td>${d.max}</td>
-<td>${grade(d.marks,d.max)}</td>
+<td>${data.exam}</td>
+<td>${data.subject}</td>
+<td>${data.marks}</td>
+<td>${data.max}</td>
+<td>${grade(data.marks,data.max)}</td>
 </tr>
-`
+`;
 
-})
+});
 
-let percent=0
+let percent=0;
+
 if(maxTotal>0){
-percent=((total/maxTotal)*100).toFixed(2)
+percent=((total/maxTotal)*100).toFixed(2);
 }
 
-const result=percent>=33?"PASS":"FAIL"
+const result=percent>=33?"PASS":"FAIL";
 
-const watermark=watermarkSelect.value==="on"
-? `<img class="watermark" src="${schoolData.logo||""}">`
-: ""
+const attQuery=query(
+collection(db,"attendance"),
+where("studentId","==",d.id),
+where("session","==",session)
+);
+
+const attSnap=await getDocs(attQuery);
+
+let attendance=0;
+
+attSnap.forEach(a=>{
+attendance=a.data().percent||0;
+});
+
+let watermarkHTML="";
+
+if(watermarkType.value==="logo"){
+watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo||""}">`;
+}
+
+if(watermarkType.value==="text"){
+
+let txt="";
+
+for(let i=0;i<10;i++){
+txt+=schoolData.name+" ";
+}
+
+watermarkHTML=`<div class="watermark-text">${txt}</div>`;
+}
 
 html+=`
 
 <div class="marksheet">
 
-${watermark}
+${watermarkHTML}
 
 <div class="school">
 
@@ -276,10 +306,10 @@ ${watermark}
 
 </div>
 
-<b>Name :</b> ${student.name}<br>
-<b>Father :</b> ${student.father}<br>
-<b>Class :</b> ${student.class}<br>
-<b>Roll :</b> ${student.roll}
+<b>Name :</b> ${s.name}<br>
+<b>Father :</b> ${s.father}<br>
+<b>Class :</b> ${s.class}<br>
+<b>Roll :</b> ${s.roll}
 
 <table>
 
@@ -295,52 +325,54 @@ ${rows}
 
 </table>
 
-<h3>Total : ${total} / ${maxTotal}</h3>
+<h3>Total : ${total}/${maxTotal}</h3>
 <h3>Percentage : ${percent}%</h3>
 <h3 class="${result==="PASS"?"pass":"fail"}">Result : ${result}</h3>
 
+<h3>Attendance : ${attendance}%</h3>
+
 </div>
 
-`
+`;
 
 }
 
-resultArea.innerHTML=html
+resultArea.innerHTML=html;
 
 }
 
 function grade(m,max){
 
-let p=(m/max)*100
+let p=(m/max)*100;
 
-if(p>=90)return"A+"
-if(p>=75)return"A"
-if(p>=60)return"B"
-if(p>=45)return"C"
-if(p>=33)return"D"
+if(p>=90)return"A+";
+if(p>=75)return"A";
+if(p>=60)return"B";
+if(p>=45)return"C";
+if(p>=33)return"D";
 
-return"F"
+return"F";
 
 }
 
 window.printResult=function(){
-window.print()
+window.print();
 }
 
 window.downloadPDF=function(){
 
-const element=document.getElementById("resultArea")
+const element=document.getElementById("resultArea");
 
 html2pdf(element,{
 margin:5,
 filename:"result.pdf",
 html2canvas:{scale:2},
 jsPDF:{unit:"mm",format:"a4"}
-})
+});
 
 }
 
 </script>
 
 </body>
-  </html>
+           </html>
