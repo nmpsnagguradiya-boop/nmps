@@ -159,7 +159,6 @@ font-size:12px;
 @media print{
 header,.card{display:none;}
 body{background:white;}
-.admit-container{margin:0;}
 }
 
 </style>
@@ -227,155 +226,13 @@ body{background:white;}
 
 </div>
 
-<script type="module">
+<script>
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-const firebaseConfig={
-apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId:"nmpsnagguradiya-b9b94"
-};
-
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
-
-const schoolId=localStorage.getItem("schoolId")||"school_001";
-
-let activeSession="";
 let students=[];
 let timetable=[];
-let schoolData={};
 let examName="";
 
-async function loadSchool(){
-const snap=await getDoc(doc(db,"schools",schoolId));
-if(snap.exists()) schoolData=snap.data();
-}
-loadSchool();
-
-async function loadSessions(){
-const snap=await getDoc(doc(db,"schools",schoolId));
-const sessions=snap.data().sessions||[];
-let html='<option value="">Select Session</option>';
-sessions.forEach(s=>html+=`<option value="${s}">${s}</option>`);
-sessionSelect.innerHTML=html;
-}
-loadSessions();
-
-sessionSelect.onchange=function(){
-activeSession=this.value;
-loadExams();
-}
-
-async function loadExams(){
-
-const q=query(
-collection(db,"exam_sessions"),
-where("schoolId","==",schoolId),
-where("session","==",activeSession)
-);
-
-const snap=await getDocs(q);
-
-let html='<option value="">Select Exam</option>';
-
-snap.forEach(d=>{
-html+=`<option value="${d.id}">${d.data().examName}</option>`;
-});
-
-examSelect.innerHTML=html;
-
-}
-
-window.loadStudents=async function(){
-
-const cls=classSelect.value;
-
-const q=query(
-collection(db,"admissions"),
-where("schoolId","==",schoolId),
-where("session","==",activeSession),
-where("class","==",cls)
-);
-
-const snap=await getDocs(q);
-
-students=snap.docs.map(d=>({id:d.id,...d.data()}));
-
-let html="";
-
-students.forEach(s=>{
-html+=`
-<label>
-<input type="checkbox" value="${s.id}">
-${s.roll||""} - ${s.name}
-</label><br>
-`;
-});
-
-studentList.innerHTML=html;
-
-await loadTimetable();
-
-}
-
-async function loadTimetable(){
-
-timetable=[];
-
-const examId=examSelect.value;
-
-const examDoc=await getDoc(doc(db,"exam_sessions",examId));
-
-examName=examDoc.exists()?examDoc.data().examName:"";
-
-const q=query(
-collection(db,"timetable"),
-where("schoolId","==",schoolId),
-where("session","==",activeSession),
-where("examId","==",examId),
-where("class","==",classSelect.value)
-);
-
-const snap=await getDocs(q);
-
-for(const d of snap.docs){
-
-const data=d.data();
-
-let subject=data.subject||"";
-
-if(!subject && data.subjectId){
-
-const subDoc=await getDoc(doc(db,"subjects",data.subjectId));
-
-if(subDoc.exists()){
-subject=subDoc.data().name;
-}
-
-}
-
-timetable.push({
-subject,
-date:data.date,
-day:data.day,
-time:data.time
-});
-
-}
-
-}
-
-window.generateCards=function(){
-
-const layout=document.getElementById("layout").value;
-const duration=document.getElementById("durationInput").value;
-const guideline=document.getElementById("guidelineInput").value;
-const watermark=document.getElementById("watermarkSelect").value;
-
-admitArea.className="admit-container "+layout;
+function generateCards(){
 
 const selected=[...document.querySelectorAll("#studentList input:checked")].map(e=>e.value);
 
@@ -394,49 +251,27 @@ rows+=`
 <td>${t.date}</td>
 <td>${t.day}</td>
 <td>${t.time}</td>
-<td>${duration}</td>
+<td>${durationInput.value}</td>
 </tr>
 `;
 });
 
-const watermarkHTML = watermark==="on"
-? `<img src="${schoolData.logo||""}" class="watermark">`
-: "";
-
 html+=`
 
 <div class="admit-card">
-
-${watermarkHTML}
-
-<div class="school">
-
-<img src="${schoolData.logo||""}">
-
-<div>
-<div class="school-name">${schoolData.name||""}</div>
-<div class="school-address">${schoolData.address||""}</div>
-<div>Session : ${activeSession}</div>
-</div>
-
-</div>
-
-<div class="exam-title">${examName}</div>
 
 <div class="title">ADMIT CARD</div>
 
 <div class="student">
 
 <div>
-
-Roll : ${s.roll||""}<br>
-Name : ${s.name||""}<br>
-Father : ${s.father||""}<br>
-Class : ${s.class||""}
-
+Roll : ${s.roll}<br>
+Name : ${s.name}<br>
+Father : ${s.father}<br>
+Class : ${s.class}
 </div>
 
-<img src="${s.photo||""}">
+<img src="${s.photo}">
 
 </div>
 
@@ -454,37 +289,55 @@ ${rows}
 
 </table>
 
-<div class="guideline">
-<b>Guidelines:</b><br>
-${guideline}
-</div>
-
-<div class="sign">
-<div>Principal Sign</div>
-<div>Director Sign</div>
-</div>
-
 </div>
 
 `;
 
 });
 
-admitArea.innerHTML=html;
+document.getElementById("admitArea").innerHTML=html;
 
 }
 
-window.printCards=function(){
+function printCards(){
 
 generateCards();
 
-setTimeout(()=>{
-window.print();
-},500);
+const content=document.getElementById("admitArea").innerHTML;
+
+const win=window.open("","","width=900,height=700");
+
+win.document.write(`
+<html>
+<head>
+<title>Print</title>
+
+<style>
+body{font-family:Arial;padding:20px;}
+.admit-card{border:2px solid #004aad;padding:10px;margin-bottom:20px;}
+table{width:100%;border-collapse:collapse;}
+th,td{border:1px solid #ccc;padding:4px;text-align:center;}
+</style>
+
+</head>
+
+<body>
+
+${content}
+
+<script>
+window.onload=function(){window.print()}
+<\/script>
+
+</body>
+</html>
+`);
+
+win.document.close();
 
 }
 
-window.downloadPDF=function(){
+function downloadPDF(){
 
 generateCards();
 
@@ -492,18 +345,18 @@ setTimeout(()=>{
 
 const element=document.getElementById("admitArea");
 
-html2pdf(element,{
+html2pdf().set({
 margin:5,
 filename:"admit-cards.pdf",
-html2canvas:{scale:2},
+html2canvas:{scale:3},
 jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
-});
+}).from(element).save();
 
-},800);
+},500);
 
 }
 
 </script>
 
 </body>
-  </html>
+</html>
