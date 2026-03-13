@@ -43,6 +43,7 @@ background:#004aad;
 color:white;
 border:none;
 cursor:pointer;
+border-radius:5px;
 }
 
 .students{
@@ -157,6 +158,8 @@ font-size:12px;
 
 @media print{
 header,.card{display:none;}
+body{background:white;}
+.admit-container{margin:0;}
 }
 
 </style>
@@ -215,7 +218,7 @@ header,.card{display:none;}
 <div id="studentList" class="students"></div>
 
 <button onclick="generateCards()">Generate Admit Cards</button>
-<button onclick="window.print()">Print</button>
+<button onclick="printCards()">Print</button>
 <button onclick="downloadPDF()">Download PDF</button>
 
 </div>
@@ -263,22 +266,27 @@ loadSessions();
 
 sessionSelect.onchange=function(){
 activeSession=this.value;
-localStorage.setItem("activeSession",activeSession);
 loadExams();
 }
 
 async function loadExams(){
+
 const q=query(
 collection(db,"exam_sessions"),
 where("schoolId","==",schoolId),
 where("session","==",activeSession)
 );
+
 const snap=await getDocs(q);
+
 let html='<option value="">Select Exam</option>';
+
 snap.forEach(d=>{
 html+=`<option value="${d.id}">${d.data().examName}</option>`;
 });
+
 examSelect.innerHTML=html;
+
 }
 
 window.loadStudents=async function(){
@@ -293,9 +301,11 @@ where("class","==",cls)
 );
 
 const snap=await getDocs(q);
+
 students=snap.docs.map(d=>({id:d.id,...d.data()}));
 
 let html="";
+
 students.forEach(s=>{
 html+=`
 <label>
@@ -307,15 +317,18 @@ ${s.roll||""} - ${s.name}
 
 studentList.innerHTML=html;
 
-loadTimetable();
+await loadTimetable();
+
 }
 
 async function loadTimetable(){
 
+timetable=[];
+
 const examId=examSelect.value;
-const cls=classSelect.value;
 
 const examDoc=await getDoc(doc(db,"exam_sessions",examId));
+
 examName=examDoc.exists()?examDoc.data().examName:"";
 
 const q=query(
@@ -323,20 +336,26 @@ collection(db,"timetable"),
 where("schoolId","==",schoolId),
 where("session","==",activeSession),
 where("examId","==",examId),
-where("class","==",cls)
+where("class","==",classSelect.value)
 );
 
 const snap=await getDocs(q);
-
-timetable=[];
 
 for(const d of snap.docs){
 
 const data=d.data();
 
+let subject=data.subject||"";
+
+if(!subject && data.subjectId){
+
 const subDoc=await getDoc(doc(db,"subjects",data.subjectId));
 
-const subject=subDoc.exists()?subDoc.data().name:"";
+if(subDoc.exists()){
+subject=subDoc.data().name;
+}
+
+}
 
 timetable.push({
 subject,
@@ -436,17 +455,13 @@ ${rows}
 </table>
 
 <div class="guideline">
-
 <b>Guidelines:</b><br>
 ${guideline}
-
 </div>
 
 <div class="sign">
-
 <div>Principal Sign</div>
 <div>Director Sign</div>
-
 </div>
 
 </div>
@@ -459,15 +474,36 @@ admitArea.innerHTML=html;
 
 }
 
+window.printCards=function(){
+
+generateCards();
+
+setTimeout(()=>{
+window.print();
+},500);
+
+}
+
 window.downloadPDF=function(){
+
+generateCards();
+
+setTimeout(()=>{
 
 const element=document.getElementById("admitArea");
 
-html2pdf().from(element).save("admit-cards.pdf");
+html2pdf(element,{
+margin:5,
+filename:"admit-cards.pdf",
+html2canvas:{scale:2},
+jsPDF:{unit:"mm",format:"a4",orientation:"portrait"}
+});
+
+},800);
 
 }
 
 </script>
 
 </body>
-</html>
+  </html>
