@@ -36,6 +36,24 @@ margin-bottom:20px;
 box-shadow:0 3px 8px rgba(0,0,0,0.1);
 }
 
+.tabs{
+display:flex;
+gap:10px;
+margin-bottom:15px;
+}
+
+.tab{
+padding:10px 15px;
+background:#ddd;
+cursor:pointer;
+border-radius:5px;
+}
+
+.tab.active{
+background:#004aad;
+color:white;
+}
+
 select,input,button{
 padding:10px;
 margin:5px;
@@ -83,7 +101,7 @@ text-align:center;
 
 <body>
 
-<header>Marks Entry + Attendance System</header>
+<header>School Marks Management</header>
 
 <div class="container">
 
@@ -98,6 +116,14 @@ text-align:center;
 </div>
 
 <div id="marksCard" style="display:none;">
+
+<div class="tabs">
+
+<div class="tab active" onclick="openTab('marksTab')">Marks</div>
+<div class="tab" onclick="openTab('activityTab')">Sports / Activity</div>
+<div class="tab" onclick="openTab('attendanceTab')">Attendance</div>
+
+</div>
 
 <div class="card">
 
@@ -132,9 +158,11 @@ text-align:center;
 
 </div>
 
-<div class="card">
+<!-- MARKS TAB -->
 
-<h3>Student Marks</h3>
+<div id="marksTab" class="card">
+
+<h3>Marks Entry</h3>
 
 <table>
 
@@ -145,17 +173,63 @@ text-align:center;
 <th>Rank</th>
 <th>Roll</th>
 <th>Name</th>
-<th>Father</th>
-
 <th>Marks</th>
 <th>%</th>
 <th>Grade</th>
 <th>Result</th>
 
-<th>Sports</th>
-<th>Activity</th>
+</tr>
 
-<th>Working</th>
+</thead>
+
+<tbody id="marksTable"></tbody>
+
+</table>
+
+</div>
+
+<!-- SPORTS TAB -->
+
+<div id="activityTab" class="card" style="display:none">
+
+<h3>Sports / Activity</h3>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Roll</th>
+<th>Name</th>
+<th>Sports Grade</th>
+<th>Activity Grade</th>
+
+</tr>
+
+</thead>
+
+<tbody id="activityTable"></tbody>
+
+</table>
+
+</div>
+
+<!-- ATTENDANCE TAB -->
+
+<div id="attendanceTab" class="card" style="display:none">
+
+<h3>Attendance</h3>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Roll</th>
+<th>Name</th>
+<th>Working Days</th>
 <th>Present</th>
 <th>Absent</th>
 
@@ -163,7 +237,7 @@ text-align:center;
 
 </thead>
 
-<tbody id="marksTable"></tbody>
+<tbody id="attendanceTable"></tbody>
 
 </table>
 
@@ -202,20 +276,23 @@ let students=[];
 let activeSession="";
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 
-function getGrade(p){
+/* TAB SWITCH */
 
-if(p>=90)return"A+";
-if(p>=75)return"A";
-if(p>=60)return"B";
-if(p>=45)return"C";
-if(p>=33)return"D";
+window.openTab=function(tab){
 
-return"F";
+document.querySelectorAll(".card").forEach(c=>{
 
-}
+if(c.id==="marksTab"||c.id==="activityTab"||c.id==="attendanceTab")
+c.style.display="none"
 
-function getResult(p){
-return p>=33?"PASS":"FAIL";
+})
+
+document.getElementById(tab).style.display="block"
+
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
+
+event.target.classList.add("active")
+
 }
 
 /* SESSION */
@@ -246,7 +323,7 @@ loadSubjects();
 
 }
 
-/* EXAMS */
+/* LOAD EXAMS */
 
 async function loadExams(){
 
@@ -263,7 +340,7 @@ snap.docs.map(d=>`<option value="${d.id}">${d.data().examName}</option>`).join("
 
 }
 
-/* SUBJECTS */
+/* LOAD SUBJECTS */
 
 async function loadSubjects(){
 
@@ -297,166 +374,49 @@ const snap=await getDocs(q);
 
 students=snap.docs.map(d=>({id:d.id,...d.data()}));
 
-renderTable();
+renderTables();
 
 }
 
-/* TABLE */
+/* RENDER */
 
-async function renderTable(){
+function renderTables(){
 
-const tbody=document.getElementById("marksTable");
+marksTable.innerHTML="";
+activityTable.innerHTML="";
+attendanceTable.innerHTML="";
 
-tbody.innerHTML="";
+students.forEach(s=>{
 
-for(const s of students){
-
-const tr=document.createElement("tr");
-
-tr.innerHTML=`
-
+marksTable.innerHTML+=`
+<tr>
 <td class="rank"></td>
-<td>${s.roll||""}</td>
+<td>${s.roll}</td>
 <td>${s.name}</td>
-<td>${s.father||""}</td>
-
-<td><input type="number" class="marks"></td>
-
+<td><input class="marks"></td>
 <td class="percent"></td>
 <td class="grade"></td>
 <td class="result"></td>
+</tr>`;
 
-<td><input class="sports gradeInput"></td>
-<td><input class="activity gradeInput"></td>
+activityTable.innerHTML+=`
+<tr>
+<td>${s.roll}</td>
+<td>${s.name}</td>
+<td><input class="sports"></td>
+<td><input class="activity"></td>
+</tr>`;
 
-<td><input type="number" class="work"></td>
-<td><input type="number" class="present"></td>
+attendanceTable.innerHTML+=`
+<tr>
+<td>${s.roll}</td>
+<td>${s.name}</td>
+<td><input class="work"></td>
+<td><input class="present"></td>
 <td class="absent"></td>
-
-`;
-
-tbody.appendChild(tr);
-
-/* LOAD MARKS */
-
-const markDoc=await getDoc(doc(db,"marks",`${s.id}_${examSelect.value}_${subjectSelect.value}`));
-
-if(markDoc.exists()){
-
-tr.querySelector(".marks").value=markDoc.data().marks;
-
-}
-
-/* LOAD ATTENDANCE + SPORTS */
-
-const attDoc=await getDoc(doc(db,"attendance",`${s.id}_${activeSession}`));
-
-if(attDoc.exists()){
-
-const a=attDoc.data();
-
-tr.querySelector(".sports").value=a.sportsGrade||"";
-tr.querySelector(".activity").value=a.activityGrade||"";
-
-tr.querySelector(".work").value=a.workingDays||"";
-tr.querySelector(".present").value=a.present||"";
-
-tr.querySelector(".absent").innerText=a.absent||"";
-
-}
-
-}
-
-}
-
-/* CALCULATE */
-
-document.addEventListener("input",()=>{
-
-const max=maxMarks.value||1;
-
-const rows=document.querySelectorAll("#marksTable tr");
-
-let arr=[];
-
-rows.forEach(r=>{
-
-const marks=r.querySelector(".marks").value||0;
-
-const percent=(marks/max)*100;
-
-r.querySelector(".percent").innerText=percent.toFixed(2)+"%";
-
-r.querySelector(".grade").innerText=getGrade(percent);
-
-r.querySelector(".result").innerText=getResult(percent);
-
-arr.push({row:r,percent});
-
-const work=r.querySelector(".work").value||0;
-const present=r.querySelector(".present").value||0;
-
-r.querySelector(".absent").innerText=work-present;
+</tr>`;
 
 });
-
-arr.sort((a,b)=>b.percent-a.percent);
-
-arr.forEach((s,i)=>{
-
-s.row.querySelector(".rank").innerText=i+1;
-
-});
-
-});
-
-/* SAVE */
-
-window.saveAll=async function(){
-
-const rows=document.querySelectorAll("#marksTable tr");
-
-for(let i=0;i<rows.length;i++){
-
-const row=rows[i];
-const s=students[i];
-
-const marks=row.querySelector(".marks").value||0;
-
-await setDoc(doc(db,"marks",`${s.id}_${examSelect.value}_${subjectSelect.value}`),{
-
-studentId:s.id,
-examId:examSelect.value,
-subjectId:subjectSelect.value,
-marks,
-maxMarks:maxMarks.value,
-class:classSelect.value,
-session:activeSession,
-schoolId
-
-});
-
-/* SESSION WISE ATTENDANCE */
-
-await setDoc(doc(db,"attendance",`${s.id}_${activeSession}`),{
-
-studentId:s.id,
-class:classSelect.value,
-session:activeSession,
-schoolId,
-
-sportsGrade:row.querySelector(".sports").value||"",
-activityGrade:row.querySelector(".activity").value||"",
-
-workingDays:row.querySelector(".work").value||0,
-present:row.querySelector(".present").value||0,
-absent:row.querySelector(".absent").innerText||0
-
-});
-
-}
-
-alert("Data Saved");
 
 }
 
