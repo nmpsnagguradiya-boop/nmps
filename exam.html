@@ -2,61 +2,135 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Print Admit Card</title>
+<title>Exam & Timetable Management</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <style>
-body{font-family:Arial;margin:0;background:#f2f4f8;}
-.container{max-width:1200px;margin:auto;padding:20px;}
-.card{padding:20px;}
-select,textarea,button{padding:10px;margin:5px;}
-button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
-textarea{width:100%;max-width:400px;}
-.admit-page{width:210mm;min-height:297mm;margin:auto;padding:5mm;page-break-after:always;display:grid;gap:5mm;}
-.admit-card{border:2px solid #004aad;padding:10px;display:flex;flex-direction:column;font-size:14px;justify-content:space-between;}
-.school-header{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #004aad;padding-bottom:5px;}
-.school-header img{width:40px;}
-.school-name{flex:1;text-align:center;font-size:20px;font-weight:bold;color:#004aad;}
-.school-info{text-align:center;font-size:12px;margin-top:2px;}
-.student-box{margin-top:10px;line-height:1.5;}
+body{font-family:Arial;margin:0;background:#f2f2f2;}
+header{background:#004aad;color:white;padding:15px;text-align:center;font-size:22px;}
+.container{padding:20px;max-width:1000px;margin:auto;}
+.card{background:white;padding:20px;border-radius:8px;margin-bottom:20px;box-shadow:0 2px 5px rgba(0,0,0,0.1);}
+select,input,button{padding:10px;margin:5px;width:100%;max-width:300px;}
+button{cursor:pointer;border:none;border-radius:5px;}
+.save{background:#004aad;color:white;}
+.delete{background:#dc3545;color:white;}
+.edit{background:#ffc107;color:white;}
 table{width:100%;border-collapse:collapse;margin-top:10px;}
-th,td{border:1px solid #000;padding:4px;text-align:center;font-size:12px;}
+th,td{border:1px solid #ccc;padding:8px;text-align:center;}
 th{background:#004aad;color:white;}
-.guidelines{margin-top:5px;font-size:12px;}
-.signature{display:flex;justify-content:space-between;margin-top:20px;}
-.sign-box{text-align:center;}
-.sign-line{border-top:1px solid black;width:100px;margin:auto;}
+@media(max-width:768px){
+table,th,td{font-size:12px;}
+select,input,button{max-width:100%;}
+}
 </style>
 </head>
-<body>
 
+<body>
+<header>Exam & Timetable Management</header>
 <div class="container">
+
+<!-- SESSION SELECT -->
 <div class="card">
-<h3>Select Session / Class / Exam</h3>
-<select id="sessionSelect"></select>
-<select id="classSelect">
-<option value="">Select Class</option>
-<option>Nursery</option><option>LKG</option><option>UKG</option>
-<option>1</option><option>2</option><option>3</option><option>4</option>
-<option>5</option><option>6</option><option>7</option><option>8</option>
-<option>9</option><option>10</option><option>11</option><option>12</option>
-</select>
-<select id="examSelect"></select>
-<textarea id="guidelines" rows="3" placeholder="Enter Exam Guidelines"></textarea>
-<select id="cardsPerPage">
-<option value="2">2 Admit Card per Page</option>
-<option value="4">4 Admit Card per Page</option>
-</select>
-<br>
-<button onclick="generateAdmit()">Generate Admit Card</button>
-<button onclick="window.print()">Print</button>
+<h3>Select Session</h3>
+<select id="sessionSelect" onchange="selectSession()"></select>
+<p id="sessionStatus" style="color:green;font-weight:bold"></p>
 </div>
 
-<div id="admitArea"></div>
+<!-- EXAM -->
+<div class="card" id="examCard" style="display:none;">
+<h3>Exam Management</h3>
+<select id="examSelect"></select>
+<input type="text" id="examInput" placeholder="Exam Name">
+<button class="save" onclick="saveExam()">Save / Update Exam</button>
+<button class="delete" onclick="deleteExam()">Delete Exam</button>
+</div>
+
+<!-- SUBJECT -->
+<div class="card" id="subjectCard" style="display:none;">
+<h3>Subject Management</h3>
+<input type="text" id="subjectInput" placeholder="Subject Name">
+<button class="save" onclick="saveSubject()">Save / Update Subject</button>
+<select id="subjectList"></select>
+<button class="delete" onclick="deleteSubject()">Delete Subject</button>
+</div>
+
+<!-- TIMETABLE -->
+<div class="card" id="timetableCard" style="display:none;">
+<h3>Timetable Creation</h3>
+<select id="ttExam"></select>
+<select id="ttSubject"></select>
+<select id="ttClass">
+<option value="">Select Class</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+<input type="date" id="ttDate">
+<select id="ttDay">
+<option value="">Select Day</option>
+<option>Monday</option>
+<option>Tuesday</option>
+<option>Wednesday</option>
+<option>Thursday</option>
+<option>Friday</option>
+<option>Saturday</option>
+</select>
+<input type="time" id="ttTime">
+<button class="save" onclick="saveTimetable()">Save / Update Timetable</button>
+<p id="ttStatus" style="color:green;font-weight:bold"></p>
+</div>
+
+<!-- TIMETABLE PREVIEW -->
+<div class="card" id="previewCard" style="display:none;">
+<h3>Timetable Preview</h3>
+<select id="classFilter" onchange="renderTimetablePreview()">
+<option value="all">All Classes</option>
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+</select>
+<table>
+<thead>
+<tr>
+<th>Exam</th>
+<th>Subject</th>
+<th>Class</th>
+<th>Date</th>
+<th>Day</th>
+<th>Time</th>
+<th>Edit</th>
+<th>Delete</th>
+</tr>
+</thead>
+<tbody id="timetablePreview"></tbody>
+</table>
+</div>
+
 </div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,query,where,getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,collection,addDoc,getDocs,doc,updateDoc,deleteDoc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -65,90 +139,202 @@ projectId:"nmpsnagguradiya-b9b94"
 };
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
-const schoolId=localStorage.getItem("schoolId")||"school_001";
-let schoolData={};
 
-// Load school + sessions
-async function loadSchool(){
-  const snap=await getDoc(doc(db,"schools",schoolId));
+const schoolId=localStorage.getItem("schoolId")||"school_001";
+let activeSession = localStorage.getItem("activeSession") || "";
+
+// EDIT IDS
+let editExamId=null;
+let editSubjectId=null;
+let editTimetableId=null;
+let timetableCache=[];
+
+// LOAD SESSIONS
+async function loadSessions(){
+  const snap = await getDoc(doc(db,"schools",schoolId));
   if(snap.exists()){
-    schoolData=snap.data();
-    sessionSelect.innerHTML='<option value="">Select Session</option>'+ (schoolData.sessions||[]).map(s=>`<option value="${s}">${s}</option>`).join("");
+    const data = snap.data();
+    const sessions = data.sessions || [];
+    let options = '<option value="">Select Session</option>';
+    sessions.forEach(s=>{
+      options += `<option value="${s}">${s}</option>`;
+    });
+    document.getElementById("sessionSelect").innerHTML = options;
   }
 }
-loadSchool();
+loadSessions();
 
-sessionSelect.addEventListener("change",async()=>{
-  const session=sessionSelect.value;
-  if(!session) return;
-  // load exams
-  const examSnap = await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
-  examSelect.innerHTML='<option value="">Select Exam</option>'+examSnap.docs.map(d=>`<option value="${d.id}">${d.data().examName}</option>`).join("");
-});
+// SESSION SELECT
+window.selectSession = function(){
+  const sel = document.getElementById("sessionSelect").value;
+  if(!sel) return;
+  activeSession = sel;
+  localStorage.setItem("activeSession",sel);
+  document.getElementById("sessionStatus").innerText = "Active Session: "+sel;
+  showAllCards();
+  loadData();
+}
 
-// Generate Admit Card
-window.generateAdmit=async function(){
-  const session=sessionSelect.value;
-  const cls=classSelect.value;
-  const examId=examSelect.value;
-  const guide=guidelines.value;
-  const perPage=parseInt(cardsPerPage.value);
-  if(!session||!cls||!examId) return alert("Select session, class, exam");
+function showAllCards(){
+  document.getElementById("examCard").style.display="block";
+  document.getElementById("subjectCard").style.display="block";
+  document.getElementById("timetableCard").style.display="block";
+  document.getElementById("previewCard").style.display="block";
+}
 
-  // students
-  const studentSnap=await getDocs(query(collection(db,"admissions"),
-    where("schoolId","==",schoolId),
-    where("session","==",session),
-    where("class","==",cls)
-  ));
-  const students=studentSnap.docs.map(d=>({id:d.id,...d.data()}));
+// LOAD EXAM/SUBJECT/TIMETABLE
+async function loadData(){
+  if(!activeSession) return;
 
-  // timetable subjects
-  const ttSnap=await getDocs(query(collection(db,"timetable"),where("examId","==",examId)));
-  const timetable=ttSnap.docs.map(d=>({id:d.id,...d.data()}));
+  // EXAM
+  const examSnap = await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",activeSession)));
+  let examHTML = '<option value="">Select Exam</option>';
+  examSnap.forEach(d=>{
+    examHTML += `<option value="${d.id}">${d.data().examName}</option>`;
+  });
+  document.getElementById("examSelect").innerHTML = examHTML;
+  document.getElementById("ttExam").innerHTML = examHTML;
 
-  let html="";
-  for(let i=0;i<students.length;i+=perPage){
-    html+='<div class="admit-page" style="grid-template-columns:repeat(2,1fr);">';
-    const slice=students.slice(i,i+perPage);
-    slice.forEach(student=>{
-      let rows="";
-      timetable.forEach(t=>{
-        if(t.class!==student.class) return;
-        rows+=`<tr>
-<td>${t.subjectId}</td><td>${t.date}</td><td>${t.day}</td><td>${t.time}</td><td>${t.duration||""}</td>
-</tr>`;
-      });
-      html+=`
-<div class="admit-card">
-<div class="school-header">
-<img src="${schoolData.logo}">
-<div class="school-name">${schoolData.name}</div>
-<img src="${schoolData.logo}">
-</div>
-<div class="school-info">${schoolData.address} | DISE: ${schoolData.dise} | Session: ${session}</div>
-<h2 style="text-align:center;margin-top:5px;">ADMIT CARD</h2>
-<div class="student-box">
-Name: ${student.name}<br>
-Father: ${student.father}<br>
-Class: ${student.class}<br>
-Roll: ${student.roll}
-</div>
-<table>
-<tr><th>Subject</th><th>Date</th><th>Day</th><th>Time</th><th>Duration</th></tr>
-${rows}
-</table>
-<div class="guidelines"><b>Exam Guidelines:</b><br>${guide}</div>
-<div class="signature">
-<div class="sign-box">Principal<div class="sign-line"></div></div>
-<div class="sign-box">Director<div class="sign-line"></div></div>
-</div>
-</div>`;
-    });
-    html+='</div>';
+  // SUBJECT
+  const subSnap = await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",activeSession)));
+  let subHTML = '<option value="">Select Subject</option>';
+  subSnap.forEach(d=>{
+    subHTML += `<option value="${d.id}">${d.data().name}</option>`;
+  });
+  document.getElementById("subjectList").innerHTML = subHTML;
+  document.getElementById("ttSubject").innerHTML = subHTML;
+
+  loadTimetablePreview();
+}
+
+// SAVE EXAM
+window.saveExam = async function(){
+  const name = document.getElementById("examInput").value;
+  if(!name) return alert("Enter exam name");
+  if(!activeSession) return alert("Select session first");
+
+  if(editExamId){
+    await updateDoc(doc(db,"exam_sessions",editExamId),{examName:name});
+    editExamId=null;
+  }else{
+    await addDoc(collection(db,"exam_sessions"),{examName:name,schoolId,session:activeSession});
   }
-  document.getElementById("admitArea").innerHTML=html;
+  document.getElementById("examInput").value="";
+  loadData();
+}
+
+// DELETE EXAM
+window.deleteExam = async function(){
+  const id = document.getElementById("examSelect").value;
+  if(!id) return alert("Select exam");
+  await deleteDoc(doc(db,"exam_sessions",id));
+  loadData();
+}
+
+// SAVE SUBJECT
+window.saveSubject = async function(){
+  const name = document.getElementById("subjectInput").value;
+  if(!name) return alert("Enter subject name");
+  if(!activeSession) return alert("Select session first");
+
+  if(editSubjectId){
+    await updateDoc(doc(db,"subjects",editSubjectId),{name});
+    editSubjectId=null;
+  }else{
+    await addDoc(collection(db,"subjects"),{name,schoolId,session:activeSession});
+  }
+  document.getElementById("subjectInput").value="";
+  loadData();
+}
+
+// DELETE SUBJECT
+window.deleteSubject = async function(){
+  const id = document.getElementById("subjectList").value;
+  if(!id) return alert("Select subject");
+  await deleteDoc(doc(db,"subjects",id));
+  loadData();
+}
+
+// SAVE TIMETABLE
+window.saveTimetable = async function(){
+  const examId = document.getElementById("ttExam").value;
+  const subjectId = document.getElementById("ttSubject").value;
+  const cls = document.getElementById("ttClass").value;
+  const date = document.getElementById("ttDate").value;
+  const day = document.getElementById("ttDay").value;
+  const time = document.getElementById("ttTime").value;
+
+  if(!examId||!subjectId||!cls||!date||!day||!time) return alert("Fill all fields");
+  if(!activeSession) return alert("Select session first");
+
+  if(editTimetableId){
+    await updateDoc(doc(db,"timetable",editTimetableId),{examId,subjectId,class:cls,date,day,time});
+    editTimetableId=null;
+  }else{
+    await addDoc(collection(db,"timetable"),{examId,subjectId,class:cls,date,day,time,schoolId,session:activeSession});
+  }
+  loadTimetablePreview();
+}
+
+// LOAD TIMETABLE PREVIEW
+async function loadTimetablePreview(){
+  if(!activeSession) return;
+  const snap = await getDocs(query(collection(db,"timetable"),where("schoolId","==",schoolId),where("session","==",activeSession)));
+  timetableCache=[];
+  snap.forEach(d=>{
+    timetableCache.push({id:d.id,data:d.data()});
+  });
+  renderTimetablePreview();
+}
+
+// RENDER TABLE
+window.renderTimetablePreview = async function(){
+  const filter = document.getElementById("classFilter").value;
+  let html="";
+  for(const item of timetableCache){
+    const data = item.data;
+    if(filter!="all" && data.class!=filter) continue;
+    const examDoc = await getDoc(doc(db,"exam_sessions",data.examId));
+    const subDoc = await getDoc(doc(db,"subjects",data.subjectId));
+    const examName = examDoc.exists()?examDoc.data().examName:"";
+    const subName = subDoc.exists()?subDoc.data().name:"";
+    html+=`
+    <tr>
+    <td>${examName}</td>
+    <td>${subName}</td>
+    <td>${data.class}</td>
+    <td>${data.date}</td>
+    <td>${data.day}</td>
+    <td>${data.time}</td>
+    <td><button class="edit" onclick="editTimetable('${item.id}')">Edit</button></td>
+    <td><button class="delete" onclick="deleteTimetable('${item.id}')">Delete</button></td>
+    </tr>
+    `;
+  }
+  document.getElementById("timetablePreview").innerHTML=html;
+}
+
+// EDIT TIMETABLE
+window.editTimetable = async function(id){
+  const docSnap = await getDoc(doc(db,"timetable",id));
+  const d = docSnap.data();
+  document.getElementById("ttExam").value = d.examId;
+  document.getElementById("ttSubject").value = d.subjectId;
+  document.getElementById("ttClass").value = d.class;
+  document.getElementById("ttDate").value = d.date;
+  document.getElementById("ttDay").value = d.day;
+  document.getElementById("ttTime").value = d.time;
+  editTimetableId = id;
+}
+
+// DELETE TIMETABLE
+window.deleteTimetable = async function(id){
+  if(confirm("Delete timetable?")){
+    await deleteDoc(doc(db,"timetable",id));
+    loadTimetablePreview();
+  }
 }
 </script>
+
 </body>
   </html>
