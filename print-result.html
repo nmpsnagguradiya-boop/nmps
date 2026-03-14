@@ -2,185 +2,84 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Student Result</title>
+<title>Print Result</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
+body{font-family:Arial;margin:0;background:#f2f4f8;}
+header{background:#004aad;color:white;padding:15px;text-align:center;font-size:22px;}
+.container{max-width:1200px;margin:auto;padding:20px;}
+.card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+select,button{padding:10px;margin:5px;}
+button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
 
-body{font-family:Arial;margin:0;background:#f2f4f8}
-
-header{
-background:#004aad;
-color:white;
-padding:15px;
-text-align:center;
-font-size:22px
-}
-
-.container{
-max-width:1200px;
-margin:auto;
-padding:20px
-}
-
-.card{
-background:white;
-padding:20px;
-border-radius:8px;
-margin-bottom:20px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1)
-}
-
-select,button{
-padding:10px;
-margin:5px
-}
-
-button{
-background:#004aad;
-color:white;
-border:none;
-border-radius:5px;
-cursor:pointer
-}
-
-/* A4 Result */
-
-.marksheet{
-width:210mm;
-min-height:297mm;
-padding:20px;
-margin:auto;
-background:white;
-border:2px solid #004aad;
-page-break-after:always;
-position:relative
-}
-
-.school{
-display:flex;
-gap:10px;
-align-items:center;
-border-bottom:2px solid #004aad;
-padding-bottom:10px;
-margin-bottom:10px
-}
-
-.school img{
-width:40px;
-height:40px
-}
-
-.school-name{
-font-size:20px;
-font-weight:bold;
-color:#004aad
-}
-
-.exam-title{
-text-align:center;
-font-weight:bold;
-font-size:18px;
-margin:10px 0
-}
-
-.student{
-display:flex;
-justify-content:space-between;
-margin-top:10px
-}
-
-.student img{
-width:80px;
-height:100px;
-border:1px solid #ccc;
-object-fit:cover
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-margin-top:15px
-}
-
-th,td{
-border:1px solid #ccc;
-padding:6px;
-text-align:center;
-font-size:13px
-}
-
-.watermark-logo{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-opacity:0.05;
-width:200px
-}
-
-.watermark-text{
-position:absolute;
-top:35%;
-left:10%;
-font-size:50px;
-opacity:0.04;
-transform:rotate(-30deg);
-white-space:nowrap
-}
-
-@media print{
-header,.card{display:none}
-body{background:white}
-}
-
+/* MARKSHEET */
+.marksheet{width:210mm;min-height:297mm;background:white;padding:20px;margin:auto;border:2px solid #004aad;page-break-after:always;position:relative;}
+.school{display:flex;align-items:center;gap:10px;border-bottom:2px solid #004aad;padding-bottom:10px;}
+.school img{width:50px;}
+.school-name{font-size:20px;font-weight:bold;color:#004aad;}
+.student{display:flex;justify-content:space-between;margin-top:15px;}
+.student img{width:80px;height:100px;object-fit:cover;border:1px solid #ccc;}
+table{width:100%;border-collapse:collapse;margin-top:15px;}
+th,td{border:1px solid #ccc;padding:6px;text-align:center;font-size:13px;}
+th{background:#004aad;color:white;}
+.watermark-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.05;width:200px;}
+.watermark-text{position:absolute;top:40%;left:20%;font-size:60px;opacity:0.05;transform:rotate(-30deg);}
+.signature-section{display:flex;justify-content:space-between;margin-top:30px;margin-bottom:10px;}
+.signature-box{text-align:center;}
+.signature-box .line{border-top:1px solid #000;width:150px;margin:auto;}
+.grade-system{margin-top:15px;}
+.grade-system th, .grade-system td{border:1px solid #004aad;padding:5px;text-align:center;font-size:12px;}
+@media print{header,.card{display:none;}}
 </style>
-</head>
 
+</head>
 <body>
 
-<header>Student Result</header>
+<header>Result Print</header>
 
 <div class="container">
-
 <div class="card">
 
 <select id="sessionSelect"></select>
 
 <select id="classSelect">
 <option value="">Select Class</option>
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-<option>6</option>
-<option>7</option>
-<option>8</option>
-<option>9</option>
-<option>10</option>
+<option>Nursery</option><option>LKG</option><option>UKG</option>
+<option>1</option><option>2</option><option>3</option><option>4</option>
+<option>5</option><option>6</option><option>7</option><option>8</option>
+<option>9</option><option>10</option>
 </select>
 
-<select id="watermarkType">
+<select id="styleSelect">
+<option value="cbse">CBSE Pattern</option>
+<option value="icse">ICSE Pattern</option>
+<option value="state">State Board</option>
+<option value="pro1">Professional 1</option>
+<option value="pro2">Professional 2</option>
+<option value="pro3">Professional 3</option>
+<option value="pro4">Professional 4</option>
+</select>
+
+<select id="watermark">
 <option value="off">Watermark OFF</option>
 <option value="logo">Logo Watermark</option>
-<option value="text">School Name Watermark</option>
+<option value="name">School Name Watermark</option>
 </select>
 
-<button onclick="generateResult()">Generate Result</button>
+<br>
+<button onclick="generateResults()">Generate Result</button>
 <button onclick="window.print()">Print</button>
 <button onclick="downloadPDF()">PDF</button>
 
 </div>
 
 <div id="resultArea"></div>
-
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -192,235 +91,107 @@ projectId:"nmpsnagguradiya-b9b94"
 
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
-
 const schoolId=localStorage.getItem("schoolId")||"school_001";
-
 let schoolData={};
 
 async function loadSchool(){
-
 const snap=await getDoc(doc(db,"schools",schoolId));
-
-if(snap.exists()) schoolData=snap.data();
-
-loadSessions();
-
-}
-
+if(snap.exists()){
+schoolData=snap.data();
+const sessions=schoolData.sessions||[];
+sessionSelect.innerHTML='<option value="">Select Session</option>'+sessions.map(s=>`<option>${s}</option>`).join("");
+}}
 loadSchool();
 
-function loadSessions(){
+function grade(p){if(p>=90)return"A+";if(p>=75)return"A";if(p>=60)return"B";if(p>=45)return"C";if(p>=33)return"D";return"F";}
 
-const sessions=schoolData.sessions||[];
-
-let html='<option value="">Select Session</option>';
-
-sessions.forEach(s=>{
-html+=`<option value="${s}">${s}</option>`;
-});
-
-sessionSelect.innerHTML=html;
-
-}
-
-async function generateResult(){
-
+window.generateResults=async function(){
 const session=sessionSelect.value;
 const cls=classSelect.value;
+const style=styleSelect.value;
+if(!session || !cls){alert("Select Session and Class"); return;}
 
-const studentQuery=query(
-collection(db,"admissions"),
-where("schoolId","==",schoolId),
-where("session","==",session),
-where("class","==",cls)
-);
+const studentSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId),where("session","==",session),where("class","==",cls)));
+const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
+const subjectSnap=await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",session)));
 
-const students=await getDocs(studentQuery);
-
-/* load exams */
-
-const examQuery=query(
-collection(db,"exam_sessions"),
-where("schoolId","==",schoolId),
-where("session","==",session)
-);
-
-const examSnap=await getDocs(examQuery);
-
-let exams=[];
-
-examSnap.forEach(e=>{
-exams.push({id:e.id,name:e.data().examName});
-});
-
-/* load subjects */
-
-const subSnap=await getDocs(collection(db,"subjects"));
-
-let subjects=[];
-
-subSnap.forEach(s=>{
-subjects.push({id:s.id,name:s.data().name});
-});
+let exams=[]; examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
+let subjects=[]; subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
 
 let html="";
+for(const st of studentSnap.docs){
+const student=st.data();
 
-for(const s of students.docs){
+// Load marks
+let marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
+let marks={}; marksSnap.forEach(m=>{const d=m.data(); marks[d.examId+"_"+d.subjectId]=d.marks;});
 
-const student=s.data();
+// Load attendance/sports/activity
+let attSnap=await getDoc(doc(db,"attendance",`${st.id}_${session}`));
+let work=0,present=0,absent=0,sports="",activity="";
+if(attSnap.exists()){const d=attSnap.data();work=d.workingDays||0;present=d.present||0;absent=d.absent||0;sports=d.sports||"";activity=d.activity||"";}
 
-/* marks */
-
-const marksQuery=query(
-collection(db,"marks"),
-where("studentId","==",s.id),
-where("session","==",session)
-);
-
-const marksSnap=await getDocs(marksQuery);
-
-let marksData={};
-
-marksSnap.forEach(m=>{
-const d=m.data();
-marksData[d.subjectId+"_"+d.examId]=d.marks;
-});
-
-/* table */
-
-let head="<tr><th>Subject</th>";
-
-exams.forEach(e=>{
-head+=`<th>${e.name}</th>`;
-});
-
-head+="<th>Total</th><th>Grade</th></tr>";
-
+// Head and rows
+let head="<tr><th>Subject</th>"; exams.forEach(e=>{head+=`<th>${e.name}</th>`}); head+="<th>Total</th><th>Grade</th></tr>";
 let rows="";
-let grandTotal=0;
-
 subjects.forEach(sub=>{
-
-let total=0;
-
-let row=`<tr><td>${sub.name}</td>`;
-
-exams.forEach(e=>{
-
-let m=marksData[sub.id+"_"+e.id]||0;
-
-row+=`<td>${m}</td>`;
-
-total+=Number(m);
-
-});
-
-grandTotal+=total;
-
+let total=0; let row=`<tr><td>${sub.name}</td>`;
+exams.forEach(ex=>{let m=marks[ex.id+"_"+sub.id]||0; row+=`<td>${m}</td>`; total+=Number(m);});
 row+=`<td>${total}</td><td>${grade(total)}</td></tr>`;
-
 rows+=row;
-
 });
 
-/* watermark */
+// Watermark
+let watermarkHTML="";
+if(watermark.value=="logo") watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;
+if(watermark.value=="name") watermarkHTML=`<div class="watermark-text">${schoolData.name}</div>`;
 
-let watermark="";
+// Grade system table
+let gradeTable=`<table class="grade-system"><tr><th>Percentage</th><th>Grade</th></tr>
+<tr><td>90-100</td><td>A+</td></tr>
+<tr><td>75-89</td><td>A</td></tr>
+<tr><td>60-74</td><td>B</td></tr>
+<tr><td>45-59</td><td>C</td></tr>
+<tr><td>33-44</td><td>D</td></tr>
+<tr><td>0-32</td><td>F</td></tr></table>`;
 
-if(watermarkType.value==="logo"){
-watermark=`<img crossorigin="anonymous" class="watermark-logo" src="${schoolData.logo}">`;
-}
-
-if(watermarkType.value==="text"){
-watermark=`<div class="watermark-text">${schoolData.name}</div>`;
-}
-
+// Styles based on style select
+let styleClass="marksheet";
 html+=`
-
-<div class="marksheet">
-
-${watermark}
-
+<div class="${styleClass}">
+${watermarkHTML}
 <div class="school">
-
-<img crossorigin="anonymous" src="${schoolData.logo||""}">
-
-<div>
-
-<div class="school-name">${schoolData.name||""}</div>
-<div>${schoolData.address||""}</div>
-<div>Session : ${session}</div>
-
+<img src="${schoolData.logo}">
+<div><div class="school-name">${schoolData.name}</div><div>${schoolData.address||""}</div><div>Session: ${session}</div></div>
 </div>
-
-</div>
-
-<div class="exam-title">RESULT</div>
-
 <div class="student">
-
-<div>
-
-Name : ${student.name}<br>
-Father : ${student.father}<br>
-Class : ${student.class}<br>
-Roll : ${student.roll}<br>
-DOB : ${student.dob||""}<br>
-Aadhaar : ${student.aadhaar||""}<br>
-SSSM : ${student.sssm||""}<br>
-Village : ${student.village||""}
-
+<div>Name: ${student.name}<br>Father: ${student.father}<br>Class: ${student.class}<br>Roll: ${student.roll}<br>DOB: ${student.dob||""}</div>
+<img src="${student.photo||""}">
 </div>
 
-<img crossorigin="anonymous" src="${student.photo||""}">
-
-</div>
+<table>${head}${rows}</table>
 
 <table>
-
-${head}
-
-${rows}
-
+<tr><th>Sports</th><th>Activity</th><th>Working Days</th><th>Present</th><th>Absent</th></tr>
+<tr><td>${sports}</td><td>${activity}</td><td>${work}</td><td>${present}</td><td>${absent}</td></tr>
 </table>
 
-<h3>Total Marks : ${grandTotal}</h3>
+${gradeTable}
 
+<div class="signature-section">
+<div class="signature-box"><div class="line"></div>Class Teacher</div>
+<div class="signature-box"><div class="line"></div>Principal</div>
 </div>
 
-`;
-
+</div>`;
 }
 
-resultArea.innerHTML=html;
-
-}
-
-function grade(total){
-
-if(total>=400)return"A+";
-if(total>=300)return"A";
-if(total>=200)return"B";
-if(total>=150)return"C";
-
-return"D";
-
+document.getElementById("resultArea").innerHTML=html;
 }
 
 window.downloadPDF=function(){
-
-const element=document.getElementById("resultArea");
-
-html2pdf(element,{
-margin:5,
-filename:"result.pdf",
-html2canvas:{scale:2,useCORS:true},
-jsPDF:{unit:"mm",format:"a4"}
-});
-
+html2pdf(document.getElementById("resultArea"),{margin:5,filename:"result.pdf",html2canvas:{scale:2,useCORS:true},jsPDF:{unit:"mm",format:"a4"}});
 }
-
 </script>
-
 </body>
 </html>
