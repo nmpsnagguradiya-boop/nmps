@@ -94,8 +94,6 @@ width:70px;
 text-align:center;
 }
 
-.gradeInput{width:60px;}
-
 </style>
 </head>
 
@@ -110,24 +108,23 @@ text-align:center;
 <h3>Select Session</h3>
 
 <select id="sessionSelect"></select>
-
-<p id="sessionStatus" style="color:green;font-weight:bold"></p>
+<p id="sessionStatus"></p>
 
 </div>
 
-<div id="marksCard" style="display:none;">
+<div id="mainSystem" style="display:none">
 
 <div class="tabs">
 
 <div class="tab active" onclick="openTab('marksTab')">Marks</div>
-<div class="tab" onclick="openTab('activityTab')">Sports / Activity</div>
+<div class="tab" onclick="openTab('sportsTab')">Sports / Activity</div>
 <div class="tab" onclick="openTab('attendanceTab')">Attendance</div>
 
 </div>
 
 <div class="card">
 
-<h3>Select Details</h3>
+<h3>Select Class</h3>
 
 <select id="classSelect">
 <option value="">Select Class</option>
@@ -158,18 +155,14 @@ text-align:center;
 
 </div>
 
-<!-- MARKS TAB -->
+<!-- MARKS -->
 
 <div id="marksTab" class="card">
-
-<h3>Marks Entry</h3>
 
 <table>
 
 <thead>
-
 <tr>
-
 <th>Rank</th>
 <th>Roll</th>
 <th>Name</th>
@@ -177,9 +170,7 @@ text-align:center;
 <th>%</th>
 <th>Grade</th>
 <th>Result</th>
-
 </tr>
-
 </thead>
 
 <tbody id="marksTable"></tbody>
@@ -188,53 +179,41 @@ text-align:center;
 
 </div>
 
-<!-- SPORTS TAB -->
+<!-- SPORTS -->
 
-<div id="activityTab" class="card" style="display:none">
-
-<h3>Sports / Activity</h3>
+<div id="sportsTab" class="card" style="display:none">
 
 <table>
 
 <thead>
-
 <tr>
-
 <th>Roll</th>
 <th>Name</th>
-<th>Sports Grade</th>
-<th>Activity Grade</th>
-
+<th>Sports</th>
+<th>Activity</th>
 </tr>
-
 </thead>
 
-<tbody id="activityTable"></tbody>
+<tbody id="sportsTable"></tbody>
 
 </table>
 
 </div>
 
-<!-- ATTENDANCE TAB -->
+<!-- ATTENDANCE -->
 
 <div id="attendanceTab" class="card" style="display:none">
-
-<h3>Attendance</h3>
 
 <table>
 
 <thead>
-
 <tr>
-
 <th>Roll</th>
 <th>Name</th>
-<th>Working Days</th>
+<th>Working</th>
 <th>Present</th>
 <th>Absent</th>
-
 </tr>
-
 </thead>
 
 <tbody id="attendanceTable"></tbody>
@@ -250,17 +229,7 @@ text-align:center;
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-
-import {
-getFirestore,
-collection,
-getDocs,
-doc,
-getDoc,
-setDoc,
-query,
-where
-}
+import { getFirestore,collection,getDocs,doc,getDoc,setDoc,query,where }
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
@@ -272,26 +241,28 @@ projectId:"nmpsnagguradiya-b9b94"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-let students=[];
-let activeSession="";
 const schoolId=localStorage.getItem("schoolId")||"school_001";
+let activeSession="";
+let students=[];
 
-/* TAB SWITCH */
+function grade(p){
+if(p>=90)return"A+";
+if(p>=75)return"A";
+if(p>=60)return"B";
+if(p>=45)return"C";
+if(p>=33)return"D";
+return"F";
+}
 
-window.openTab=function(tab){
+/* TAB */
 
-document.querySelectorAll(".card").forEach(c=>{
+window.openTab=function(id){
 
-if(c.id==="marksTab"||c.id==="activityTab"||c.id==="attendanceTab")
-c.style.display="none"
+marksTab.style.display="none";
+sportsTab.style.display="none";
+attendanceTab.style.display="none";
 
-})
-
-document.getElementById(tab).style.display="block"
-
-document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"))
-
-event.target.classList.add("active")
+document.getElementById(id).style.display="block";
 
 }
 
@@ -303,7 +274,7 @@ const snap=await getDoc(doc(db,"schools",schoolId));
 
 const sessions=snap.data().sessions||[];
 
-sessionSelect.innerHTML='<option value="">Select</option>'+
+sessionSelect.innerHTML='<option>Select</option>'+
 sessions.map(s=>`<option>${s}</option>`).join("");
 
 }
@@ -314,45 +285,41 @@ sessionSelect.onchange=async function(){
 
 activeSession=this.value;
 
-sessionStatus.innerText="Active Session: "+activeSession;
+sessionStatus.innerText="Active Session : "+activeSession;
 
-document.getElementById("marksCard").style.display="block";
+mainSystem.style.display="block";
 
 loadExams();
 loadSubjects();
 
 }
 
-/* LOAD EXAMS */
+/* EXAM */
 
 async function loadExams(){
 
-const q=query(
-collection(db,"exam_sessions"),
+const q=query(collection(db,"exam_sessions"),
 where("schoolId","==",schoolId),
-where("session","==",activeSession)
-);
+where("session","==",activeSession));
 
 const snap=await getDocs(q);
 
-examSelect.innerHTML='<option value="">Exam</option>'+
+examSelect.innerHTML='<option>Exam</option>'+
 snap.docs.map(d=>`<option value="${d.id}">${d.data().examName}</option>`).join("");
 
 }
 
-/* LOAD SUBJECTS */
+/* SUBJECT */
 
 async function loadSubjects(){
 
-const q=query(
-collection(db,"subjects"),
+const q=query(collection(db,"subjects"),
 where("schoolId","==",schoolId),
-where("session","==",activeSession)
-);
+where("session","==",activeSession));
 
 const snap=await getDocs(q);
 
-subjectSelect.innerHTML='<option value="">Subject</option>'+
+subjectSelect.innerHTML='<option>Subject</option>'+
 snap.docs.map(d=>`<option value="${d.id}">${d.data().name}</option>`).join("");
 
 }
@@ -363,12 +330,10 @@ window.loadStudents=async function(){
 
 const cls=classSelect.value;
 
-const q=query(
-collection(db,"admissions"),
+const q=query(collection(db,"admissions"),
 where("class","==",cls),
 where("session","==",activeSession),
-where("schoolId","==",schoolId)
-);
+where("schoolId","==",schoolId));
 
 const snap=await getDocs(q);
 
@@ -378,49 +343,127 @@ renderTables();
 
 }
 
-/* RENDER */
+/* TABLES */
 
-function renderTables(){
+async function renderTables(){
 
 marksTable.innerHTML="";
-activityTable.innerHTML="";
+sportsTable.innerHTML="";
 attendanceTable.innerHTML="";
 
-students.forEach(s=>{
+for(const s of students){
+
+/* MARKS LOAD */
+
+let marksVal="";
+
+const m=await getDoc(doc(db,"marks",`${s.id}_${examSelect.value}_${subjectSelect.value}`));
+
+if(m.exists()) marksVal=m.data().marks;
+
+/* ATTENDANCE LOAD */
+
+let sport="",act="",work="",present="",absent="";
+
+const a=await getDoc(doc(db,"attendance",`${s.id}_${activeSession}`));
+
+if(a.exists()){
+
+const d=a.data();
+
+sport=d.sports||"";
+act=d.activity||"";
+work=d.work||"";
+present=d.present||"";
+absent=d.absent||"";
+
+}
 
 marksTable.innerHTML+=`
 <tr>
-<td class="rank"></td>
+<td></td>
 <td>${s.roll}</td>
 <td>${s.name}</td>
-<td><input class="marks"></td>
+<td><input class="marks" value="${marksVal}"></td>
 <td class="percent"></td>
 <td class="grade"></td>
 <td class="result"></td>
 </tr>`;
 
-activityTable.innerHTML+=`
+sportsTable.innerHTML+=`
 <tr>
 <td>${s.roll}</td>
 <td>${s.name}</td>
-<td><input class="sports"></td>
-<td><input class="activity"></td>
+<td><input class="sport" value="${sport}"></td>
+<td><input class="activity" value="${act}"></td>
 </tr>`;
 
 attendanceTable.innerHTML+=`
 <tr>
 <td>${s.roll}</td>
 <td>${s.name}</td>
-<td><input class="work"></td>
-<td><input class="present"></td>
-<td class="absent"></td>
+<td><input class="work" value="${work}"></td>
+<td><input class="present" value="${present}"></td>
+<td class="absent">${absent}</td>
 </tr>`;
 
+}
+
+}
+
+/* SAVE */
+
+window.saveAll=async function(){
+
+const rows=document.querySelectorAll("#marksTable tr");
+
+for(let i=0;i<rows.length;i++){
+
+const s=students[i];
+
+const marks=rows[i].querySelector(".marks").value||0;
+
+await setDoc(doc(db,"marks",`${s.id}_${examSelect.value}_${subjectSelect.value}`),{
+
+studentId:s.id,
+marks,
+examId:examSelect.value,
+subjectId:subjectSelect.value,
+class:classSelect.value,
+session:activeSession,
+schoolId
+
 });
+
+const sport=sportsTable.rows[i].querySelector(".sport").value||"";
+const activity=sportsTable.rows[i].querySelector(".activity").value||"";
+
+const work=attendanceTable.rows[i].querySelector(".work").value||0;
+const present=attendanceTable.rows[i].querySelector(".present").value||0;
+
+const absent=work-present;
+
+await setDoc(doc(db,"attendance",`${s.id}_${activeSession}`),{
+
+studentId:s.id,
+sports:sport,
+activity:activity,
+work,
+present,
+absent,
+class:classSelect.value,
+session:activeSession,
+schoolId
+
+});
+
+}
+
+alert("Saved Successfully");
 
 }
 
 </script>
 
 </body>
-</html>
+  </html>
