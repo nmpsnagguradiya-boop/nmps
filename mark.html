@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Marks Management PRO MAX</title>
+<title>Marks Entry + Attendance System</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -87,11 +87,6 @@ text-align:center;
 width:60px;
 }
 
-@media(max-width:768px){
-table,th,td{font-size:12px;}
-select,input,button{max-width:100%;}
-}
-
 </style>
 </head>
 
@@ -105,7 +100,7 @@ select,input,button{max-width:100%;}
 
 <h3>Select Session</h3>
 
-<select id="sessionSelect" onchange="selectSession()"></select>
+<select id="sessionSelect"></select>
 
 <p id="sessionStatus" style="color:green;font-weight:bold"></p>
 
@@ -134,27 +129,30 @@ select,input,button{max-width:100%;}
 <option>10</option>
 </select>
 
-<select id="examSelect"></select>
+<select id="examSelect">
+<option value="">Select Exam</option>
+</select>
 
-<select id="subjectSelect"></select>
+<select id="subjectSelect">
+<option value="">Select Subject</option>
+</select>
 
 <input type="number" id="maxMarks" placeholder="Maximum Marks">
 
 <br>
 
 <button class="load" onclick="loadStudents()">Load Students</button>
-<button class="save" onclick="saveAll()">Save Marks + Attendance</button>
+<button class="save" onclick="saveAll()">Save</button>
 
 </div>
 
 <div class="card">
 
-<h3>Student Marks + Attendance</h3>
+<h3>Student Marks</h3>
 
 <table>
 
 <thead>
-
 <tr>
 
 <th>Rank</th>
@@ -167,15 +165,14 @@ select,input,button{max-width:100%;}
 <th>Grade</th>
 <th>Result</th>
 
-<th>Sports Grade</th>
-<th>Activity Grade</th>
+<th>Sports</th>
+<th>Activity</th>
 
-<th>Working Days</th>
+<th>Working</th>
 <th>Present</th>
 <th>Absent</th>
 
 </tr>
-
 </thead>
 
 <tbody id="marksTable"></tbody>
@@ -202,7 +199,6 @@ setDoc,
 query,
 where
 }
-
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
@@ -225,16 +221,15 @@ if(p>=75)return"A";
 if(p>=60)return"B";
 if(p>=45)return"C";
 if(p>=33)return"D";
-
 return"F";
 
 }
 
 function getResult(p){
-
 return p>=33?"PASS":"FAIL";
-
 }
+
+/* LOAD SESSION */
 
 async function loadSessions(){
 
@@ -244,15 +239,13 @@ if(snap.exists()){
 
 const sessions=snap.data().sessions||[];
 
-let options='<option value="">Select Session</option>';
+let html='<option value="">Select Session</option>';
 
 sessions.forEach(s=>{
-options+=`<option value="${s}" ${s===activeSession?'selected':''}>${s}</option>`;
+html+=`<option value="${s}">${s}</option>`;
 });
 
-sessionSelect.innerHTML=options;
-
-if(activeSession)selectSession();
+sessionSelect.innerHTML=html;
 
 }
 
@@ -260,26 +253,83 @@ if(activeSession)selectSession();
 
 loadSessions();
 
-window.selectSession=function(){
+sessionSelect.onchange=async function(){
 
-const sel=sessionSelect.value;
-if(!sel)return;
+activeSession=this.value;
 
-activeSession=sel;
+localStorage.setItem("activeSession",activeSession);
 
-localStorage.setItem("activeSession",sel);
-
-sessionStatus.innerText="Active Session: "+sel;
+sessionStatus.innerText="Active Session: "+activeSession;
 
 document.getElementById("marksCard").style.display="block";
 
+loadExams();
+loadSubjects();
+
+};
+
+/* LOAD EXAMS */
+
+async function loadExams(){
+
+const q=query(
+collection(db,"exam_sessions"),
+where("schoolId","==",schoolId),
+where("session","==",activeSession)
+);
+
+const snap=await getDocs(q);
+
+let html='<option value="">Select Exam</option>';
+
+snap.forEach(d=>{
+const e=d.data();
+html+=`<option value="${d.id}">${e.examName}</option>`;
+});
+
+examSelect.innerHTML=html;
+
 }
+
+/* LOAD SUBJECTS */
+
+async function loadSubjects(){
+
+const q=query(
+collection(db,"subjects"),
+where("schoolId","==",schoolId),
+where("session","==",activeSession)
+);
+
+const snap=await getDocs(q);
+
+let html='<option value="">Select Subject</option>';
+
+snap.forEach(d=>{
+const s=d.data();
+html+=`<option value="${d.id}">${s.name}</option>`;
+});
+
+subjectSelect.innerHTML=html;
+
+}
+
+/* LOAD STUDENTS */
 
 window.loadStudents=async function(){
 
 const cls=classSelect.value;
 
-const q=query(collection(db,"admissions"),
+if(!cls||!examSelect.value||!subjectSelect.value){
+
+alert("Select Class, Exam, Subject");
+
+return;
+
+}
+
+const q=query(
+collection(db,"admissions"),
 where("class","==",cls),
 where("schoolId","==",schoolId),
 where("session","==",activeSession)
@@ -293,9 +343,12 @@ renderTable();
 
 }
 
+/* TABLE */
+
 function renderTable(){
 
 const tbody=document.getElementById("marksTable");
+
 tbody.innerHTML="";
 
 students.forEach(s=>{
@@ -305,26 +358,21 @@ const tr=document.createElement("tr");
 tr.innerHTML=`
 
 <td class="rank"></td>
-
 <td>${s.roll||""}</td>
-
 <td>${s.name}</td>
-
 <td>${s.father||""}</td>
 
-<td>
-<input type="number" class="markInput" data-id="${s.id}" oninput="calculate()">
-</td>
+<td><input type="number" class="marks"></td>
 
 <td class="percent"></td>
 <td class="grade"></td>
 <td class="result"></td>
 
-<td><input class="gradeInput sports"></td>
-<td><input class="gradeInput activity"></td>
+<td><input class="sports gradeInput"></td>
+<td><input class="activity gradeInput"></td>
 
-<td><input type="number" class="workDays"></td>
-<td><input type="number" class="presentDays"></td>
+<td><input type="number" class="work"></td>
+<td><input type="number" class="present"></td>
 <td class="absent"></td>
 
 `;
@@ -335,9 +383,11 @@ tbody.appendChild(tr);
 
 }
 
-window.calculate=function(){
+/* CALCULATE */
 
-const max=parseInt(document.getElementById("maxMarks").value)||1;
+function calculate(){
+
+const max=parseFloat(maxMarks.value)||1;
 
 const rows=document.querySelectorAll("#marksTable tr");
 
@@ -345,17 +395,15 @@ let list=[];
 
 rows.forEach(row=>{
 
-const marks=parseFloat(row.querySelector(".markInput").value)||0;
+const marks=parseFloat(row.querySelector(".marks").value)||0;
 
-const percent=((marks/max)*100).toFixed(2);
+const percent=(marks/max)*100;
 
-row.querySelector(".percent").innerText=percent+"%";
+row.querySelector(".percent").innerText=percent.toFixed(2)+"%";
 
-const grade=getGrade(percent);
-const result=getResult(percent);
+row.querySelector(".grade").innerText=getGrade(percent);
 
-row.querySelector(".grade").innerText=grade;
-row.querySelector(".result").innerText=result;
+row.querySelector(".result").innerText=getResult(percent);
 
 list.push({row,percent});
 
@@ -369,23 +417,25 @@ s.row.querySelector(".rank").innerText=i+1;
 
 }
 
+document.addEventListener("input",calculate);
+
+/* SAVE */
+
 window.saveAll=async function(){
 
 const rows=document.querySelectorAll("#marksTable tr");
-const maxMarks=parseInt(document.getElementById("maxMarks").value);
 
 for(const row of rows){
 
-const studentId=row.querySelector(".markInput").dataset.id;
+const studentId=students[Array.from(rows).indexOf(row)].id;
 
-const marks=parseInt(row.querySelector(".markInput").value)||0;
+const marks=parseFloat(row.querySelector(".marks").value)||0;
 
 const sports=row.querySelector(".sports").value||"";
-
 const activity=row.querySelector(".activity").value||"";
 
-const work=parseInt(row.querySelector(".workDays").value)||0;
-const present=parseInt(row.querySelector(".presentDays").value)||0;
+const work=parseInt(row.querySelector(".work").value)||0;
+const present=parseInt(row.querySelector(".present").value)||0;
 
 const absent=work-present;
 
@@ -395,7 +445,7 @@ studentId,
 examId:examSelect.value,
 subjectId:subjectSelect.value,
 marks,
-maxMarks,
+maxMarks:maxMarks.value,
 sportsGrade:sports,
 activityGrade:activity,
 class:classSelect.value,
