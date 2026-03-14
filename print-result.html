@@ -2,9 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Print Result</title>
+<title>Print Result - Professional</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
@@ -19,12 +18,14 @@ button{background:#004aad;color:white;border:none;border-radius:5px;cursor:point
 .marksheet{width:210mm;min-height:297mm;background:white;padding:20px;margin:auto;border:2px solid #004aad;page-break-after:always;position:relative;}
 .school{display:flex;align-items:center;gap:10px;border-bottom:2px solid #004aad;padding-bottom:10px;}
 .school img{width:50px;}
-.school-name{font-size:20px;font-weight:bold;color:#004aad;}
+.school-name{font-size:28px;font-weight:bold;color:#004aad;}
 .student{display:flex;justify-content:space-between;margin-top:15px;}
 .student img{width:80px;height:100px;object-fit:cover;border:1px solid #ccc;}
 table{width:100%;border-collapse:collapse;margin-top:15px;}
 th,td{border:1px solid #ccc;padding:6px;text-align:center;font-size:13px;}
 th{background:#004aad;color:white;}
+.topper{background:#d1ffd1;}
+.low-mark{background:#ffd1d1;}
 .watermark-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.05;width:200px;}
 .watermark-text{position:absolute;top:40%;left:20%;font-size:60px;opacity:0.05;transform:rotate(-30deg);}
 .signature-section{display:flex;justify-content:space-between;margin-top:30px;margin-bottom:10px;}
@@ -32,22 +33,19 @@ th{background:#004aad;color:white;}
 .signature-box .line{border-top:1px solid #000;width:150px;margin:auto;}
 .grade-system{margin-top:15px;}
 .grade-system th, .grade-system td{border:1px solid #004aad;padding:5px;text-align:center;font-size:12px;}
+.total-summary{margin-top:10px;font-weight:bold;}
 @media print{header,.card{display:none;}}
 </style>
 </head>
 <body>
 
-<header>Result Print</header>
+<header>Result Print - Professional</header>
 
 <div class="container">
 <div class="card">
 
 <select id="sessionSelect"></select>
-
-<select id="classSelect">
-<option value="">Select Class</option>
-</select>
-
+<select id="classSelect"><option value="">Select Class</option></select>
 <select id="styleSelect">
 <option value="cbse">CBSE Pattern</option>
 <option value="icse">ICSE Pattern</option>
@@ -57,18 +55,15 @@ th{background:#004aad;color:white;}
 <option value="pro3">Professional 3</option>
 <option value="pro4">Professional 4</option>
 </select>
-
 <select id="watermark">
 <option value="off">Watermark OFF</option>
 <option value="logo">Logo Watermark</option>
 <option value="name">School Name Watermark</option>
 </select>
-
 <br>
 <button onclick="generateResults()">Generate Result</button>
 <button onclick="window.print()">Print</button>
 <button onclick="downloadPDF()">PDF</button>
-
 </div>
 
 <div id="resultArea"></div>
@@ -83,21 +78,19 @@ apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
 projectId:"nmpsnagguradiya-b9b94"
 };
-
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 let schoolData={};
 
-// Load school and session
 async function loadSchool(){
   const snap=await getDoc(doc(db,"schools",schoolId));
   if(snap.exists()){
     schoolData=snap.data();
-    // Load session
+    // sessions
     const sessions=schoolData.sessions||[];
     sessionSelect.innerHTML='<option value="">Select Session</option>'+sessions.map(s=>`<option>${s}</option>`).join("");
-    // Load classes dynamically from admissions collection
+    // classes dynamically
     const classSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId)));
     const classes=new Set();
     classSnap.forEach(d=>{if(d.data().class)classes.add(d.data().class)});
@@ -111,10 +104,8 @@ function grade(p){if(p>=90)return"A+";if(p>=75)return"A";if(p>=60)return"B";if(p
 window.generateResults=async function(){
   const session=sessionSelect.value;
   const cls=classSelect.value;
-  const style=styleSelect.value;
-  if(!session || !cls){alert("Select Session and Class"); return;}
+  if(!session||!cls){alert("Select Session and Class"); return;}
 
-  // Load students
   const studentSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId),where("session","==",session),where("class","==",cls)));
   const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
   const subjectSnap=await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",session)));
@@ -122,67 +113,65 @@ window.generateResults=async function(){
   let exams=[]; examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
   let subjects=[]; subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
 
+  // compute total marks per student to identify topper
+  let studentTotals=[];
+  for(const st of studentSnap.docs){
+    const student=st.data();
+    const markSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
+    let total=0; markSnap.forEach(m=>total+=Number(m.data().marks||0));
+    studentTotals.push({id:st.id,total});
+  }
+  studentTotals.sort((a,b)=>b.total-a.total);
+  const topperId=studentTotals.length>0?studentTotals[0].id:"";
+
   let html="";
   for(const st of studentSnap.docs){
     const student=st.data();
+    let markSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
+    let marks={}; markSnap.forEach(m=>{const d=m.data(); marks[d.examId+"_"+d.subjectId]=d.marks||0;});
 
-    // Load marks
-    let marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
-    let marks={}; marksSnap.forEach(m=>{const d=m.data(); marks[d.examId+"_"+d.subjectId]=d.marks;});
-
-    // Load attendance/sports/activity
     let attSnap=await getDoc(doc(db,"attendance",`${st.id}_${session}`));
     let work=0,present=0,absent=0,sports="",activity="";
     if(attSnap.exists()){const d=attSnap.data();work=d.workingDays||0;present=d.present||0;absent=d.absent||0;sports=d.sports||"";activity=d.activity||"";}
 
-    // Head and rows
-    let head="<tr><th>Subject</th>"; exams.forEach(e=>{head+=`<th>${e.name}</th>`}); head+="<th>Total</th><th>Grade</th></tr>";
-    let rows="";
+    let head="<tr><th>Subject</th>"; exams.forEach(e=>head+=`<th>${e.name}</th>`); head+="<th>Total</th><th>Grade</th></tr>";
+    let rows=""; let studentTotal=0;
     subjects.forEach(sub=>{
-      let total=0; let row=`<tr><td>${sub.name}</td>`;
-      exams.forEach(ex=>{let m=marks[ex.id+"_"+sub.id]||0; row+=`<td>${m}</td>`; total+=Number(m);});
-      row+=`<td>${total}</td><td>${grade(total)}</td></tr>`;
+      let row=`<tr>`; let subTotal=0;
+      row+=`<td>${sub.name}</td>`;
+      exams.forEach(ex=>{let m=marks[ex.id+"_"+sub.id]||0; row+=`<td style="background:${m>=75?'#d1ffd1':m<33?'#ffd1d1':'#ffffd1'}">${m}</td>`; subTotal+=Number(m);});
+      row+=`<td>${subTotal}</td><td>${grade(subTotal)}</td></tr>`;
       rows+=row;
+      studentTotal+=subTotal;
     });
 
-    // Watermark
     let watermarkHTML="";
     if(watermark.value=="logo") watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;
     if(watermark.value=="name") watermarkHTML=`<div class="watermark-text">${schoolData.name}</div>`;
 
-    // Grade system table
-    let gradeTable=`<table class="grade-system"><tr><th>Percentage</th><th>Grade</th></tr>
-    <tr><td>90-100</td><td>A+</td></tr>
-    <tr><td>75-89</td><td>A</td></tr>
-    <tr><td>60-74</td><td>B</td></tr>
-    <tr><td>45-59</td><td>C</td></tr>
-    <tr><td>33-44</td><td>D</td></tr>
-    <tr><td>0-32</td><td>F</td></tr></table>`;
-
     html+=`
-    <div class="marksheet">
-    ${watermarkHTML}
-    <div class="school">
-      <img src="${schoolData.logo}">
-      <div><div class="school-name">${schoolData.name}</div><div>${schoolData.address||""}</div><div>Session: ${session}</div></div>
-    </div>
-    <div class="student">
-      <div>Name: ${student.name}<br>Father: ${student.father}<br>Class: ${student.class}<br>Roll: ${student.roll}<br>DOB: ${student.dob||""}</div>
-      <img src="${student.photo||""}">
-    </div>
-    <table>${head}${rows}</table>
-    <table>
-      <tr><th>Sports</th><th>Activity</th><th>Working Days</th><th>Present</th><th>Absent</th></tr>
-      <tr><td>${sports}</td><td>${activity}</td><td>${work}</td><td>${present}</td><td>${absent}</td></tr>
-    </table>
-    ${gradeTable}
-    <div class="signature-section">
-      <div class="signature-box"><div class="line"></div>Class Teacher</div>
-      <div class="signature-box"><div class="line"></div>Principal</div>
-    </div>
+    <div class="marksheet ${st.id===topperId?'topper':''}">
+      ${watermarkHTML}
+      <div class="school">
+        <img src="${schoolData.logo}">
+        <div><div class="school-name">${schoolData.name}</div><div>${schoolData.address||""}</div><div>Session: ${session}</div></div>
+      </div>
+      <div class="student">
+        <div>Name: ${student.name}<br>Father: ${student.father}<br>Class: ${student.class}<br>Roll: ${student.roll}<br>DOB: ${student.dob||""}</div>
+        <img src="${student.photo||""}">
+      </div>
+      <table>${head}${rows}</table>
+      <div class="total-summary">Total Marks: ${studentTotal} | Average: ${(studentTotal/subjects.length).toFixed(2)}</div>
+      <table>
+        <tr><th>Sports</th><th>Activity</th><th>Working Days</th><th>Present</th><th>Absent</th></tr>
+        <tr><td>${sports}</td><td>${activity}</td><td>${work}</td><td>${present}</td><td>${absent}</td></tr>
+      </table>
+      <div class="signature-section">
+        <div class="signature-box"><div class="line"></div>Class Teacher</div>
+        <div class="signature-box"><div class="line"></div>Principal</div>
+      </div>
     </div>`;
   }
-
   document.getElementById("resultArea").innerHTML=html;
 }
 
@@ -191,4 +180,4 @@ window.downloadPDF=function(){
 }
 </script>
 </body>
-  </html>
+</html>
