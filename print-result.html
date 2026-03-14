@@ -4,6 +4,7 @@
 <meta charset="UTF-8">
 <title>Professional Print Result</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
@@ -14,7 +15,6 @@ header{background:#004aad;color:white;padding:15px;text-align:center;font-size:2
 select,button{padding:10px;margin:5px;}
 button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
 
-/* MARKSHEET STYLES */
 .marksheet{width:210mm;min-height:297mm;background:white;padding:20px;margin:auto;page-break-after:always;position:relative;border:2px solid #004aad;}
 .school{display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:2px solid #004aad;}
 .school img{width:50px;}
@@ -35,7 +35,6 @@ th{background:#004aad;color:white;}
 .low-mark{background:#ffd1d1;}
 @media print{header,.card{display:none;}}
 
-/* Professional Styles */
 .style1 .school-name{color:#004aad;}
 .style2 .school-name{color:#d35400;}
 .style3 .school-name{color:#27ae60;}
@@ -78,7 +77,7 @@ th{background:#004aad;color:white;}
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, getDoc, query, where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",projectId:"nmpsnagguradiya-b9b94"};
 const app=initializeApp(firebaseConfig);
@@ -86,7 +85,6 @@ const db=getFirestore(app);
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 let schoolData={};
 
-// Load school sessions and classes dynamically
 async function loadSchool(){
   const snap=await getDoc(doc(db,"schools",schoolId));
   if(snap.exists()){
@@ -116,6 +114,7 @@ window.generateResults=async function(){
   let exams=[]; examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
   let subjects=[]; subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
 
+  // Calculate topper
   let studentTotals=[];
   for(const st of studentSnap.docs){
     let total=0;
@@ -129,7 +128,7 @@ window.generateResults=async function(){
   let html="";
   for(const st of studentSnap.docs){
     const student=st.data();
-    const marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
+    let marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
     let marks={}; marksSnap.forEach(m=>{const d=m.data(); marks[d.examId+"_"+d.subjectId]=d.marks||0;});
 
     let attSnap=await getDoc(doc(db,"attendance",`${st.id}_${session}`));
@@ -168,7 +167,6 @@ window.generateResults=async function(){
       </div>
     </div>`;
   }
-
   document.getElementById("resultArea").innerHTML=html;
 }
 
@@ -176,6 +174,5 @@ window.downloadPDF=function(){
   html2pdf(document.getElementById("resultArea"),{margin:5,filename:"result.pdf",html2canvas:{scale:2,useCORS:true},jsPDF:{unit:"mm",format:"a4"}});
 }
 </script>
-
 </body>
   </html>
