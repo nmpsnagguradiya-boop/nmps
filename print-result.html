@@ -4,7 +4,9 @@
 <meta charset="UTF-8">
 <title>Print Result</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+
 <style>
 body{font-family:Arial;margin:0;background:#f2f4f8;}
 header{background:#004aad;color:white;padding:15px;text-align:center;font-size:22px;font-weight:bold;}
@@ -12,6 +14,8 @@ header{background:#004aad;color:white;padding:15px;text-align:center;font-size:2
 .card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
 select,button{padding:10px;margin:5px;}
 button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
+
+/* MARKSHEET */
 .marksheet{width:210mm;min-height:297mm;background:white;padding:20px;margin:auto;border:2px solid #004aad;page-break-after:always;position:relative;}
 .school{display:flex;align-items:center;gap:10px;border-bottom:2px solid #004aad;padding-bottom:10px;}
 .school img{width:50px;}
@@ -28,25 +32,50 @@ th{background:#004aad;color:white;}
 .signature-box .line{border-top:1px solid #000;width:150px;margin:auto;}
 .grade-system{margin-top:15px;}
 .grade-system th, .grade-system td{border:1px solid #004aad;padding:5px;text-align:center;font-size:12px;}
-.topper{background-color:#d4edda;}
+
+/* Style Variants */
+.cbse{border-color:#004aad;} .cbse th{background:#004aad;}
+.icse{border-color:#ff5733;} .icse th{background:#ff5733;}
+.state{border-color:#28a745;} .state th{background:#28a745;}
+.pro1{border-color:#6f42c1;} .pro1 th{background:#6f42c1;}
+.pro2{border-color:#fd7e14;} .pro2 th{background:#fd7e14;}
+.pro3{border-color:#17a2b8;} .pro3 th{background:#17a2b8;}
+.pro4{border-color:#e83e8c;} .pro4 th{background:#e83e8c;}
+
+.pass{color:green;font-weight:bold;}
+.fail{color:red;font-weight:bold;}
+
 @media print{header,.card{display:none;}}
-/* 7 Professional Styles */
-.style-cbse th{background:#004aad;color:white;}
-.style-icse th{background:#ff5722;color:white;}
-.style-state th{background:#3f51b5;color:white;}
-.style-pro1 th{background:#009688;color:white;}
-.style-pro2 th{background:#673ab7;color:white;}
-.style-pro3 th{background:#e91e63;color:white;}
-.style-pro4 th{background:#795548;color:white;}
 </style>
 </head>
 <body>
 
 <header>Result Print</header>
+
 <div class="container">
 <div class="card">
+
 <select id="sessionSelect"></select>
-<select id="classSelect"><option value="">Select Class</option></select>
+
+<select id="classSelect">
+  <option value="">Select Class</option>
+  <option>Nursery</option>
+  <option>LKG</option>
+  <option>UKG</option>
+  <option>1</option>
+  <option>2</option>
+  <option>3</option>
+  <option>4</option>
+  <option>5</option>
+  <option>6</option>
+  <option>7</option>
+  <option>8</option>
+  <option>9</option>
+  <option>10</option>
+  <option>11</option>
+  <option>12</option>
+</select>
+
 <select id="styleSelect">
 <option value="cbse">CBSE Pattern</option>
 <option value="icse">ICSE Pattern</option>
@@ -56,15 +85,23 @@ th{background:#004aad;color:white;}
 <option value="pro3">Professional 3</option>
 <option value="pro4">Professional 4</option>
 </select>
+
 <select id="watermark">
 <option value="off">Watermark OFF</option>
 <option value="logo">Logo Watermark</option>
 <option value="name">School Name Watermark</option>
 </select>
+
+<select id="resultType">
+<option value="percent">Percentage System</option>
+<option value="gradeOnly">Grade Only System</option>
+</select>
+
 <br>
 <button onclick="generateResults()">Generate Result</button>
 <button onclick="window.print()">Print</button>
 <button onclick="downloadPDF()">PDF</button>
+
 </div>
 
 <div id="resultArea"></div>
@@ -74,7 +111,12 @@ th{background:#004aad;color:white;}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig={apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",projectId:"nmpsnagguradiya-b9b94"};
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94"
+};
+
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const schoolId=localStorage.getItem("schoolId")||"school_001";
@@ -86,10 +128,6 @@ async function loadSchool(){
     schoolData=snap.data();
     const sessions=schoolData.sessions||[];
     sessionSelect.innerHTML='<option value="">Select Session</option>'+sessions.map(s=>`<option>${s}</option>`).join("");
-    const classSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId)));
-    const classes=new Set();
-    classSnap.forEach(d=>{if(d.data().class)classes.add(d.data().class)});
-    classSelect.innerHTML='<option value="">Select Class</option>'+Array.from(classes).sort().map(c=>`<option>${c}</option>`).join("");
   }
 }
 loadSchool();
@@ -100,6 +138,7 @@ window.generateResults=async function(){
   const session=sessionSelect.value;
   const cls=classSelect.value;
   const style=styleSelect.value;
+  const type=resultType.value;
   if(!session || !cls){alert("Select Session and Class"); return;}
 
   const studentSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId),where("session","==",session),where("class","==",cls)));
@@ -109,35 +148,33 @@ window.generateResults=async function(){
   let exams=[]; examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
   let subjects=[]; subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
 
-  // calculate topper
-  let studentTotals=[];
-  for(const st of studentSnap.docs){
-    let total=0;
-    const marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
-    marksSnap.forEach(m=>{total+=Number(m.data().marks||0)});
-    studentTotals.push({id:st.id,total});
-  }
-  const maxTotal=Math.max(...studentTotals.map(s=>s.total));
-
   let html="";
   for(const st of studentSnap.docs){
     const student=st.data();
-    const marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
-    let marks={}; marksSnap.forEach(m=>{marks[m.data().examId+"_"+m.data().subjectId]=m.data().marks;});
 
-    const attSnap=await getDoc(doc(db,"attendance",`${st.id}_${session}`));
+    let marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
+    let marks={}; marksSnap.forEach(m=>{const d=m.data(); marks[d.examId+"_"+d.subjectId]=d.marks;});
+
+    let attSnap=await getDoc(doc(db,"attendance",`${st.id}_${session}`));
     let work=0,present=0,absent=0,sports="",activity="";
-    if(attSnap.exists()){const d=attSnap.data(); work=d.work||0; present=d.present||0; absent=d.absent||0; sports=d.sports||""; activity=d.activity||"";}
+    if(attSnap.exists()){const d=attSnap.data();work=d.workingDays||0;present=d.present||0;absent=d.absent||0;sports=d.sports||"";activity=d.activity||"";}
 
+    // Table Head
     let head="<tr><th>Subject</th>";
     exams.forEach(e=>{head+=`<th>${e.name}</th>`});
-    head+="<th>Total</th><th>Grade</th></tr>";
+    if(type=="percent"){head+="<th>Total</th><th>%</th><th>Grade</th><th>Result</th></tr>";}
+    else{head+="<th>Grade</th></tr>";}
 
     let rows="";
     subjects.forEach(sub=>{
-      let totalSub=0; let row=`<tr><td>${sub.name}</td>`;
-      exams.forEach(ex=>{let m=marks[ex.id+"_"+sub.id]||0; row+=`<td>${m}</td>`; totalSub+=Number(m)});
-      row+=`<td>${totalSub}</td><td>${grade(totalSub)}</td></tr>`;
+      let total=0; let row=`<tr><td>${sub.name}</td>`;
+      exams.forEach(ex=>{
+        let m=marks[ex.id+"_"+sub.id]||0;
+        if(type=="percent"){row+=`<td>${m}</td>`; total+=Number(m);}
+        else{row+=`<td>${grade(m)}</td>`;}
+      });
+      if(type=="percent"){row+=`<td>${total}</td><td>${(total/exams.length).toFixed(1)}</td><td>${grade(total/exams.length)}</td><td class="${(total/exams.length)>=33?'pass':'fail'}">${(total/exams.length)>=33?'PASS':'FAIL'}</td></tr>`;}
+      else{row+="</tr>";}
       rows+=row;
     });
 
@@ -145,38 +182,26 @@ window.generateResults=async function(){
     if(watermark.value=="logo") watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;
     if(watermark.value=="name") watermarkHTML=`<div class="watermark-text">${schoolData.name}</div>`;
 
-    let styleClass="style-"+style;
-    if(studentTotals.find(s=>s.id===st.id).total===maxTotal) styleClass+=" topper";
-
     html+=`
-    <div class="marksheet ${styleClass}">
-      ${watermarkHTML}
-      <div class="school">
-        <img src="${schoolData.logo}">
-        <div><div class="school-name">${schoolData.name}</div><div>${schoolData.address||""}</div><div>Session: ${session}</div></div>
-      </div>
-      <div class="student">
-        <div>Name: ${student.name}<br>Father: ${student.father}<br>Class: ${student.class}<br>Roll: ${student.roll}<br>DOB: ${student.dob||""}</div>
-        <img src="${student.photo||""}">
-      </div>
-      <table>${head}${rows}</table>
-      <table>
-        <tr><th>Sports</th><th>Activity</th><th>Working</th><th>Present</th><th>Absent</th></tr>
-        <tr><td>${sports}</td><td>${activity}</td><td>${work}</td><td>${present}</td><td>${absent}</td></tr>
-      </table>
-      <table class="grade-system">
-        <tr><th>Percentage</th><th>Grade</th></tr>
-        <tr><td>90-100</td><td>A+</td></tr>
-        <tr><td>75-89</td><td>A</td></tr>
-        <tr><td>60-74</td><td>B</td></tr>
-        <tr><td>45-59</td><td>C</td></tr>
-        <tr><td>33-44</td><td>D</td></tr>
-        <tr><td>0-32</td><td>F</td></tr>
-      </table>
-      <div class="signature-section">
-        <div class="signature-box"><div class="line"></div>Class Teacher</div>
-        <div class="signature-box"><div class="line"></div>Principal</div>
-      </div>
+    <div class="marksheet ${style}">
+    ${watermarkHTML}
+    <div class="school">
+      <img src="${schoolData.logo}">
+      <div><div class="school-name">${schoolData.name}</div><div>${schoolData.address||""}</div><div>Session: ${session}</div></div>
+    </div>
+    <div class="student">
+      <div>Name: ${student.name}<br>Father: ${student.father}<br>Class: ${student.class}<br>Roll: ${student.roll}<br>DOB: ${student.dob||""}</div>
+      <img src="${student.photo||""}">
+    </div>
+    <table>${head}${rows}</table>
+    <table>
+      <tr><th>Sports</th><th>Activity</th><th>Working Days</th><th>Present</th><th>Absent</th></tr>
+      <tr><td>${sports}</td><td>${activity}</td><td>${work}</td><td>${present}</td><td>${absent}</td></tr>
+    </table>
+    <div class="signature-section">
+      <div class="signature-box"><div class="line"></div>Class Teacher</div>
+      <div class="signature-box"><div class="line"></div>Principal</div>
+    </div>
     </div>`;
   }
 
@@ -184,12 +209,7 @@ window.generateResults=async function(){
 }
 
 window.downloadPDF=function(){
-  html2pdf(document.getElementById("resultArea"),{
-    margin:5,
-    filename:"result.pdf",
-    html2canvas:{scale:2,useCORS:true},
-    jsPDF:{unit:"mm",format:"a4"}
-  });
+  html2pdf(document.getElementById("resultArea"),{margin:5,filename:"result.pdf",html2canvas:{scale:2,useCORS:true},jsPDF:{unit:"mm",format:"a4"}});
 }
 </script>
 </body>
