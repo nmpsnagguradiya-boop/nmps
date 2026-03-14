@@ -1,8 +1,6 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-
 <meta charset="UTF-8">
 <title>School Fees Management</title>
 
@@ -71,23 +69,6 @@ border:2px solid black;
 display:none;
 }
 
-.school{
-font-size:24px;
-font-weight:bold;
-text-align:center;
-}
-
-.address{
-font-size:14px;
-text-align:center;
-margin-bottom:15px;
-}
-
-.sign{
-margin-top:40px;
-text-align:right;
-}
-
 </style>
 
 </head>
@@ -128,7 +109,7 @@ text-align:right;
 <input type="number" id="oldFees" placeholder="Old Pending Fees">
 <button onclick="addOldFees()">Add Old Fees</button>
 
-<button onclick="downloadExcel()">Download Excel Report</button>
+<button onclick="downloadExcel()">Export Excel</button>
 
 <div class="report">
 
@@ -146,8 +127,6 @@ text-align:right;
 <tr>
 <th>Select</th>
 <th>Name</th>
-<th>Father</th>
-<th>Village</th>
 <th>Class</th>
 <th>Mobile</th>
 <th>Call</th>
@@ -171,18 +150,11 @@ text-align:right;
 
 <div id="receiptBox" class="receipt">
 
-<div class="school" id="schoolName"></div>
-<div class="address" id="schoolAddress"></div>
-
-<h3>Fees Receipt</h3>
-
-<p><b>Receipt No :</b> <span id="rno"></span></p>
+<h2>Fees Receipt</h2>
 
 <table>
 
-<tr><td>Student Name</td><td id="rname"></td></tr>
-<tr><td>Father Name</td><td id="rfather"></td></tr>
-<tr><td>Village</td><td id="rvillage"></td></tr>
+<tr><td>Name</td><td id="rname"></td></tr>
 <tr><td>Class</td><td id="rclass"></td></tr>
 <tr><td>Mobile</td><td id="rmobile"></td></tr>
 
@@ -190,16 +162,11 @@ text-align:right;
 <tr><td>Vehicle Fees</td><td id="rvehicle"></td></tr>
 <tr><td>Old Pending</td><td id="rold"></td></tr>
 
-<tr><td>Total Fees</td><td id="rtotal"></td></tr>
-<tr><td>Paid Amount</td><td id="rpaid"></td></tr>
+<tr><td>Total</td><td id="rtotal"></td></tr>
+<tr><td>Paid</td><td id="rpaid"></td></tr>
 <tr><td>Pending</td><td id="rpending"></td></tr>
-<tr><td>Date</td><td id="rdate"></td></tr>
 
 </table>
-
-<div class="sign">
-Principal Sign
-</div>
 
 <br>
 
@@ -217,10 +184,7 @@ collection,
 getDocs,
 doc,
 updateDoc,
-addDoc,
-getDoc,
-query,
-where
+addDoc
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
@@ -232,41 +196,17 @@ projectId:"nmpsnagguradiya-b9b94"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
+const schoolId = localStorage.getItem("schoolId") || "school_001";
+const session = localStorage.getItem("activeSession") || "2025-26";
+
 let students=[];
-let schoolId=localStorage.getItem("schoolId")||"school_001";
-let activeSession="";
-
-async function loadSchool(){
-
-const snap=await getDoc(doc(db,"schools",schoolId));
-
-if(snap.exists()){
-
-let s=snap.data();
-
-document.getElementById("schoolName").innerText=s.name;
-document.getElementById("schoolAddress").innerText=s.address;
-
-activeSession=s.activeSession;
-
-loadStudents();
-
-}
-
-}
 
 async function loadStudents(){
 
-let cls=document.getElementById("classFilter").value;
-
-let q=query(collection(db,"admissions"),
-where("schoolId","==",schoolId),
-where("session","==",activeSession)
-);
-
-let snap=await getDocs(q);
+const snap=await getDocs(collection(db,"admissions"));
 
 let html="";
+
 let totalFees=0;
 let totalCollection=0;
 let totalPending=0;
@@ -274,11 +214,15 @@ let totalOld=0;
 
 students=[];
 
+let cls=document.getElementById("classFilter").value;
+
 snap.forEach(docSnap=>{
 
 let s=docSnap.data();
 s.id=docSnap.id;
 
+if(s.schoolId!==schoolId) return;
+if(s.session!==session) return;
 if(cls && s.class!=cls) return;
 
 students.push(s);
@@ -297,13 +241,12 @@ totalPending+=pending;
 totalOld+=old;
 
 html+=`
+
 <tr>
 
 <td><input type="checkbox" value="${s.id}"></td>
 
 <td>${s.name||""}</td>
-<td>${s.father||""}</td>
-<td>${s.village||""}</td>
 <td>${s.class||""}</td>
 <td>${s.mobile||""}</td>
 
@@ -333,6 +276,7 @@ html+=`
 </td>
 
 </tr>
+
 `;
 
 });
@@ -430,21 +374,8 @@ loadStudents();
 
 }
 
-window.viewHistory=async function(id){
-
-let q=query(collection(db,"fees_history"),where("studentId","==",id));
-
-let snap=await getDocs(q);
-
-let text="Fees History\n\n";
-
-snap.forEach(d=>{
-let h=d.data();
-text+="Date : "+h.date+"\nAmount : "+h.amount+"\n\n";
-});
-
-alert(text);
-
+window.viewHistory=function(id){
+alert("Fees history stored in fees_history collection");
 }
 
 window.sendWhatsApp=function(id){
@@ -452,7 +383,7 @@ window.sendWhatsApp=function(id){
 let s=students.find(x=>x.id==id);
 
 let msg=
-"Fees Receipt%0A"+
+"Fees Update%0A"+
 "Student : "+s.name+"%0A"+
 "Class : "+s.class+"%0A"+
 "Paid : ₹"+(s.paid||0);
@@ -465,14 +396,12 @@ window.open("https://wa.me/91"+phone+"?text="+msg);
 
 window.downloadExcel=function(){
 
-let csv="Name,Father,Village,Class,Mobile,Fees,Vehicle,Old,Paid\n";
+let csv="Name,Class,Mobile,Fees,Vehicle,Old,Paid\n";
 
 students.forEach(s=>{
 
 csv+=
 (s.name||"")+","+
-(s.father||"")+","+
-(s.village||"")+","+
 (s.class||"")+","+
 (s.mobile||"")+","+
 (s.fees||0)+","+
@@ -490,7 +419,7 @@ a.click();
 
 }
 
-loadSchool();
+loadStudents();
 
 document.getElementById("classFilter").addEventListener("change",loadStudents);
 
