@@ -40,11 +40,9 @@ max-height:200px;
 overflow:auto;
 }
 
-/* PVC SIZE */
+/* PVC CARD SIZE */
 
 .id-card{
-width:85.6mm;
-height:54mm;
 border-radius:8px;
 border:2px solid #000;
 overflow:hidden;
@@ -53,6 +51,20 @@ flex-direction:column;
 justify-content:space-between;
 font-size:9px;
 background:white;
+}
+
+/* PORTRAIT */
+
+.portrait{
+width:54mm;
+height:85.6mm;
+}
+
+/* LANDSCAPE */
+
+.landscape{
+width:85.6mm;
+height:54mm;
 }
 
 #idArea{
@@ -194,6 +206,11 @@ body{background:white;}
 <option value="style7">Style 7</option>
 </select>
 
+<select id="orientationSelect">
+<option value="portrait">Portrait</option>
+<option value="landscape">Landscape</option>
+</select>
+
 <br>
 
 <button onclick="loadStudents()">Load Students</button>
@@ -303,6 +320,7 @@ studentList.innerHTML=html;
 window.generateCards=function(){
 
 const style=document.getElementById("styleSelect").value;
+const orientation=document.getElementById("orientationSelect").value;
 
 let html="";
 
@@ -314,7 +332,7 @@ const qr=`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=https://nm
 
 html+=`
 
-<div class="id-card ${style}">
+<div class="id-card ${style} ${orientation}">
 
 <div class="top">
 
