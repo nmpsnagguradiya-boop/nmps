@@ -88,24 +88,6 @@ margin-top:40px;
 text-align:right;
 }
 
-@media print{
-
-body *{
-visibility:hidden;
-}
-
-#receiptBox,#receiptBox *{
-visibility:visible;
-}
-
-#receiptBox{
-position:absolute;
-left:0;
-top:0;
-}
-
-}
-
 </style>
 
 </head>
@@ -115,8 +97,6 @@ top:0;
 <header>School Fees Management</header>
 
 <div class="container">
-
-<select id="sessionSelect"></select>
 
 <select id="classFilter">
 <option value="">All Classes</option>
@@ -224,7 +204,6 @@ Principal Sign
 <br>
 
 <button onclick="window.print()">Print</button>
-<button onclick="downloadReceipt()">Download Receipt</button>
 
 </div>
 
@@ -255,6 +234,7 @@ const db=getFirestore(app);
 
 let students=[];
 let schoolId=localStorage.getItem("schoolId")||"school_001";
+let activeSession="";
 
 async function loadSchool(){
 
@@ -267,15 +247,9 @@ let s=snap.data();
 document.getElementById("schoolName").innerText=s.name;
 document.getElementById("schoolAddress").innerText=s.address;
 
-let sessions=s.sessions||[];
+activeSession=s.activeSession;
 
-let html='<option value="">Select Session</option>';
-
-sessions.forEach(x=>{
-html+=`<option>${x}</option>`
-});
-
-document.getElementById("sessionSelect").innerHTML=html;
+loadStudents();
 
 }
 
@@ -283,18 +257,16 @@ document.getElementById("sessionSelect").innerHTML=html;
 
 async function loadStudents(){
 
-let session=document.getElementById("sessionSelect").value;
 let cls=document.getElementById("classFilter").value;
 
 let q=query(collection(db,"admissions"),
 where("schoolId","==",schoolId),
-where("session","==",session)
+where("session","==",activeSession)
 );
 
 let snap=await getDocs(q);
 
 let html="";
-
 let totalFees=0;
 let totalCollection=0;
 let totalPending=0;
@@ -325,7 +297,6 @@ totalPending+=pending;
 totalOld+=old;
 
 html+=`
-
 <tr>
 
 <td><input type="checkbox" value="${s.id}"></td>
@@ -362,7 +333,6 @@ html+=`
 </td>
 
 </tr>
-
 `;
 
 });
@@ -377,24 +347,60 @@ document.getElementById("oldPending").innerText=totalOld;
 }
 
 window.callStudent=function(mobile){
-
 window.location.href="tel:"+mobile;
+}
+
+window.addFees=async function(){
+
+let amount=parseInt(document.getElementById("feesAmount").value);
+
+let checked=document.querySelectorAll("#studentList input:checked");
+
+for(let c of checked){
+
+await updateDoc(doc(db,"admissions",c.value),{
+fees:amount
+});
 
 }
 
-window.downloadReceipt=function(){
+loadStudents();
 
-let box=document.getElementById("receiptBox").innerHTML;
+}
 
-let blob=new Blob([box],{type:"text/html"});
+window.addVehicleFees=async function(){
 
-let a=document.createElement("a");
+let amount=parseInt(document.getElementById("vehicleFees").value);
 
-a.href=URL.createObjectURL(blob);
+let checked=document.querySelectorAll("#studentList input:checked");
 
-a.download="fees-receipt.html";
+for(let c of checked){
 
-a.click();
+await updateDoc(doc(db,"admissions",c.value),{
+vehicleFees:amount
+});
+
+}
+
+loadStudents();
+
+}
+
+window.addOldFees=async function(){
+
+let amount=parseInt(document.getElementById("oldFees").value);
+
+let checked=document.querySelectorAll("#studentList input:checked");
+
+for(let c of checked){
+
+await updateDoc(doc(db,"admissions",c.value),{
+oldFees:amount
+});
+
+}
+
+loadStudents();
 
 }
 
@@ -415,57 +421,80 @@ paid:newPaid
 });
 
 await addDoc(collection(db,"fees_history"),{
-schoolId:schoolId,
 studentId:id,
 amount:amount,
 date:new Date().toLocaleDateString()
 });
 
-alert("Payment Deposited");
-
 loadStudents();
 
 }
 
-window.showReceipt=function(id){
+window.viewHistory=async function(id){
+
+let q=query(collection(db,"fees_history"),where("studentId","==",id));
+
+let snap=await getDocs(q);
+
+let text="Fees History\n\n";
+
+snap.forEach(d=>{
+let h=d.data();
+text+="Date : "+h.date+"\nAmount : "+h.amount+"\n\n";
+});
+
+alert(text);
+
+}
+
+window.sendWhatsApp=function(id){
 
 let s=students.find(x=>x.id==id);
 
-let fees=s.fees||0;
-let vehicle=s.vehicleFees||0;
-let old=s.oldFees||0;
-let total=fees+vehicle+old;
-let paid=s.paid||0;
-let pending=total-paid;
+let msg=
+"Fees Receipt%0A"+
+"Student : "+s.name+"%0A"+
+"Class : "+s.class+"%0A"+
+"Paid : ₹"+(s.paid||0);
 
-document.getElementById("receiptBox").style.display="block";
+let phone=s.mobile.replace(/\D/g,'');
 
-document.getElementById("rno").innerText="RC-"+Date.now();
+window.open("https://wa.me/91"+phone+"?text="+msg);
 
-document.getElementById("rname").innerText=s.name;
-document.getElementById("rfather").innerText=s.father;
-document.getElementById("rvillage").innerText=s.village;
-document.getElementById("rclass").innerText=s.class;
-document.getElementById("rmobile").innerText=s.mobile;
+}
 
-document.getElementById("rfees").innerText=fees;
-document.getElementById("rvehicle").innerText=vehicle;
-document.getElementById("rold").innerText=old;
+window.downloadExcel=function(){
 
-document.getElementById("rtotal").innerText=total;
-document.getElementById("rpaid").innerText=paid;
-document.getElementById("rpending").innerText=pending;
+let csv="Name,Father,Village,Class,Mobile,Fees,Vehicle,Old,Paid\n";
 
-document.getElementById("rdate").innerText=new Date().toLocaleDateString();
+students.forEach(s=>{
+
+csv+=
+(s.name||"")+","+
+(s.father||"")+","+
+(s.village||"")+","+
+(s.class||"")+","+
+(s.mobile||"")+","+
+(s.fees||0)+","+
+(s.vehicleFees||0)+","+
+(s.oldFees||0)+","+
+(s.paid||0)+"\n";
+
+});
+
+let blob=new Blob([csv],{type:"text/csv"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="fees-report.csv";
+a.click();
 
 }
 
 loadSchool();
 
-document.getElementById("sessionSelect").addEventListener("change",loadStudents);
 document.getElementById("classFilter").addEventListener("change",loadStudents);
 
 </script>
 
 </body>
-</html>
+  </html>
