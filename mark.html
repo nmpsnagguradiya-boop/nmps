@@ -2,10 +2,8 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Print Result</title>
+<title>Marks Management PRO MAX</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 
@@ -21,12 +19,13 @@ color:white;
 padding:15px;
 text-align:center;
 font-size:22px;
+font-weight:bold;
 }
 
 .container{
+padding:20px;
 max-width:1200px;
 margin:auto;
-padding:20px;
 }
 
 .card{
@@ -34,148 +33,87 @@ background:white;
 padding:20px;
 border-radius:10px;
 margin-bottom:20px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
+box-shadow:0 3px 8px rgba(0,0,0,0.1);
 }
 
-select,button{
+select,input,button{
 padding:10px;
 margin:5px;
+width:100%;
+max-width:220px;
+border-radius:5px;
+border:1px solid #ccc;
 }
 
 button{
+cursor:pointer;
+font-weight:bold;
+border:none;
+}
+
+.load{
+background:#28a745;
+color:white;
+}
+
+.save{
 background:#004aad;
 color:white;
-border:none;
-border-radius:5px;
-cursor:pointer;
-}
-
-/* MARKSHEET */
-
-.marksheet{
-
-width:210mm;
-min-height:297mm;
-background:white;
-padding:20px;
-margin:auto;
-border:2px solid #004aad;
-page-break-after:always;
-position:relative;
-
-}
-
-.school{
-
-display:flex;
-align-items:center;
-gap:10px;
-border-bottom:2px solid #004aad;
-padding-bottom:10px;
-
-}
-
-.school img{
-
-width:40px;
-
-}
-
-.school-name{
-
-font-size:20px;
-font-weight:bold;
-color:#004aad;
-
-}
-
-.student{
-
-display:flex;
-justify-content:space-between;
-margin-top:15px;
-
-}
-
-.student img{
-
-width:80px;
-height:100px;
-object-fit:cover;
-border:1px solid #ccc;
-
 }
 
 table{
-
 width:100%;
 border-collapse:collapse;
-margin-top:15px;
-
+margin-top:10px;
 }
 
 th,td{
-
-border:1px solid #ccc;
-padding:6px;
+border:1px solid #ddd;
+padding:8px;
 text-align:center;
-font-size:13px;
-
 }
 
 th{
-
 background:#004aad;
 color:white;
-
 }
 
-.watermark-logo{
-
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-opacity:0.05;
-width:200px;
-
+input[type="number"]{
+width:70px;
+text-align:center;
 }
 
-.watermark-text{
-
-position:absolute;
-top:40%;
-left:20%;
-font-size:60px;
-opacity:0.05;
-transform:rotate(-30deg);
-
-}
-
-@media print{
-
-header,.card{
-display:none;
-}
-
+@media(max-width:768px){
+table,th,td{font-size:12px;}
+select,input,button{max-width:100%;}
 }
 
 </style>
-
 </head>
 
 <body>
 
-<header>Result Print</header>
+<header>Marks Entry + Attendance System</header>
 
 <div class="container">
 
 <div class="card">
 
-<select id="sessionSelect"></select>
+<h3>Select Session</h3>
+
+<select id="sessionSelect" onchange="selectSession()"></select>
+
+<p id="sessionStatus" style="color:green;font-weight:bold"></p>
+
+</div>
+
+<div id="marksCard" style="display:none;">
+
+<div class="card">
+
+<h3>Select Details</h3>
 
 <select id="classSelect">
-
 <option value="">Select Class</option>
 <option>Nursery</option>
 <option>LKG</option>
@@ -190,26 +128,56 @@ display:none;
 <option>8</option>
 <option>9</option>
 <option>10</option>
-
 </select>
 
-<select id="watermark">
+<select id="examSelect"></select>
 
-<option value="off">Watermark OFF</option>
-<option value="logo">Logo Watermark</option>
-<option value="name">School Name Watermark</option>
+<select id="subjectSelect"></select>
 
-</select>
+<input type="number" id="maxMarks" placeholder="Maximum Marks">
 
 <br>
 
-<button onclick="generate()">Generate Result</button>
-<button onclick="window.print()">Print</button>
-<button onclick="downloadPDF()">PDF</button>
+<button class="load" onclick="loadStudents()">Load Students</button>
+<button class="save" onclick="saveAll()">Save Marks + Attendance</button>
 
 </div>
 
-<div id="resultArea"></div>
+<div class="card">
+
+<h3>Student Marks + Attendance</h3>
+
+<table>
+
+<thead>
+
+<tr>
+
+<th>Roll</th>
+<th>Name</th>
+<th>Father</th>
+
+<th>Marks</th>
+
+<th>Working Days</th>
+<th>Present</th>
+<th>Absent</th>
+<th>%</th>
+
+<th>Grade</th>
+<th>Result</th>
+
+</tr>
+
+</thead>
+
+<tbody id="marksTable"></tbody>
+
+</table>
+
+</div>
+
+</div>
 
 </div>
 
@@ -217,50 +185,37 @@ display:none;
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+getFirestore,
+collection,
+getDocs,
+doc,
+getDoc,
+setDoc,
+query,
+where
+}
+
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
-
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
 projectId:"nmpsnagguradiya-b9b94"
-
 };
 
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
+let students=[];
+let exams=[];
+let subjects=[];
+
+let activeSession=localStorage.getItem("activeSession")||"";
+
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 
-let schoolData={};
-
-async function loadSchool(){
-
-const snap=await getDoc(doc(db,"schools",schoolId));
-
-if(snap.exists()){
-
-schoolData=snap.data();
-
-const sessions=schoolData.sessions||[];
-
-let html='<option value="">Select Session</option>';
-
-sessions.forEach(s=>{
-
-html+=`<option>${s}</option>`;
-
-});
-
-sessionSelect.innerHTML=html;
-
-}
-
-}
-
-loadSchool();
-
-function grade(p){
+function getGrade(p){
 
 if(p>=90)return"A+";
 if(p>=75)return"A";
@@ -272,185 +227,207 @@ return"F";
 
 }
 
-window.generate=async function(){
+function getResult(p){
 
-const session=sessionSelect.value;
+return p>=33?"PASS":"FAIL";
+
+}
+
+async function loadSessions(){
+
+const snap=await getDoc(doc(db,"schools",schoolId));
+
+if(snap.exists()){
+
+const sessions=snap.data().sessions||[];
+
+let options='<option value="">Select Session</option>';
+
+sessions.forEach(s=>{
+
+options+=`<option value="${s}" ${s===activeSession?'selected':''}>${s}</option>`;
+
+});
+
+sessionSelect.innerHTML=options;
+
+if(activeSession)selectSession();
+
+}
+
+}
+
+loadSessions();
+
+window.selectSession=function(){
+
+const sel=sessionSelect.value;
+
+if(!sel)return;
+
+activeSession=sel;
+
+localStorage.setItem("activeSession",sel);
+
+sessionStatus.innerText="Active Session: "+sel;
+
+document.getElementById("marksCard").style.display="block";
+
+loadExams();
+loadSubjects();
+
+}
+
+async function loadExams(){
+
+const snap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",activeSession)));
+
+exams=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+examSelect.innerHTML='<option value="">Select Exam</option>'+exams.map(e=>`<option value="${e.id}">${e.examName}</option>`).join("");
+
+}
+
+async function loadSubjects(){
+
+const snap=await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",activeSession)));
+
+subjects=snap.docs.map(d=>({id:d.id,...d.data()}));
+
+subjectSelect.innerHTML='<option value="">Select Subject</option>'+subjects.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
+
+}
+
+window.loadStudents=async function(){
+
 const cls=classSelect.value;
 
-const studentSnap=await getDocs(query(
+const q=query(collection(db,"admissions"),where("class","==",cls),where("schoolId","==",schoolId),where("session","==",activeSession));
 
-collection(db,"admissions"),
-where("schoolId","==",schoolId),
-where("session","==",session),
-where("class","==",cls)
+const snap=await getDocs(q);
 
-));
+students=snap.docs.map(d=>({id:d.id,...d.data()}));
 
-const examSnap=await getDocs(query(
-
-collection(db,"exam_sessions"),
-where("schoolId","==",schoolId),
-where("session","==",session)
-
-));
-
-const subjectSnap=await getDocs(query(
-
-collection(db,"subjects"),
-where("schoolId","==",schoolId),
-where("session","==",session)
-
-));
-
-let exams=[];
-examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
-
-let subjects=[];
-subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
-
-let html="";
-
-for(const st of studentSnap.docs){
-
-const student=st.data();
-
-const marksSnap=await getDocs(query(
-
-collection(db,"marks"),
-where("studentId","==",st.id),
-where("session","==",session)
-
-));
-
-let marks={};
-
-marksSnap.forEach(m=>{
-
-const d=m.data();
-
-marks[d.examId+"_"+d.subjectId]=d.marks;
-
-});
-
-let head="<tr><th>Subject</th>";
-
-exams.forEach(e=>{
-
-head+=`<th>${e.name}</th>`;
-
-});
-
-head+="<th>Total</th><th>Grade</th></tr>";
-
-let rows="";
-
-subjects.forEach(sub=>{
-
-let total=0;
-
-let row=`<tr><td>${sub.name}</td>`;
-
-exams.forEach(ex=>{
-
-let m=marks[ex.id+"_"+sub.id]||0;
-
-row+=`<td>${m}</td>`;
-
-total+=Number(m);
-
-});
-
-row+=`<td>${total}</td><td>${grade(total)}</td></tr>`;
-
-rows+=row;
-
-});
-
-let watermarkHTML="";
-
-if(watermark.value=="logo"){
-
-watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;
+renderTable();
 
 }
 
-if(watermark.value=="name"){
+function renderTable(){
 
-watermarkHTML=`<div class="watermark-text">${schoolData.name}</div>`;
+const tbody=document.getElementById("marksTable");
 
-}
+tbody.innerHTML="";
 
-html+=`
+students.forEach(s=>{
 
-<div class="marksheet">
+const tr=document.createElement("tr");
 
-${watermarkHTML}
+tr.innerHTML=`
 
-<div class="school">
+<td>${s.roll||""}</td>
 
-<img src="${schoolData.logo}">
+<td>${s.name}</td>
 
-<div>
+<td>${s.father||""}</td>
 
-<div class="school-name">${schoolData.name}</div>
-<div>${schoolData.address}</div>
-<div>Session : ${session}</div>
+<td>
+<input type="number" class="markInput" data-id="${s.id}">
+</td>
 
-</div>
+<td>
+<input type="number" class="workDays">
+</td>
 
-</div>
+<td>
+<input type="number" class="presentDays">
+</td>
 
-<div class="student">
+<td class="absent"></td>
 
-<div>
+<td class="percent"></td>
 
-Name : ${student.name}<br>
-Father : ${student.father}<br>
-Class : ${student.class}<br>
-Roll : ${student.roll}<br>
-DOB : ${student.dob||""}<br>
-Aadhaar : ${student.aadhaar||""}<br>
-SSSM : ${student.sssm||""}<br>
-Village : ${student.village||""}
+<td class="grade"></td>
 
-</div>
-
-<img src="${student.photo||""}">
-
-</div>
-
-<table>
-
-${head}
-
-${rows}
-
-</table>
-
-</div>
+<td class="result"></td>
 
 `;
 
-}
-
-resultArea.innerHTML=html;
-
-}
-
-window.downloadPDF=function(){
-
-html2pdf(document.getElementById("resultArea"),{
-
-margin:5,
-filename:"result.pdf",
-html2canvas:{scale:2,useCORS:true},
-jsPDF:{unit:"mm",format:"a4"}
+tbody.appendChild(tr);
 
 });
+
+}
+
+window.saveAll=async function(){
+
+const maxMarks=parseInt(document.getElementById("maxMarks").value);
+
+const rows=document.querySelectorAll("#marksTable tr");
+
+for(const row of rows){
+
+const studentId=row.querySelector(".markInput").dataset.id;
+
+let marks=parseInt(row.querySelector(".markInput").value)||0;
+
+const work=parseInt(row.querySelector(".workDays").value)||0;
+
+const present=parseInt(row.querySelector(".presentDays").value)||0;
+
+const absent=work-present;
+
+const percent=((present/work)*100).toFixed(2);
+
+row.querySelector(".absent").innerText=absent;
+
+row.querySelector(".percent").innerText=percent+"%";
+
+const grade=getGrade(percent);
+
+const result=getResult(percent);
+
+row.querySelector(".grade").innerText=grade;
+
+row.querySelector(".result").innerText=result;
+
+/* SAVE MARKS */
+
+await setDoc(doc(db,"marks",`${studentId}_${examSelect.value}_${subjectSelect.value}`),{
+
+studentId,
+examId:examSelect.value,
+subjectId:subjectSelect.value,
+marks,
+maxMarks,
+class:classSelect.value,
+session:activeSession,
+schoolId
+
+});
+
+/* SAVE ATTENDANCE */
+
+await setDoc(doc(db,"attendance",`${studentId}_${activeSession}`),{
+
+studentId,
+class:classSelect.value,
+session:activeSession,
+schoolId,
+workingDays:work,
+present,
+absent,
+percentage:percent,
+updatedAt:new Date()
+
+});
+
+}
+
+alert("Marks + Attendance Saved");
 
 }
 
 </script>
 
 </body>
-  </html>
+</html>
