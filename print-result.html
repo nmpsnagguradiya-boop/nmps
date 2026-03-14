@@ -17,7 +17,7 @@ button{background:#004aad;color:white;border:none;border-radius:5px;cursor:point
 
 /* MARKSHEET */
 .marksheet{width:210mm;min-height:297mm;background:white;padding:20px;margin:auto;border:2px solid #004aad;page-break-after:always;position:relative;}
-.school{display:flex;align-items:center;gap:10px;padding-bottom:10px;}
+.school{display:flex;align-items:center;gap:10px;border-bottom:2px solid #004aad;padding-bottom:10px;}
 .school img{width:50px;}
 .school-name{font-size:22px;font-weight:bold;color:#004aad;}
 .student{display:flex;justify-content:space-between;margin-top:15px;}
@@ -32,10 +32,10 @@ th{background:#004aad;color:white;}
 .signature-box .line{border-top:1px solid #000;width:150px;margin:auto;}
 .grade-system{margin-top:15px;}
 .grade-system th, .grade-system td{border:1px solid #004aad;padding:5px;text-align:center;font-size:12px;}
-.topper{background-color:#d4edda;} /* green highlight for topper */
+.topper{background-color:#d4edda;} /* topper highlight green */
 @media print{header,.card{display:none;}}
 
-/* STYLE VARIATIONS */
+/* 7 PROFESSIONAL STYLES */
 .style-cbse th{background:#004aad;color:white;}
 .style-icse th{background:#ff5722;color:white;}
 .style-state th{background:#3f51b5;color:white;}
@@ -53,7 +53,10 @@ th{background:#004aad;color:white;}
 <div class="card">
 
 <select id="sessionSelect"></select>
-<select id="classSelect"><option value="">Select Class</option></select>
+
+<select id="classSelect">
+<option value="">Select Class</option>
+</select>
 
 <select id="styleSelect">
 <option value="cbse">CBSE Pattern</option>
@@ -96,15 +99,12 @@ const db=getFirestore(app);
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 let schoolData={};
 
-// Load school & sessions/classes
 async function loadSchool(){
   const snap=await getDoc(doc(db,"schools",schoolId));
   if(snap.exists()){
     schoolData=snap.data();
-    // Sessions
     const sessions=schoolData.sessions||[];
     sessionSelect.innerHTML='<option value="">Select Session</option>'+sessions.map(s=>`<option>${s}</option>`).join("");
-    // Classes
     const classSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId)));
     const classes=new Set();
     classSnap.forEach(d=>{if(d.data().class)classes.add(d.data().class)});
@@ -115,14 +115,12 @@ loadSchool();
 
 function grade(p){if(p>=90)return"A+";if(p>=75)return"A";if(p>=60)return"B";if(p>=45)return"C";if(p>=33)return"D";return"F";}
 
-// Generate results
 window.generateResults=async function(){
   const session=sessionSelect.value;
   const cls=classSelect.value;
   const style=styleSelect.value;
   if(!session || !cls){alert("Select Session and Class"); return;}
 
-  // Load students
   const studentSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId),where("session","==",session),where("class","==",cls)));
   const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
   const subjectSnap=await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",session)));
@@ -130,46 +128,47 @@ window.generateResults=async function(){
   let exams=[]; examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
   let subjects=[]; subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
 
-  // Calculate topper
-  let studentMarksArr=[];
+  // Topper calculation
+  let studentTotals=[];
   for(const st of studentSnap.docs){
-    const student=st.data();
-    let marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
     let total=0;
-    marksSnap.forEach(m=>{const d=m.data(); total+=Number(d.marks||0);});
-    studentMarksArr.push({id:st.id,total});
+    const marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
+    marksSnap.forEach(m=>{total+=Number(m.data().marks||0)});
+    studentTotals.push({id:st.id,total});
   }
-  const maxMarks=Math.max(...studentMarksArr.map(s=>s.total));
+  const maxTotal=Math.max(...studentTotals.map(s=>s.total));
 
   let html="";
   for(const st of studentSnap.docs){
     const student=st.data();
-    let marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
-    let marks={}; marksSnap.forEach(m=>{const d=m.data(); marks[d.examId+"_"+d.subjectId]=d.marks;});
+    const marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
+    let marks={}; marksSnap.forEach(m=>{marks[m.data().examId+"_"+m.data().subjectId]=m.data().marks;});
 
-    let attSnap=await getDoc(doc(db,"attendance",`${st.id}_${session}`));
+    const attSnap=await getDoc(doc(db,"attendance",`${st.id}_${session}`));
     let work=0,present=0,absent=0,sports="",activity="";
     if(attSnap.exists()){const d=attSnap.data(); work=d.workingDays||0; present=d.present||0; absent=d.absent||0; sports=d.sports||""; activity=d.activity||"";}
 
-    let head="<tr>"; exams.forEach(e=>{head+=`<th>${e.name}</th>`}); head="<tr><th>Subject</th>"+head+"<th>Total</th><th>Grade</th></tr>";
+    let head="<tr><th>Subject</th>";
+    exams.forEach(e=>{head+=`<th>${e.name}</th>`});
+    head+="<th>Total</th><th>Grade</th></tr>";
+
     let rows="";
     subjects.forEach(sub=>{
       let totalSub=0; let row=`<tr><td>${sub.name}</td>`;
-      exams.forEach(ex=>{let m=marks[ex.id+"_"+sub.id]||0; row+=`<td>${m}</td>`; totalSub+=Number(m);});
+      exams.forEach(ex=>{let m=marks[ex.id+"_"+sub.id]||0; row+=`<td>${m}</td>`; totalSub+=Number(m)});
       row+=`<td>${totalSub}</td><td>${grade(totalSub)}</td></tr>`;
       rows+=row;
     });
 
-    // Watermark
     let watermarkHTML="";
     if(watermark.value=="logo") watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;
     if(watermark.value=="name") watermarkHTML=`<div class="watermark-text">${schoolData.name}</div>`;
 
-    // Style class
     let styleClass="style-"+style;
+    if(studentTotals.find(s=>s.id===st.id).total===maxTotal) styleClass+=" topper";
 
     html+=`
-    <div class="marksheet ${styleClass} ${studentMarksArr.find(s=>s.id===st.id).total===maxMarks?'topper':''}">
+    <div class="marksheet ${styleClass}">
       ${watermarkHTML}
       <div class="school">
         <img src="${schoolData.logo}">
