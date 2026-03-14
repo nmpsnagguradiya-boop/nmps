@@ -1,334 +1,142 @@
 <!DOCTYPE html>
 <html>
 <head>
-
 <meta charset="UTF-8">
 <title>Print Student ID Cards</title>
-
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-
-body{
-font-family:Verdana;
-background:#f2f2f2;
-padding:20px;
-text-align:center;
-}
-
-.controls{
-margin-bottom:20px;
-}
-
-select,button{
-padding:8px 12px;
-margin:5px;
-font-weight:bold;
-cursor:pointer;
-}
-
-/* STUDENT LIST */
-
-.students{
-background:white;
-padding:10px;
-max-height:200px;
-overflow:auto;
-border:2px solid #ccc;
-margin-bottom:20px;
-}
-
-/* GRID 8 CARDS */
-
-.cards{
-display:grid;
-grid-template-columns:repeat(4,1fr);
-gap:10px;
-justify-items:center;
-}
-
-/* CARD */
-
-.card{
-width:250px;
-height:360px;
-border:3px solid black;
-border-radius:10px;
-overflow:hidden;
-background:white;
-}
-
-/* HEADER FOOTER COLOURS */
-
-.design1 .header{background:#004aad;color:white;}
-.design1 .footer{background:#ffeb3b;}
-
-.design2 .header{background:#1b5e20;color:white;}
-.design2 .footer{background:#a5d6a7;}
-
-.design3 .header{background:#6a1b9a;color:white;}
-.design3 .footer{background:#e1bee7;}
-
-.design4 .header{background:#e65100;color:white;}
-.design4 .footer{background:#ffe0b2;}
-
-.design5 .header{background:#283593;color:white;}
-.design5 .footer{background:#c5cae9;}
-
-.design6 .header{background:#00695c;color:white;}
-.design6 .footer{background:#b2dfdb;}
-
-.design7 .header{background:#263238;color:white;}
-.design7 .footer{background:#90a4ae;}
-
-/* HEADER */
-
-.header{
-padding:8px;
-font-weight:bold;
-font-style:italic;
-font-size:15px;
-}
-
-/* PHOTO */
-
-.photo img{
-width:85px;
-height:100px;
-border:2px solid black;
-border-radius:6px;
-margin-top:5px;
-object-fit:cover;
-}
-
-/* NAME */
-
-.name{
-font-size:16px;
-font-weight:bold;
-font-style:italic;
-margin-top:5px;
-}
-
-/* DETAILS */
-
-.details{
-font-size:12px;
-font-weight:bold;
-font-style:italic;
-line-height:17px;
-margin-top:4px;
-}
-
-/* FOOTER */
-
-.footer{
-margin-top:5px;
-padding:4px;
-}
-
-.qr canvas{
-width:60px;
-}
-
-@media print{
-
-button,select{
-display:none;
-}
-
-.students{
-display:none;
-}
-
-.card{
--webkit-print-color-adjust:exact;
-print-color-adjust:exact;
-}
-
-}
-
+body{font-family:Arial;margin:0;background:#f2f4f8;}
+.container{max-width:1200px;margin:auto;padding:20px;}
+.card{padding:20px;}
+select,button{padding:10px;margin:5px;}
+button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
+.id-page{width:210mm;min-height:297mm;margin:auto;padding:5mm;page-break-after:always;display:grid;gap:5mm;}
+.id-card{border:2px solid #004aad;padding:10px;display:flex;flex-direction:column;font-size:12px;justify-content:space-between;}
+.school-header{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #004aad;padding-bottom:5px;}
+.school-header img{width:40px;height:40px;}
+.school-name{flex:1;text-align:center;font-size:16px;font-weight:bold;color:#004aad;}
+.school-info{text-align:center;font-size:10px;margin-top:2px;}
+.student-info{margin-top:5px;display:flex;justify-content:space-between;align-items:center;}
+.student-details{line-height:1.4;font-size:12px;}
+.student-photo{width:70px;height:80px;border:1px solid #000;object-fit:cover;}
+.qr-code{width:60px;height:60px;}
+/* 7 styles */
+.style1{background:#e3f2fd;border-left:5px solid #0d47a1;border-top:5px solid #1976d2;border-bottom:5px solid #64b5f6;}
+.style2{background:#e8f5e9;border-left:5px solid #1b5e20;border-top:5px solid #388e3c;border-bottom:5px solid #81c784;}
+.style3{background:#f3e5f5;border-left:5px solid #4a148c;border-top:5px solid #7b1fa2;border-bottom:5px solid #ba68c8;}
+.style4{background:#ffebee;border-left:5px solid #b71c1c;border-top:5px solid #c62828;border-bottom:5px solid #e57373;}
+.style5{background:#fff3e0;border-left:5px solid #e65100;border-top:5px solid #ef6c00;border-bottom:5px solid #ffb74d;}
+.style6{background:#e0f7fa;border-left:5px solid #006064;border-top:5px solid #00838f;border-bottom:5px solid #4dd0e1;}
+.style7{background:#eceff1;border-left:5px solid #263238;border-top:5px solid #37474f;border-bottom:5px solid #90a4ae;}
 </style>
-
 </head>
-
 <body>
+<div class="container">
+<h3>Print Student ID Cards</h3>
 
-<div class="controls">
-
-<select id="classFilter">
-
-<option value="">All Classes</option>
-<option>Nursery</option>
-<option>LKG</option>
-<option>UKG</option>
-<option>1</option>
-<option>2</option>
-<option>3</option>
-<option>4</option>
-<option>5</option>
-<option>6</option>
-<option>7</option>
-<option>8</option>
-<option>9</option>
-<option>10</option>
-
+<select id="sessionSelect"></select>
+<select id="classSelect">
+<option value="">Select Class</option>
+<option>Nursery</option><option>LKG</option><option>UKG</option>
+<option>1</option><option>2</option><option>3</option><option>4</option>
+<option>5</option><option>6</option><option>7</option><option>8</option>
+<option>9</option><option>10</option><option>11</option><option>12</option>
 </select>
-
-<select id="designSelect">
-
-<option value="design1">Blue / Yellow</option>
-<option value="design2">Green</option>
-<option value="design3">Purple</option>
-<option value="design4">Orange</option>
-<option value="design5">Royal Blue</option>
-<option value="design6">Teal</option>
-<option value="design7">Dark Grey</option>
-
+<select id="cardsPerPage">
+<option value="2">2 per Page</option>
+<option value="4">4 per Page</option>
+<option value="6">6 per Page</option>
 </select>
+<select id="styleSelect">
+<option value="style1">Style 1</option>
+<option value="style2">Style 2</option>
+<option value="style3">Style 3</option>
+<option value="style4">Style 4</option>
+<option value="style5">Style 5</option>
+<option value="style6">Style 6</option>
+<option value="style7">Style 7</option>
+</select>
+<br>
+<button onclick="generateIDCards()">Generate ID Cards</button>
+<button onclick="window.print()">Print</button>
 
-<button onclick="printSelected()">Print Selected IDs</button>
-
+<div id="idArea"></div>
 </div>
 
-<div class="students" id="studentSelect"></div>
-
-<div class="cards" id="cards"></div>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcode/1.5.3/qrcode.min.js"></script>
-
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId:"nmpsnagguradiya-b9b94",
-storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId:"811957568318",
-appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
+projectId:"nmpsnagguradiya-b9b94"
 };
-
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-let students=[];
+const schoolId=localStorage.getItem("schoolId")||"school_001";
+let schoolData={};
 
-async function loadStudents(){
-
-const snap=await getDocs(collection(db,"admissions"));
-
-students=[];
-
-snap.forEach(doc=>{
-let d=doc.data();
-d.id=doc.id;
-students.push(d);
-});
-
-renderStudentList();
-
+async function loadSchool(){
+  const snap=await getDoc(doc(db,"schools",schoolId));
+  if(snap.exists()){
+    schoolData=snap.data();
+    sessionSelect.innerHTML='<option value="">Select Session</option>'+(schoolData.sessions||[]).map(s=>`<option value="${s}">${s}</option>`).join("");
+  }
 }
+loadSchool();
 
-function renderStudentList(){
+async function generateIDCards(){
+  const session=sessionSelect.value;
+  const cls=classSelect.value;
+  const perPage=parseInt(document.getElementById("cardsPerPage").value);
+  const style=document.getElementById("styleSelect").value;
+  if(!session||!cls) return alert("Select session and class");
 
-let cls=document.getElementById("classFilter").value;
-
-let html="";
-
-students.forEach(s=>{
-
-if(cls && s.class!=cls) return;
-
-html+=`
-<label>
-<input type="checkbox" value="${s.id}">
-${s.name} (Class ${s.class})
-</label><br>
-`;
-
-});
-
-document.getElementById("studentSelect").innerHTML=html;
-
+  const studentSnap=await getDocs(query(collection(db,"admissions"),
+    where("schoolId","==",schoolId),
+    where("session","==",session),
+    where("class","==",cls)
+  ));
+  const students=studentSnap.docs.map(d=>({id:d.id,...d.data()}));
+  let html="";
+  for(let i=0;i<students.length;i+=perPage){
+    html+='<div class="id-page" style="grid-template-columns:repeat(2,1fr);">';
+    const slice=students.slice(i,i+perPage);
+    slice.forEach(student=>{
+      // QR code text
+      const qrText=`${schoolData.name} | ${student.name} | ${student.roll}`;
+      const qrURL=`https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(qrText)}`;
+      html+=`
+      <div class="id-card ${style}">
+        <div class="school-header">
+          <img src="${schoolData.logo}">
+          <div class="school-name">${schoolData.name}</div>
+          <img src="${schoolData.logo}">
+        </div>
+        <div class="school-info">${schoolData.address} | DISE: ${schoolData.dise} | Session: ${session}</div>
+        <div class="student-info">
+          <div class="student-details">
+            Name: ${student.name}<br>
+            Father: ${student.father}<br>
+            Mobile: ${student.mobile||''}<br>
+            Village/City: ${student.village||student.city||''}<br>
+            Class: ${student.class}<br>
+            Roll: ${student.roll}
+          </div>
+          <img class="student-photo" src="${student.photo||''}">
+        </div>
+        <div style="margin-top:5px;text-align:center;">
+          <img class="qr-code" src="${qrURL}">
+        </div>
+      </div>
+      `;
+    });
+    html+='</div>';
+  }
+  document.getElementById("idArea").innerHTML=html;
 }
-
-window.printSelected=function(){
-
-let checked=document.querySelectorAll("#studentSelect input:checked");
-
-let design=document.getElementById("designSelect").value;
-
-let html="";
-
-checked.forEach(c=>{
-
-let s=students.find(x=>x.id==c.value);
-
-let sid="STU-"+s.id.substring(0,6).toUpperCase();
-
-html+=`
-
-<div class="card ${design}">
-
-<div class="header">
-YOUR SCHOOL NAME
-</div>
-
-<div class="photo">
-<img src="${s.photo||''}">
-</div>
-
-<div class="name">${s.name||''}</div>
-
-<div class="details">
-
-ID : ${sid}<br>
-Class : ${s.class||''}<br>
-Father : ${s.father||''}<br>
-Mobile : ${s.mobile||''}
-
-</div>
-
-<div class="footer">
-
-<div class="qr">
-<canvas id="qr${s.id}"></canvas>
-</div>
-
-</div>
-
-</div>
-
-`;
-
-});
-
-document.getElementById("cards").innerHTML=html;
-
-checked.forEach(c=>{
-
-let s=students.find(x=>x.id==c.value);
-
-let sid="STU-"+s.id.substring(0,6).toUpperCase();
-
-QRCode.toCanvas(document.getElementById("qr"+s.id),sid);
-
-});
-
-/* DIRECT PRINT */
-
-setTimeout(()=>{
-window.print();
-},300);
-
-}
-
-document.getElementById("classFilter").addEventListener("change",renderStudentList);
-
-loadStudents();
-
 </script>
-
 </body>
-                                                      </html>
+                                </html>
