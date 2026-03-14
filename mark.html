@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Marks Entry + Attendance System</title>
+<title>Marks Entry + Attendance</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -51,15 +51,8 @@ font-weight:bold;
 border:none;
 }
 
-.load{
-background:#28a745;
-color:white;
-}
-
-.save{
-background:#004aad;
-color:white;
-}
+.load{background:#28a745;color:white;}
+.save{background:#004aad;color:white;}
 
 table{
 width:100%;
@@ -83,9 +76,7 @@ width:70px;
 text-align:center;
 }
 
-.gradeInput{
-width:60px;
-}
+.gradeInput{width:60px;}
 
 </style>
 </head>
@@ -129,13 +120,8 @@ width:60px;
 <option>10</option>
 </select>
 
-<select id="examSelect">
-<option value="">Select Exam</option>
-</select>
-
-<select id="subjectSelect">
-<option value="">Select Subject</option>
-</select>
+<select id="examSelect"></select>
+<select id="subjectSelect"></select>
 
 <input type="number" id="maxMarks" placeholder="Maximum Marks">
 
@@ -153,6 +139,7 @@ width:60px;
 <table>
 
 <thead>
+
 <tr>
 
 <th>Rank</th>
@@ -173,6 +160,7 @@ width:60px;
 <th>Absent</th>
 
 </tr>
+
 </thead>
 
 <tbody id="marksTable"></tbody>
@@ -211,7 +199,7 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
 let students=[];
-let activeSession=localStorage.getItem("activeSession")||"";
+let activeSession="";
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 
 function getGrade(p){
@@ -221,6 +209,7 @@ if(p>=75)return"A";
 if(p>=60)return"B";
 if(p>=45)return"C";
 if(p>=33)return"D";
+
 return"F";
 
 }
@@ -229,25 +218,16 @@ function getResult(p){
 return p>=33?"PASS":"FAIL";
 }
 
-/* LOAD SESSION */
+/* SESSION */
 
 async function loadSessions(){
 
 const snap=await getDoc(doc(db,"schools",schoolId));
 
-if(snap.exists()){
-
 const sessions=snap.data().sessions||[];
 
-let html='<option value="">Select Session</option>';
-
-sessions.forEach(s=>{
-html+=`<option value="${s}">${s}</option>`;
-});
-
-sessionSelect.innerHTML=html;
-
-}
+sessionSelect.innerHTML='<option value="">Select</option>'+
+sessions.map(s=>`<option>${s}</option>`).join("");
 
 }
 
@@ -257,8 +237,6 @@ sessionSelect.onchange=async function(){
 
 activeSession=this.value;
 
-localStorage.setItem("activeSession",activeSession);
-
 sessionStatus.innerText="Active Session: "+activeSession;
 
 document.getElementById("marksCard").style.display="block";
@@ -266,9 +244,9 @@ document.getElementById("marksCard").style.display="block";
 loadExams();
 loadSubjects();
 
-};
+}
 
-/* LOAD EXAMS */
+/* EXAMS */
 
 async function loadExams(){
 
@@ -280,18 +258,12 @@ where("session","==",activeSession)
 
 const snap=await getDocs(q);
 
-let html='<option value="">Select Exam</option>';
-
-snap.forEach(d=>{
-const e=d.data();
-html+=`<option value="${d.id}">${e.examName}</option>`;
-});
-
-examSelect.innerHTML=html;
+examSelect.innerHTML='<option value="">Exam</option>'+
+snap.docs.map(d=>`<option value="${d.id}">${d.data().examName}</option>`).join("");
 
 }
 
-/* LOAD SUBJECTS */
+/* SUBJECTS */
 
 async function loadSubjects(){
 
@@ -303,14 +275,8 @@ where("session","==",activeSession)
 
 const snap=await getDocs(q);
 
-let html='<option value="">Select Subject</option>';
-
-snap.forEach(d=>{
-const s=d.data();
-html+=`<option value="${d.id}">${s.name}</option>`;
-});
-
-subjectSelect.innerHTML=html;
+subjectSelect.innerHTML='<option value="">Subject</option>'+
+snap.docs.map(d=>`<option value="${d.id}">${d.data().name}</option>`).join("");
 
 }
 
@@ -320,19 +286,11 @@ window.loadStudents=async function(){
 
 const cls=classSelect.value;
 
-if(!cls||!examSelect.value||!subjectSelect.value){
-
-alert("Select Class, Exam, Subject");
-
-return;
-
-}
-
 const q=query(
 collection(db,"admissions"),
 where("class","==",cls),
-where("schoolId","==",schoolId),
-where("session","==",activeSession)
+where("session","==",activeSession),
+where("schoolId","==",schoolId)
 );
 
 const snap=await getDocs(q);
@@ -345,13 +303,13 @@ renderTable();
 
 /* TABLE */
 
-function renderTable(){
+async function renderTable(){
 
 const tbody=document.getElementById("marksTable");
 
 tbody.innerHTML="";
 
-students.forEach(s=>{
+for(const s of students){
 
 const tr=document.createElement("tr");
 
@@ -379,45 +337,78 @@ tr.innerHTML=`
 
 tbody.appendChild(tr);
 
-});
+/* LOAD MARKS */
+
+const markDoc=await getDoc(doc(db,"marks",`${s.id}_${examSelect.value}_${subjectSelect.value}`));
+
+if(markDoc.exists()){
+
+tr.querySelector(".marks").value=markDoc.data().marks;
+
+}
+
+/* LOAD ATTENDANCE + SPORTS */
+
+const attDoc=await getDoc(doc(db,"attendance",`${s.id}_${activeSession}`));
+
+if(attDoc.exists()){
+
+const a=attDoc.data();
+
+tr.querySelector(".sports").value=a.sportsGrade||"";
+tr.querySelector(".activity").value=a.activityGrade||"";
+
+tr.querySelector(".work").value=a.workingDays||"";
+tr.querySelector(".present").value=a.present||"";
+
+tr.querySelector(".absent").innerText=a.absent||"";
+
+}
+
+}
 
 }
 
 /* CALCULATE */
 
-function calculate(){
+document.addEventListener("input",()=>{
 
-const max=parseFloat(maxMarks.value)||1;
+const max=maxMarks.value||1;
 
 const rows=document.querySelectorAll("#marksTable tr");
 
-let list=[];
+let arr=[];
 
-rows.forEach(row=>{
+rows.forEach(r=>{
 
-const marks=parseFloat(row.querySelector(".marks").value)||0;
+const marks=r.querySelector(".marks").value||0;
 
 const percent=(marks/max)*100;
 
-row.querySelector(".percent").innerText=percent.toFixed(2)+"%";
+r.querySelector(".percent").innerText=percent.toFixed(2)+"%";
 
-row.querySelector(".grade").innerText=getGrade(percent);
+r.querySelector(".grade").innerText=getGrade(percent);
 
-row.querySelector(".result").innerText=getResult(percent);
+r.querySelector(".result").innerText=getResult(percent);
 
-list.push({row,percent});
+arr.push({row:r,percent});
+
+const work=r.querySelector(".work").value||0;
+const present=r.querySelector(".present").value||0;
+
+r.querySelector(".absent").innerText=work-present;
 
 });
 
-list.sort((a,b)=>b.percent-a.percent);
+arr.sort((a,b)=>b.percent-a.percent);
 
-list.forEach((s,i)=>{
+arr.forEach((s,i)=>{
+
 s.row.querySelector(".rank").innerText=i+1;
+
 });
 
-}
-
-document.addEventListener("input",calculate);
+});
 
 /* SAVE */
 
@@ -425,54 +416,51 @@ window.saveAll=async function(){
 
 const rows=document.querySelectorAll("#marksTable tr");
 
-for(const row of rows){
+for(let i=0;i<rows.length;i++){
 
-const studentId=students[Array.from(rows).indexOf(row)].id;
+const row=rows[i];
+const s=students[i];
 
-const marks=parseFloat(row.querySelector(".marks").value)||0;
+const marks=row.querySelector(".marks").value||0;
 
-const sports=row.querySelector(".sports").value||"";
-const activity=row.querySelector(".activity").value||"";
+await setDoc(doc(db,"marks",`${s.id}_${examSelect.value}_${subjectSelect.value}`),{
 
-const work=parseInt(row.querySelector(".work").value)||0;
-const present=parseInt(row.querySelector(".present").value)||0;
-
-const absent=work-present;
-
-await setDoc(doc(db,"marks",`${studentId}_${examSelect.value}_${subjectSelect.value}`),{
-
-studentId,
+studentId:s.id,
 examId:examSelect.value,
 subjectId:subjectSelect.value,
 marks,
 maxMarks:maxMarks.value,
-sportsGrade:sports,
-activityGrade:activity,
 class:classSelect.value,
 session:activeSession,
 schoolId
 
 });
 
-await setDoc(doc(db,"attendance",`${studentId}_${activeSession}`),{
+/* SESSION WISE ATTENDANCE */
 
-studentId,
+await setDoc(doc(db,"attendance",`${s.id}_${activeSession}`),{
+
+studentId:s.id,
 class:classSelect.value,
 session:activeSession,
 schoolId,
-workingDays:work,
-present,
-absent
+
+sportsGrade:row.querySelector(".sports").value||"",
+activityGrade:row.querySelector(".activity").value||"",
+
+workingDays:row.querySelector(".work").value||0,
+present:row.querySelector(".present").value||0,
+absent:row.querySelector(".absent").innerText||0
 
 });
 
 }
 
-alert("Saved Successfully");
+alert("Data Saved");
 
 }
 
 </script>
 
 </body>
-  </html>
+</html>
