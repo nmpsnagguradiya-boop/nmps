@@ -55,7 +55,7 @@ button{background:#004aad;color:white;border:none;border-radius:5px;cursor:point
 <option value="style7">Style 7</option>
 </select>
 <br>
-<button onclick="generateIDCards()">Generate ID Cards</button>
+<button id="generateBtn">Generate ID Cards</button>
 <button onclick="window.print()">Print</button>
 
 <div id="idArea"></div>
@@ -72,7 +72,6 @@ projectId:"nmpsnagguradiya-b9b94"
 };
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
-
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 let schoolData={};
 
@@ -80,17 +79,20 @@ async function loadSchool(){
   const snap=await getDoc(doc(db,"schools",schoolId));
   if(snap.exists()){
     schoolData=snap.data();
-    sessionSelect.innerHTML='<option value="">Select Session</option>'+ (schoolData.sessions||[]).map(s=>`<option value="${s}">${s}</option>`).join("");
+    const sess=schoolData.sessions||[];
+    let html='<option value="">Select Session</option>';
+    sess.forEach(s=>{html+=`<option value="${s}">${s}</option>`;});
+    document.getElementById("sessionSelect").innerHTML=html;
   }
 }
 loadSchool();
 
-async function generateIDCards(){
-  const session=sessionSelect.value;
-  const cls=classSelect.value;
+document.getElementById("generateBtn").addEventListener("click", async()=>{
+  const session=document.getElementById("sessionSelect").value;
+  const cls=document.getElementById("classSelect").value;
   const perPage=parseInt(document.getElementById("cardsPerPage").value);
   const style=document.getElementById("styleSelect").value;
-  if(!session||!cls) return alert("Select session and class");
+  if(!session || !cls){alert("Select session and class"); return;}
 
   const studentSnap=await getDocs(query(collection(db,"admissions"),
     where("schoolId","==",schoolId),
@@ -98,12 +100,7 @@ async function generateIDCards(){
     where("class","==",cls)
   ));
   const students=studentSnap.docs.map(d=>({id:d.id,...d.data()}));
-
-  if(students.length===0){
-    alert("No students found!");
-    document.getElementById("idArea").innerHTML="";
-    return;
-  }
+  if(students.length===0){alert("No students found!"); document.getElementById("idArea").innerHTML=""; return;}
 
   let html="";
   for(let i=0;i<students.length;i+=perPage){
@@ -134,13 +131,12 @@ async function generateIDCards(){
         <div style="margin-top:5px;text-align:center;">
           <img class="qr-code" src="${qrURL}">
         </div>
-      </div>
-      `;
+      </div>`;
     });
     html+='</div>';
   }
   document.getElementById("idArea").innerHTML=html;
-}
+});
 </script>
 </body>
 </html>
