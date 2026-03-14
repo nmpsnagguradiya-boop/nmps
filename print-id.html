@@ -31,6 +31,15 @@ border:none;
 cursor:pointer;
 }
 
+#studentList{
+margin-top:10px;
+background:white;
+padding:10px;
+border-radius:6px;
+max-height:200px;
+overflow:auto;
+}
+
 #idArea{
 display:flex;
 flex-wrap:wrap;
@@ -38,14 +47,12 @@ gap:10px;
 margin-top:20px;
 }
 
-/* PRINT COLOR FIX */
-
 *{
--webkit-print-color-adjust: exact !important;
-print-color-adjust: exact !important;
+-webkit-print-color-adjust:exact !important;
+print-color-adjust:exact !important;
 }
 
-/* ID CARD BASE */
+/* ID CARD */
 
 .id-card{
 border-radius:12px;
@@ -58,21 +65,19 @@ font-size:13px;
 background:white;
 }
 
-/* PORTRAIT */
+/* portrait */
 
 .portrait{
 width:220px;
 height:340px;
 }
 
-/* LANDSCAPE */
+/* landscape */
 
 .landscape{
 width:340px;
 height:220px;
 }
-
-/* top design */
 
 .top{
 padding:10px;
@@ -102,12 +107,10 @@ font-size:10px;
 }
 
 .card-title{
-font-size:16px;
+font-size:15px;
 font-weight:bold;
 margin-top:3px;
 }
-
-/* student section */
 
 .student-section{
 display:flex;
@@ -128,8 +131,6 @@ object-fit:cover;
 border:2px solid #000;
 }
 
-/* QR */
-
 .qr{
 text-align:center;
 padding-bottom:6px;
@@ -139,7 +140,7 @@ padding-bottom:6px;
 width:55px;
 }
 
-/* 7 STYLES */
+/* styles */
 
 .style1 .top{background:#004aad;}
 .style1{background:linear-gradient(#004aad 35%,#e6f0ff 35%);}
@@ -166,12 +167,12 @@ width:55px;
 
 @media print{
 
-body{
-background:white;
-}
-
 .container{
 display:none;
+}
+
+body{
+background:white;
 }
 
 #idArea{
@@ -189,13 +190,7 @@ gap:0;
 
 <select id="sessionSelect"></select>
 
-<select id="classSelect">
-<option value="">Select Class</option>
-<option>Nursery</option><option>LKG</option><option>UKG</option>
-<option>1</option><option>2</option><option>3</option><option>4</option>
-<option>5</option><option>6</option><option>7</option><option>8</option>
-<option>9</option><option>10</option><option>11</option><option>12</option>
-</select>
+<select id="classSelect"></select>
 
 <select id="styleSelect">
 <option value="style1">Style 1</option>
@@ -207,21 +202,30 @@ gap:0;
 <option value="style7">Style 7</option>
 </select>
 
-<!-- PORTRAIT / LANDSCAPE -->
-
 <select id="layoutSelect">
-<option value="portrait">Portrait ID Card</option>
-<option value="landscape">Landscape ID Card</option>
+<option value="portrait">Portrait</option>
+<option value="landscape">Landscape</option>
 </select>
 
 <br>
 
+<button onclick="loadStudents()">Load Students</button>
+
+<div id="studentList"></div>
+
+<br>
+
 <button onclick="generateCards()">Generate ID Card</button>
-<button onclick="window.print()">Print</button>
+
+<button onclick="printCards()">Print</button>
+
+<button onclick="downloadPDF()">Download PDF</button>
+
+</div>
 
 <div id="idArea"></div>
 
-</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <script type="module">
 
@@ -250,6 +254,7 @@ const db=getFirestore(app);
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 
 let schoolData={};
+let students=[];
 
 async function loadSchool(){
 
@@ -261,13 +266,8 @@ schoolData=snap.data();
 
 let sessions=schoolData.sessions||[];
 
-let html='<option value="">Select Session</option>';
-
-sessions.forEach(s=>{
-html+=`<option value="${s}">${s}</option>`;
-});
-
-document.getElementById("sessionSelect").innerHTML=html;
+sessionSelect.innerHTML='<option>Select Session</option>'+
+sessions.map(s=>`<option>${s}</option>`).join("");
 
 }
 
@@ -275,23 +275,10 @@ document.getElementById("sessionSelect").innerHTML=html;
 
 loadSchool();
 
-window.generateCards=async function(){
+async function loadStudents(){
 
-const session=document.getElementById("sessionSelect").value;
-
-const cls=document.getElementById("classSelect").value;
-
-const style=document.getElementById("styleSelect").value;
-
-const layout=document.getElementById("layoutSelect").value;
-
-if(!session||!cls){
-
-alert("Select Session & Class");
-
-return;
-
-}
+const session=sessionSelect.value;
+const cls=classSelect.value;
 
 const snap=await getDocs(query(
 collection(db,"admissions"),
@@ -300,11 +287,35 @@ where("session","==",session),
 where("class","==",cls)
 ));
 
-const students=snap.docs.map(d=>({id:d.id,...d.data()}));
+students=snap.docs.map(d=>({id:d.id,...d.data()}));
 
 let html="";
 
-students.forEach(st=>{
+students.forEach((s,i)=>{
+
+html+=`
+<label>
+<input type="checkbox" class="studentCheck" value="${i}" checked>
+${s.name} - Roll ${s.roll}
+</label><br>
+`;
+
+});
+
+studentList.innerHTML=html;
+
+}
+
+window.generateCards=function(){
+
+const style=styleSelect.value;
+const layout=layoutSelect.value;
+
+let html="";
+
+document.querySelectorAll(".studentCheck:checked").forEach(cb=>{
+
+const st=students[cb.value];
 
 const qr=`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${st.name}`;
 
@@ -317,22 +328,19 @@ html+=`
 <div class="school-header">
 
 <img src="${schoolData.logo}">
-
 <div class="school-name">${schoolData.name}</div>
-
 <img src="${schoolData.logo}">
 
 </div>
 
-<div class="card-title">ID CARD</div>
-
 <div class="school-info">
 
 ${schoolData.address}<br>
-
 DISE: ${schoolData.dise}
 
 </div>
+
+<div class="card-title">ID CARD</div>
 
 </div>
 
@@ -341,15 +349,10 @@ DISE: ${schoolData.dise}
 <div class="student-details">
 
 <b>${st.name}</b><br>
-
 Father: ${st.father}<br>
-
 Mobile: ${st.mobile||""}<br>
-
 Village/City: ${st.village||st.city||""}<br>
-
 Class: ${st.class}<br>
-
 Roll: ${st.roll}
 
 </div>
@@ -370,11 +373,25 @@ Roll: ${st.roll}
 
 });
 
-document.getElementById("idArea").innerHTML=html;
+idArea.innerHTML=html;
+
+}
+
+window.printCards=function(){
+
+window.print();
+
+}
+
+window.downloadPDF=function(){
+
+const element=document.getElementById("idArea");
+
+html2pdf().from(element).save("Student_ID_Cards.pdf");
 
 }
 
 </script>
 
 </body>
-                                                          </html>
+</html>
