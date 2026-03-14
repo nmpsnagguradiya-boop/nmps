@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admit Card Generator - Multiple per Page</title>
+<title>Admit Card Generator - Working</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
@@ -62,7 +62,6 @@ margin-top:20px;
 
 .sign-box{text-align:center;}
 .sign-line{border-top:1px solid black;width:100px;margin:auto;}
-
 </style>
 </head>
 
@@ -82,7 +81,9 @@ margin-top:20px;
 <option>9</option><option>10</option><option>11</option><option>12</option>
 </select>
 
-<select id="examSelect"></select>
+<select id="examSelect">
+<option value="">Select Exam</option>
+</select>
 
 <textarea id="guidelines" rows="3" placeholder="Enter Exam Guidelines"></textarea>
 
@@ -100,7 +101,6 @@ margin-top:20px;
 </div>
 
 <script type="module">
-
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore,collection,getDocs,doc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -115,53 +115,68 @@ const db=getFirestore(app);
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 let schoolData={};
 
+// Load school info + sessions
 async function loadSchool(){
-const snap=await getDoc(doc(db,"schools",schoolId));
-if(snap.exists()){
-schoolData=snap.data();
-const sessions=schoolData.sessions||[];
-sessionSelect.innerHTML='<option>Select Session</option>'+sessions.map(s=>`<option>${s}</option>`).join("");
-}
+  const snap=await getDoc(doc(db,"schools",schoolId));
+  if(snap.exists()){
+    schoolData=snap.data();
+    const sessions=schoolData.sessions||[];
+    sessionSelect.innerHTML='<option value="">Select Session</option>'+sessions.map(s=>`<option value="${s}">${s}</option>`).join("");
+  }
 }
 loadSchool();
 
+// Load exams for selected session
 async function loadExams(session){
-const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
-let html='<option>Select Exam</option>';
-examSnap.forEach(e=>{html+=`<option value="${e.id}">${e.data().examName}</option>`;});
-examSelect.innerHTML=html;
+  examSelect.innerHTML='<option value="">Select Exam</option>'; // clear
+  if(!session) return;
+  const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
+  examSnap.forEach(e=>{
+    examSelect.innerHTML+=`<option value="${e.id}">${e.data().examName}</option>`;
+  });
 }
-sessionSelect.onchange=()=>loadExams(sessionSelect.value);
 
-window.generateAdmit=async function(){
-const session=sessionSelect.value;
-const cls=classSelect.value;
-const examId=examSelect.value;
-const guide=guidelines.value;
-const cardsPerPage=parseInt(cardsPerPage.value);
-
-const studentsSnap=await getDocs(query(collection(db,"admissions"),
-where("schoolId","==",schoolId),
-where("session","==",session),
-where("class","==",cls)));
-const students=studentsSnap.docs.map(d=>({id:d.id,...d.data()}));
-
-const subjectsSnap=await getDocs(query(collection(db,"exam_subjects"),where("examId","==",examId)));
-const subjects=subjectsSnap.docs.map(s=>s.data());
-
-let html="";
-for(let i=0;i<students.length;i+=cardsPerPage){
-html+='<div class="admit-page" style="grid-template-columns:repeat(2,1fr);">';
-const slice=students.slice(i,i+cardsPerPage);
-slice.forEach(student=>{
-let subjectRows="";
-subjects.forEach(d=>{
-subjectRows+=`<tr>
-<td>${d.subject}</td><td>${d.date}</td><td>${d.day}</td><td>${d.time}</td><td>${d.duration}</td>
-</tr>`;
+// when session changes, load exams
+sessionSelect.addEventListener("change",()=>{
+  const session=sessionSelect.value;
+  loadExams(session);
 });
 
-html+=`
+// generate admit card
+window.generateAdmit=async function(){
+  const session=sessionSelect.value;
+  const cls=classSelect.value;
+  const examId=examSelect.value;
+  const guide=guidelines.value;
+  const perPage=parseInt(cardsPerPage.value);
+
+  if(!session || !cls || !examId){alert("Select Session, Class, and Exam"); return;}
+
+  // students
+  const studentsSnap=await getDocs(query(collection(db,"admissions"),
+      where("schoolId","==",schoolId),
+      where("session","==",session),
+      where("class","==",cls)
+  ));
+  const students=studentsSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+  // subjects for exam
+  const subjectsSnap=await getDocs(query(collection(db,"exam_subjects"),where("examId","==",examId)));
+  const subjects=subjectsSnap.docs.map(s=>s.data());
+
+  let html="";
+  for(let i=0;i<students.length;i+=perPage){
+    html+='<div class="admit-page" style="grid-template-columns:repeat(2,1fr);">';
+    const slice=students.slice(i,i+perPage);
+    slice.forEach(student=>{
+      let subjectRows="";
+      subjects.forEach(d=>{
+        subjectRows+=`<tr>
+<td>${d.subject}</td><td>${d.date}</td><td>${d.day}</td><td>${d.time}</td><td>${d.duration}</td>
+</tr>`;
+      });
+
+      html+=`
 <div class="admit-card">
 <div class="school-header">
 <img src="${schoolData.logo}">
@@ -187,13 +202,11 @@ ${subjectRows}
 </div>
 </div>
 `;
-});
-html+='</div>'; // end admit-page
+    });
+    html+='</div>';
+  }
+  document.getElementById("admitArea").innerHTML=html;
 }
-document.getElementById("admitArea").innerHTML=html;
-}
-
 </script>
-
 </body>
 </html>
