@@ -20,6 +20,7 @@ button{background:#004aad;color:white;border:none;border-radius:5px;cursor:point
 .school-header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #004aad;padding-bottom:10px;margin-bottom:10px;}
 .school-header img{width:50px;}
 .school-name{flex:1;text-align:center;font-size:28px;font-weight:bold;color:#004aad;}
+.school-info{text-align:center;font-size:14px;margin-bottom:10px;}
 .student{display:flex;justify-content:space-between;margin-top:15px;}
 .student-details{line-height:1.4;}
 .student img{width:80px;height:100px;object-fit:cover;border:1px solid #ccc;}
@@ -167,7 +168,7 @@ window.generateResults=async function(){
         row+=`<td>${total}</td><td>${percent}</td><td>${g}</td><td class="${pass?'pass':'fail'}">${pass?'PASS':'FAIL'}</td></tr>`;
       } else {
         pass=true; // grade only assume pass
-        row+=`<td class="${grade(exams.length)>='D'?'pass':'fail'}">${grade(total/exams.length)}</td><td class="${pass?'pass':'fail'}">${pass?'PASS':'FAIL'}</td></tr>`;
+        row+=`<td class="${grade(total/exams.length)>='D'?'pass':'fail'}">${grade(total/exams.length)}</td><td class="${pass?'pass':'fail'}">${pass?'PASS':'FAIL'}</td></tr>`;
       }
       rows+=row;
     });
@@ -193,6 +194,9 @@ window.generateResults=async function(){
         <img src="${schoolData.logo}">
         <div class="school-name">${schoolData.name}</div>
         <img src="${schoolData.logo}">
+      </div>
+      <div class="school-info">
+        Address: ${schoolData.address||""} | DISE Code: ${schoolData.dise||""} | Session: ${session}
       </div>
       <div class="student">
         <div class="student-details">
