@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Print Result - Professional</title>
+<title>Professional Print Result</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
@@ -14,9 +14,9 @@ header{background:#004aad;color:white;padding:15px;text-align:center;font-size:2
 select,button{padding:10px;margin:5px;}
 button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
 
-/* MARKSHEET */
-.marksheet{width:210mm;min-height:297mm;background:white;padding:20px;margin:auto;border:2px solid #004aad;page-break-after:always;position:relative;}
-.school{display:flex;align-items:center;gap:10px;border-bottom:2px solid #004aad;padding-bottom:10px;}
+/* MARKSHEET STYLES */
+.marksheet{width:210mm;min-height:297mm;background:white;padding:20px;margin:auto;page-break-after:always;position:relative;border:2px solid #004aad;}
+.school{display:flex;align-items:center;gap:10px;padding-bottom:10px;border-bottom:2px solid #004aad;}
 .school img{width:50px;}
 .school-name{font-size:28px;font-weight:bold;color:#004aad;}
 .student{display:flex;justify-content:space-between;margin-top:15px;}
@@ -24,8 +24,6 @@ button{background:#004aad;color:white;border:none;border-radius:5px;cursor:point
 table{width:100%;border-collapse:collapse;margin-top:15px;}
 th,td{border:1px solid #ccc;padding:6px;text-align:center;font-size:13px;}
 th{background:#004aad;color:white;}
-.topper{background:#d1ffd1;}
-.low-mark{background:#ffd1d1;}
 .watermark-logo{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);opacity:0.05;width:200px;}
 .watermark-text{position:absolute;top:40%;left:20%;font-size:60px;opacity:0.05;transform:rotate(-30deg);}
 .signature-section{display:flex;justify-content:space-between;margin-top:30px;margin-bottom:10px;}
@@ -33,27 +31,36 @@ th{background:#004aad;color:white;}
 .signature-box .line{border-top:1px solid #000;width:150px;margin:auto;}
 .grade-system{margin-top:15px;}
 .grade-system th, .grade-system td{border:1px solid #004aad;padding:5px;text-align:center;font-size:12px;}
-.total-summary{margin-top:10px;font-weight:bold;}
+.topper{background:#d1ffd1;}
+.low-mark{background:#ffd1d1;}
 @media print{header,.card{display:none;}}
+
+/* Professional Styles */
+.style1 .school-name{color:#004aad;}
+.style2 .school-name{color:#d35400;}
+.style3 .school-name{color:#27ae60;}
+.style4 .school-name{color:#2980b9;}
+.style5 .school-name{color:#8e44ad;}
+.style6 .school-name{color:#c0392b;}
+.style7 .school-name{color:#f39c12;}
 </style>
 </head>
 <body>
 
-<header>Result Print - Professional</header>
+<header>Professional Result Print</header>
 
 <div class="container">
 <div class="card">
-
 <select id="sessionSelect"></select>
 <select id="classSelect"><option value="">Select Class</option></select>
 <select id="styleSelect">
-<option value="cbse">CBSE Pattern</option>
-<option value="icse">ICSE Pattern</option>
-<option value="state">State Board</option>
-<option value="pro1">Professional 1</option>
-<option value="pro2">Professional 2</option>
-<option value="pro3">Professional 3</option>
-<option value="pro4">Professional 4</option>
+<option value="style1">Style 1 - CBSE</option>
+<option value="style2">Style 2 - ICSE</option>
+<option value="style3">Style 3 - State Board</option>
+<option value="style4">Style 4 - Professional 1</option>
+<option value="style5">Style 5 - Professional 2</option>
+<option value="style6">Style 6 - Professional 3</option>
+<option value="style7">Style 7 - Professional 4</option>
 </select>
 <select id="watermark">
 <option value="off">Watermark OFF</option>
@@ -73,24 +80,19 @@ th{background:#004aad;color:white;}
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig={
-apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId:"nmpsnagguradiya-b9b94"
-};
+const firebaseConfig={apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",projectId:"nmpsnagguradiya-b9b94"};
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 let schoolData={};
 
+// Load school sessions and classes dynamically
 async function loadSchool(){
   const snap=await getDoc(doc(db,"schools",schoolId));
   if(snap.exists()){
     schoolData=snap.data();
-    // sessions
     const sessions=schoolData.sessions||[];
     sessionSelect.innerHTML='<option value="">Select Session</option>'+sessions.map(s=>`<option>${s}</option>`).join("");
-    // classes dynamically
     const classSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId)));
     const classes=new Set();
     classSnap.forEach(d=>{if(d.data().class)classes.add(d.data().class)});
@@ -104,7 +106,8 @@ function grade(p){if(p>=90)return"A+";if(p>=75)return"A";if(p>=60)return"B";if(p
 window.generateResults=async function(){
   const session=sessionSelect.value;
   const cls=classSelect.value;
-  if(!session||!cls){alert("Select Session and Class"); return;}
+  const style=styleSelect.value;
+  if(!session || !cls){alert("Select Session and Class"); return;}
 
   const studentSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId),where("session","==",session),where("class","==",cls)));
   const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
@@ -113,12 +116,11 @@ window.generateResults=async function(){
   let exams=[]; examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
   let subjects=[]; subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
 
-  // compute total marks per student to identify topper
   let studentTotals=[];
   for(const st of studentSnap.docs){
-    const student=st.data();
+    let total=0;
     const markSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
-    let total=0; markSnap.forEach(m=>total+=Number(m.data().marks||0));
+    markSnap.forEach(m=>total+=Number(m.data().marks||0));
     studentTotals.push({id:st.id,total});
   }
   studentTotals.sort((a,b)=>b.total-a.total);
@@ -127,22 +129,19 @@ window.generateResults=async function(){
   let html="";
   for(const st of studentSnap.docs){
     const student=st.data();
-    let markSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
-    let marks={}; markSnap.forEach(m=>{const d=m.data(); marks[d.examId+"_"+d.subjectId]=d.marks||0;});
+    const marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
+    let marks={}; marksSnap.forEach(m=>{const d=m.data(); marks[d.examId+"_"+d.subjectId]=d.marks||0;});
 
     let attSnap=await getDoc(doc(db,"attendance",`${st.id}_${session}`));
     let work=0,present=0,absent=0,sports="",activity="";
     if(attSnap.exists()){const d=attSnap.data();work=d.workingDays||0;present=d.present||0;absent=d.absent||0;sports=d.sports||"";activity=d.activity||"";}
 
     let head="<tr><th>Subject</th>"; exams.forEach(e=>head+=`<th>${e.name}</th>`); head+="<th>Total</th><th>Grade</th></tr>";
-    let rows=""; let studentTotal=0;
-    subjects.forEach(sub=>{
-      let row=`<tr>`; let subTotal=0;
-      row+=`<td>${sub.name}</td>`;
-      exams.forEach(ex=>{let m=marks[ex.id+"_"+sub.id]||0; row+=`<td style="background:${m>=75?'#d1ffd1':m<33?'#ffd1d1':'#ffffd1'}">${m}</td>`; subTotal+=Number(m);});
-      row+=`<td>${subTotal}</td><td>${grade(subTotal)}</td></tr>`;
+    let rows=""; subjects.forEach(sub=>{
+      let totalSub=0; let row=`<tr>`; row+=`<td>${sub.name}</td>`;
+      exams.forEach(ex=>{let m=marks[ex.id+"_"+sub.id]||0; row+=`<td>${m}</td>`; totalSub+=Number(m);});
+      row+=`<td>${totalSub}</td><td>${grade(totalSub)}</td></tr>`;
       rows+=row;
-      studentTotal+=subTotal;
     });
 
     let watermarkHTML="";
@@ -150,7 +149,7 @@ window.generateResults=async function(){
     if(watermark.value=="name") watermarkHTML=`<div class="watermark-text">${schoolData.name}</div>`;
 
     html+=`
-    <div class="marksheet ${st.id===topperId?'topper':''}">
+    <div class="marksheet ${style} ${st.id===topperId?'topper':''}">
       ${watermarkHTML}
       <div class="school">
         <img src="${schoolData.logo}">
@@ -161,17 +160,15 @@ window.generateResults=async function(){
         <img src="${student.photo||""}">
       </div>
       <table>${head}${rows}</table>
-      <div class="total-summary">Total Marks: ${studentTotal} | Average: ${(studentTotal/subjects.length).toFixed(2)}</div>
-      <table>
-        <tr><th>Sports</th><th>Activity</th><th>Working Days</th><th>Present</th><th>Absent</th></tr>
-        <tr><td>${sports}</td><td>${activity}</td><td>${work}</td><td>${present}</td><td>${absent}</td></tr>
-      </table>
+      <table><tr><th>Sports</th><th>Activity</th><th>Working Days</th><th>Present</th><th>Absent</th></tr>
+      <tr><td>${sports}</td><td>${activity}</td><td>${work}</td><td>${present}</td><td>${absent}</td></tr></table>
       <div class="signature-section">
         <div class="signature-box"><div class="line"></div>Class Teacher</div>
         <div class="signature-box"><div class="line"></div>Principal</div>
       </div>
     </div>`;
   }
+
   document.getElementById("resultArea").innerHTML=html;
 }
 
@@ -179,5 +176,6 @@ window.downloadPDF=function(){
   html2pdf(document.getElementById("resultArea"),{margin:5,filename:"result.pdf",html2canvas:{scale:2,useCORS:true},jsPDF:{unit:"mm",format:"a4"}});
 }
 </script>
+
 </body>
-</html>
+  </html>
