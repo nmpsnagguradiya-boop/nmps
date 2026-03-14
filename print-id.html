@@ -2,24 +2,24 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Print Student ID Cards - Professional</title>
+<title>Print School ID Card</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{font-family:Arial;margin:0;background:#f2f4f8;}
 .container{max-width:1200px;margin:auto;padding:20px;}
 select,button{padding:10px;margin:5px;}
 button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
-.id-page{width:210mm;min-height:297mm;margin:auto;padding:5mm;page-break-after:always;display:grid;gap:5mm;}
-.id-card{border:2px solid #000;padding:10px;display:flex;flex-direction:column;font-size:12px;justify-content:space-between;position:relative;overflow:hidden;}
-.school-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:5px;}
-.school-header img{width:40px;height:40px;}
-.school-name{flex:1;text-align:center;font-size:16px;font-weight:bold;color:#004aad;}
-.school-info{text-align:center;font-size:10px;margin-top:2px;}
-.student-info{margin-top:5px;display:flex;justify-content:space-between;align-items:center;}
-.student-details{line-height:1.4;font-size:12px;font-weight:bold;font-style:italic;}
-.student-photo{width:70px;height:80px;border:1px solid #000;object-fit:cover;}
-.qr-code{width:60px;height:60px;}
-/* Wave background */
+.id-page{width:210mm;min-height:297mm;margin:auto;padding:5mm;page-break-after:always;display:flex;justify-content:center;align-items:center;}
+.id-card{width:85mm;height:55mm;border:2px solid #000;position:relative;overflow:hidden;font-size:10px;display:flex;flex-direction:column;justify-content:space-between;padding:5px;}
+.school-header{display:flex;align-items:center;justify-content:space-between;}
+.school-header img{width:30px;height:30px;}
+.school-name{flex:1;text-align:center;font-weight:bold;font-size:12px;color:#004aad;}
+.school-info{text-align:center;font-size:8px;margin-top:2px;}
+.student-info{display:flex;justify-content:space-between;align-items:center;margin-top:3px;}
+.student-details{line-height:1.2;font-size:9px;font-weight:bold;font-style:italic;width:60%;}
+.student-photo{width:40px;height:50px;border:1px solid #000;object-fit:cover;}
+.qr-code{width:35px;height:35px;margin-top:2px;}
+/* Wave backgrounds for 7 styles */
 .style1{background: linear-gradient(to bottom, #e3f2fd 50%, #1976d2 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
 .style2{background: linear-gradient(to bottom, #e8f5e9 50%, #388e3c 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
 .style3{background: linear-gradient(to bottom, #f3e5f5 50%, #7b1fa2 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
@@ -31,7 +31,7 @@ button{background:#004aad;color:white;border:none;border-radius:5px;cursor:point
 </head>
 <body>
 <div class="container">
-<h3>Print Student ID Cards - Professional</h3>
+<h3>Print Student ID Card - Professional</h3>
 
 <select id="sessionSelect"></select>
 <select id="classSelect">
@@ -40,11 +40,6 @@ button{background:#004aad;color:white;border:none;border-radius:5px;cursor:point
 <option>1</option><option>2</option><option>3</option><option>4</option>
 <option>5</option><option>6</option><option>7</option><option>8</option>
 <option>9</option><option>10</option><option>11</option><option>12</option>
-</select>
-<select id="cardsPerPage">
-<option value="2">2 per Page</option>
-<option value="4">4 per Page</option>
-<option value="6">6 per Page</option>
 </select>
 <select id="styleSelect">
 <option value="style1">Style 1</option>
@@ -55,8 +50,7 @@ button{background:#004aad;color:white;border:none;border-radius:5px;cursor:point
 <option value="style6">Style 6</option>
 <option value="style7">Style 7</option>
 </select>
-<br>
-<button id="generateBtn">Generate ID Cards</button>
+<button id="generateBtn">Generate ID Card</button>
 <button onclick="window.print()">Print</button>
 
 <div id="idArea"></div>
@@ -91,7 +85,6 @@ loadSchool();
 document.getElementById("generateBtn").addEventListener("click", async()=>{
   const session=document.getElementById("sessionSelect").value;
   const cls=document.getElementById("classSelect").value;
-  const perPage=parseInt(document.getElementById("cardsPerPage").value);
   const style=document.getElementById("styleSelect").value;
   if(!session || !cls){alert("Select session and class"); return;}
 
@@ -104,13 +97,11 @@ document.getElementById("generateBtn").addEventListener("click", async()=>{
   if(students.length===0){alert("No students found!"); document.getElementById("idArea").innerHTML=""; return;}
 
   let html="";
-  for(let i=0;i<students.length;i+=perPage){
-    html+='<div class="id-page" style="grid-template-columns:repeat(2,1fr);">';
-    const slice=students.slice(i,i+perPage);
-    slice.forEach(student=>{
+  students.forEach(student=>{
       const qrText=`${schoolData.name} | ${student.name} | ${student.roll}`;
-      const qrURL=`https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(qrText)}`;
+      const qrURL=`https://api.qrserver.com/v1/create-qr-code/?size=35x35&data=${encodeURIComponent(qrText)}`;
       html+=`
+      <div class="id-page">
       <div class="id-card ${style}">
         <div class="school-header">
           <img src="${schoolData.logo}">
@@ -129,13 +120,12 @@ document.getElementById("generateBtn").addEventListener("click", async()=>{
           </div>
           <img class="student-photo" src="${student.photo||''}">
         </div>
-        <div style="margin-top:5px;text-align:center;">
+        <div style="margin-top:2px;text-align:center;">
           <img class="qr-code" src="${qrURL}">
         </div>
+      </div>
       </div>`;
-    });
-    html+='</div>';
-  }
+  });
   document.getElementById("idArea").innerHTML=html;
 });
 </script>
