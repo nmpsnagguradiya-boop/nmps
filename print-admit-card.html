@@ -2,76 +2,36 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Admit Card Generator - Working</title>
+<title>Print Admit Card</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <style>
 body{font-family:Arial;margin:0;background:#f2f4f8;}
 .container{max-width:1200px;margin:auto;padding:20px;}
-.card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
-select,button,textarea{padding:10px;margin:5px;}
+.card{padding:20px;}
+select,textarea,button{padding:10px;margin:5px;}
 button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
 textarea{width:100%;max-width:400px;}
-
-.admit-page{
-width:210mm;
-min-height:297mm;
-margin:auto;
-padding:5mm;
-page-break-after:always;
-display:grid;
-gap:5mm;
-}
-
-.admit-card{
-border:2px solid #004aad;
-padding:10px;
-position:relative;
-display:flex;
-flex-direction:column;
-justify-content:space-between;
-font-size:14px;
-}
-
-.school-header{
-display:flex;
-align-items:center;
-justify-content:space-between;
-border-bottom:3px solid #004aad;
-padding-bottom:5px;
-}
-
+.admit-page{width:210mm;min-height:297mm;margin:auto;padding:5mm;page-break-after:always;display:grid;gap:5mm;}
+.admit-card{border:2px solid #004aad;padding:10px;display:flex;flex-direction:column;font-size:14px;justify-content:space-between;}
+.school-header{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #004aad;padding-bottom:5px;}
 .school-header img{width:40px;}
 .school-name{flex:1;text-align:center;font-size:20px;font-weight:bold;color:#004aad;}
-
 .school-info{text-align:center;font-size:12px;margin-top:2px;}
-
 .student-box{margin-top:10px;line-height:1.5;}
-
 table{width:100%;border-collapse:collapse;margin-top:10px;}
 th,td{border:1px solid #000;padding:4px;text-align:center;font-size:12px;}
 th{background:#004aad;color:white;}
-
 .guidelines{margin-top:5px;font-size:12px;}
-
-.signature{
-display:flex;
-justify-content:space-between;
-margin-top:20px;
-}
-
+.signature{display:flex;justify-content:space-between;margin-top:20px;}
 .sign-box{text-align:center;}
 .sign-line{border-top:1px solid black;width:100px;margin:auto;}
 </style>
 </head>
-
 <body>
 
 <div class="container">
-
 <div class="card">
 <h3>Select Session / Class / Exam</h3>
-
 <select id="sessionSelect"></select>
 <select id="classSelect">
 <option value="">Select Class</option>
@@ -80,18 +40,12 @@ margin-top:20px;
 <option>5</option><option>6</option><option>7</option><option>8</option>
 <option>9</option><option>10</option><option>11</option><option>12</option>
 </select>
-
-<select id="examSelect">
-<option value="">Select Exam</option>
-</select>
-
+<select id="examSelect"></select>
 <textarea id="guidelines" rows="3" placeholder="Enter Exam Guidelines"></textarea>
-
 <select id="cardsPerPage">
 <option value="2">2 Admit Card per Page</option>
 <option value="4">4 Admit Card per Page</option>
 </select>
-
 <br>
 <button onclick="generateAdmit()">Generate Admit Card</button>
 <button onclick="window.print()">Print</button>
@@ -102,80 +56,69 @@ margin-top:20px;
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore,collection,getDocs,doc,query,where,getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
 projectId:"nmpsnagguradiya-b9b94"
 };
-
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 let schoolData={};
 
-// Load school info + sessions
+// Load school + sessions
 async function loadSchool(){
   const snap=await getDoc(doc(db,"schools",schoolId));
   if(snap.exists()){
     schoolData=snap.data();
-    const sessions=schoolData.sessions||[];
-    sessionSelect.innerHTML='<option value="">Select Session</option>'+sessions.map(s=>`<option value="${s}">${s}</option>`).join("");
+    sessionSelect.innerHTML='<option value="">Select Session</option>'+ (schoolData.sessions||[]).map(s=>`<option value="${s}">${s}</option>`).join("");
   }
 }
 loadSchool();
 
-// Load exams for selected session
-async function loadExams(session){
-  examSelect.innerHTML='<option value="">Select Exam</option>'; // clear
-  if(!session) return;
-  const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
-  examSnap.forEach(e=>{
-    examSelect.innerHTML+=`<option value="${e.id}">${e.data().examName}</option>`;
-  });
-}
-
-// when session changes, load exams
-sessionSelect.addEventListener("change",()=>{
+sessionSelect.addEventListener("change",async()=>{
   const session=sessionSelect.value;
-  loadExams(session);
+  if(!session) return;
+  // load exams
+  const examSnap = await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
+  examSelect.innerHTML='<option value="">Select Exam</option>'+examSnap.docs.map(d=>`<option value="${d.id}">${d.data().examName}</option>`).join("");
 });
 
-// generate admit card
+// Generate Admit Card
 window.generateAdmit=async function(){
   const session=sessionSelect.value;
   const cls=classSelect.value;
   const examId=examSelect.value;
   const guide=guidelines.value;
   const perPage=parseInt(cardsPerPage.value);
-
-  if(!session || !cls || !examId){alert("Select Session, Class, and Exam"); return;}
+  if(!session||!cls||!examId) return alert("Select session, class, exam");
 
   // students
-  const studentsSnap=await getDocs(query(collection(db,"admissions"),
-      where("schoolId","==",schoolId),
-      where("session","==",session),
-      where("class","==",cls)
+  const studentSnap=await getDocs(query(collection(db,"admissions"),
+    where("schoolId","==",schoolId),
+    where("session","==",session),
+    where("class","==",cls)
   ));
-  const students=studentsSnap.docs.map(d=>({id:d.id,...d.data()}));
+  const students=studentSnap.docs.map(d=>({id:d.id,...d.data()}));
 
-  // subjects for exam
-  const subjectsSnap=await getDocs(query(collection(db,"exam_subjects"),where("examId","==",examId)));
-  const subjects=subjectsSnap.docs.map(s=>s.data());
+  // timetable subjects
+  const ttSnap=await getDocs(query(collection(db,"timetable"),where("examId","==",examId)));
+  const timetable=ttSnap.docs.map(d=>({id:d.id,...d.data()}));
 
   let html="";
   for(let i=0;i<students.length;i+=perPage){
     html+='<div class="admit-page" style="grid-template-columns:repeat(2,1fr);">';
     const slice=students.slice(i,i+perPage);
     slice.forEach(student=>{
-      let subjectRows="";
-      subjects.forEach(d=>{
-        subjectRows+=`<tr>
-<td>${d.subject}</td><td>${d.date}</td><td>${d.day}</td><td>${d.time}</td><td>${d.duration}</td>
+      let rows="";
+      timetable.forEach(t=>{
+        if(t.class!==student.class) return;
+        rows+=`<tr>
+<td>${t.subjectId}</td><td>${t.date}</td><td>${t.day}</td><td>${t.time}</td><td>${t.duration||""}</td>
 </tr>`;
       });
-
       html+=`
 <div class="admit-card">
 <div class="school-header">
@@ -193,15 +136,14 @@ Roll: ${student.roll}
 </div>
 <table>
 <tr><th>Subject</th><th>Date</th><th>Day</th><th>Time</th><th>Duration</th></tr>
-${subjectRows}
+${rows}
 </table>
 <div class="guidelines"><b>Exam Guidelines:</b><br>${guide}</div>
 <div class="signature">
 <div class="sign-box">Principal<div class="sign-line"></div></div>
 <div class="sign-box">Director<div class="sign-line"></div></div>
 </div>
-</div>
-`;
+</div>`;
     });
     html+='</div>';
   }
