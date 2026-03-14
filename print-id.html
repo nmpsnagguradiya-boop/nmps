@@ -38,10 +38,16 @@ gap:10px;
 margin-top:20px;
 }
 
-/* ID CARD SIZE */
+/* PRINT COLOR FIX */
+
+*{
+-webkit-print-color-adjust: exact !important;
+print-color-adjust: exact !important;
+}
+
+/* ID CARD BASE */
+
 .id-card{
-width:220px;
-height:340px;
 border-radius:12px;
 border:3px solid #000;
 overflow:hidden;
@@ -52,7 +58,22 @@ font-size:13px;
 background:white;
 }
 
+/* PORTRAIT */
+
+.portrait{
+width:220px;
+height:340px;
+}
+
+/* LANDSCAPE */
+
+.landscape{
+width:340px;
+height:220px;
+}
+
 /* top design */
+
 .top{
 padding:10px;
 color:white;
@@ -80,7 +101,14 @@ text-align:center;
 font-size:10px;
 }
 
+.card-title{
+font-size:16px;
+font-weight:bold;
+margin-top:3px;
+}
+
 /* student section */
+
 .student-section{
 display:flex;
 padding:8px;
@@ -101,6 +129,7 @@ border:2px solid #000;
 }
 
 /* QR */
+
 .qr{
 text-align:center;
 padding-bottom:6px;
@@ -133,6 +162,24 @@ width:55px;
 .style7 .top{background:#333;}
 .style7{background:linear-gradient(#333 35%,#eeeeee 35%);}
 
+/* PRINT */
+
+@media print{
+
+body{
+background:white;
+}
+
+.container{
+display:none;
+}
+
+#idArea{
+gap:0;
+}
+
+}
+
 </style>
 </head>
 
@@ -158,6 +205,13 @@ width:55px;
 <option value="style5">Style 5</option>
 <option value="style6">Style 6</option>
 <option value="style7">Style 7</option>
+</select>
+
+<!-- PORTRAIT / LANDSCAPE -->
+
+<select id="layoutSelect">
+<option value="portrait">Portrait ID Card</option>
+<option value="landscape">Landscape ID Card</option>
 </select>
 
 <br>
@@ -197,8 +251,6 @@ const schoolId=localStorage.getItem("schoolId")||"school_001";
 
 let schoolData={};
 
-/* LOAD SCHOOL */
-
 async function loadSchool(){
 
 const snap=await getDoc(doc(db,"schools",schoolId));
@@ -223,8 +275,6 @@ document.getElementById("sessionSelect").innerHTML=html;
 
 loadSchool();
 
-/* GENERATE ID CARD */
-
 window.generateCards=async function(){
 
 const session=document.getElementById("sessionSelect").value;
@@ -232,6 +282,8 @@ const session=document.getElementById("sessionSelect").value;
 const cls=document.getElementById("classSelect").value;
 
 const style=document.getElementById("styleSelect").value;
+
+const layout=document.getElementById("layoutSelect").value;
 
 if(!session||!cls){
 
@@ -258,7 +310,7 @@ const qr=`https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${st.name}
 
 html+=`
 
-<div class="id-card ${style}">
+<div class="id-card ${style} ${layout}">
 
 <div class="top">
 
@@ -271,6 +323,8 @@ html+=`
 <img src="${schoolData.logo}">
 
 </div>
+
+<div class="card-title">ID CARD</div>
 
 <div class="school-info">
 
@@ -323,4 +377,4 @@ document.getElementById("idArea").innerHTML=html;
 </script>
 
 </body>
-  </html>
+                                                          </html>
