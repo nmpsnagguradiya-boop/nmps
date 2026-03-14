@@ -191,14 +191,13 @@ display:none;
 
 <div id="receiptBox" class="receipt">
 
-<img id="schoolLogo" style="width:70px;display:block;margin:auto">
-
-<div class="school" id="schoolName"></div>
+<div class="school">NEW MODEL PUBLIC SCHOOL</div>
 
 <div class="address">
 
-<span id="schoolAddress"></span><br>
-DISE Code : <span id="schoolDise"></span><br>
+Village Nag Guradiya<br>
+District Ujjain (M.P.)<br>
+DISE Code : XXXXX<br>
 Session : <span id="rsession"></span>
 
 </div>
@@ -253,8 +252,7 @@ doc,
 updateDoc,
 addDoc,
 query,
-where,
-getDoc
+where
 } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
@@ -271,29 +269,12 @@ const session = localStorage.getItem("activeSession") || "2025-26";
 
 let students=[];
 
-async function loadSchool(){
-
-const ref=doc(db,"schools",schoolId);
-const snap=await getDoc(ref);
-
-if(snap.exists()){
-
-let d=snap.data();
-
-document.getElementById("schoolName").innerText=d.name||"";
-document.getElementById("schoolAddress").innerText=d.address||"";
-document.getElementById("schoolDise").innerText=d.dise||"";
-document.getElementById("schoolLogo").src=d.logo||"";
-
-}
-
-}
-
 async function loadStudents(){
 
 const snap=await getDocs(collection(db,"admissions"));
 
 let html="";
+
 let totalFees=0;
 let totalCollection=0;
 let totalPending=0;
@@ -327,7 +308,9 @@ totalCollection+=paid;
 totalPending+=pending;
 totalOld+=old;
 
-html+=`<tr>
+html+=`
+
+<tr>
 
 <td><input type="checkbox" value="${s.id}"></td>
 
@@ -361,34 +344,77 @@ html+=`<tr>
 <button class="whatsapp" onclick="sendWhatsApp('${s.id}')">WhatsApp</button>
 </td>
 
-</tr>`;
+</tr>
+
+`;
 
 });
 
-studentList.innerHTML=html;
+document.getElementById("studentList").innerHTML=html;
 
-totalFees.innerText=totalFees;
-collection.innerText=totalCollection;
-pending.innerText=totalPending;
-oldPending.innerText=totalOld;
+document.getElementById("totalFees").innerText=totalFees;
+document.getElementById("collection").innerText=totalCollection;
+document.getElementById("pending").innerText=totalPending;
+document.getElementById("oldPending").innerText=totalOld;
+
+}
+
+window.depositFees=async function(id){
+
+let amount=prompt("Enter Deposit Amount");
+
+if(!amount) return;
+
+amount=parseInt(amount);
+
+let s=students.find(x=>x.id==id);
+
+let newPaid=(s.paid||0)+amount;
+
+await updateDoc(doc(db,"admissions",id),{
+paid:newPaid
+});
+
+await addDoc(collection(db,"fees_history"),{
+studentId:id,
+amount:amount,
+date:new Date().toLocaleDateString()
+});
+
+loadStudents();
+
+}
+
+window.viewHistory=async function(id){
+
+let q=query(collection(db,"fees_history"),where("studentId","==",id));
+
+let snap=await getDocs(q);
+
+let text="Fees History\n\n";
+
+snap.forEach(d=>{
+let h=d.data();
+text+="Date : "+h.date+"  Amount : "+h.amount+"\n";
+});
+
+alert(text);
 
 }
 
 window.showReceipt=async function(id){
 
-await loadSchool();
-
 let s=students.find(x=>x.id==id)
 
-receiptBox.style.display="block"
+document.getElementById("receiptBox").style.display="block"
 
-rno.innerText="RC-"+Date.now()
+document.getElementById("rno").innerText="RC-"+Date.now()
 
-rname.innerText=s.name
-rfather.innerText=s.father
-rvillage.innerText=s.village
-rmobile.innerText=s.mobile
-rsession.innerText=session
+document.getElementById("rname").innerText=s.name
+document.getElementById("rfather").innerText=s.father
+document.getElementById("rvillage").innerText=s.village
+document.getElementById("rmobile").innerText=s.mobile
+document.getElementById("rsession").innerText=session
 
 let fees=s.fees||0
 let vehicle=s.vehicleFees||0
@@ -398,13 +424,14 @@ let paid=s.paid||0
 let total=fees+vehicle+old
 let pending=total-paid
 
-rfees.innerText=fees
-rvehicle.innerText=vehicle
-rold.innerText=old
-rtotal.innerText=total
-rpending.innerText=pending
+document.getElementById("rfees").innerText=fees
+document.getElementById("rvehicle").innerText=vehicle
+document.getElementById("rold").innerText=old
+document.getElementById("rtotal").innerText=total
+document.getElementById("rpending").innerText=pending
 
 let q=query(collection(db,"fees_history"),where("studentId","==",id));
+
 let snap=await getDocs(q);
 
 let lastPaid=0
@@ -416,8 +443,8 @@ lastPaid=h.amount
 lastDate=h.date
 });
 
-rlastpaid.innerText=lastPaid
-rdate.innerText=lastDate
+document.getElementById("rlastpaid").innerText=lastPaid
+document.getElementById("rdate").innerText=lastDate
 
 }
 
@@ -425,7 +452,50 @@ window.printReceipt=function(){
 window.print()
 }
 
+window.callStudent=function(mobile){
+window.location.href="tel:"+mobile;
+}
+
+window.sendWhatsApp=function(id){
+
+let s=students.find(x=>x.id==id);
+
+let msg="Fees Pending Reminder";
+
+window.open("https://wa.me/91"+s.mobile+"?text="+msg)
+
+}
+
+window.downloadExcel=function(){
+
+let csv="Name,Class,Mobile,Fees,Vehicle,Old,Paid\n";
+
+students.forEach(s=>{
+
+csv+=
+(s.name||"")+","+
+(s.class||"")+","+
+(s.mobile||"")+","+
+(s.fees||0)+","+
+(s.vehicleFees||0)+","+
+(s.oldFees||0)+","+
+(s.paid||0)+"\n";
+
+});
+
+let blob=new Blob([csv],{type:"text/csv"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="fees-report.csv";
+a.click();
+
+}
+
+document.getElementById("classFilter").addEventListener("change",loadStudents);
+
+loadStudents();
+
 </script>
 
 </body>
-                            </html>
+            </html>
