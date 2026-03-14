@@ -189,112 +189,41 @@ display:none;
 
 </div>
 
-<!-- RECEIPT BOX -->
-
 <div id="receiptBox" class="receipt">
 
-<div style="display:flex;align-items:center;justify-content:center;gap:20px">
-
-<img id="schoolLogo" style="width:80px;height:80px">
-
-<div>
+<img id="schoolLogo" style="width:70px;display:block;margin:auto">
 
 <div class="school" id="schoolName"></div>
 
 <div class="address">
 
 <span id="schoolAddress"></span><br>
-
 DISE Code : <span id="schoolDise"></span><br>
-
 Session : <span id="rsession"></span>
 
 </div>
 
-</div>
-
-</div>
-
-<h3 style="text-align:center">Fees Receipt</h3>
+<h3 style="text-align:center;">Fees Receipt</h3>
 
 <p><b>Receipt No :</b> <span id="rno"></span></p>
 
-<div style="display:flex;gap:20px">
-
-<div style="flex:1">
-
 <table width="100%" border="1">
 
-<tr>
-<td>Name</td>
-<td id="rname"></td>
-</tr>
+<tr><td>Name</td><td id="rname"></td></tr>
+<tr><td>Father</td><td id="rfather"></td></tr>
+<tr><td>Village</td><td id="rvillage"></td></tr>
+<tr><td>Mobile</td><td id="rmobile"></td></tr>
 
-<tr>
-<td>Father</td>
-<td id="rfather"></td>
-</tr>
+<tr><td>School Fees</td><td id="rfees"></td></tr>
+<tr><td>Vehicle Fees</td><td id="rvehicle"></td></tr>
+<tr><td>Old Fees</td><td id="rold"></td></tr>
 
-<tr>
-<td>Village</td>
-<td id="rvillage"></td>
-</tr>
+<tr><td>Total Fees</td><td id="rtotal"></td></tr>
 
-<tr>
-<td>Mobile</td>
-<td id="rmobile"></td>
-</tr>
+<tr><td>Last Paid</td><td id="rlastpaid"></td></tr>
+<tr><td>Paid Date</td><td id="rdate"></td></tr>
 
-</table>
-
-</div>
-
-<div>
-
-<img id="studentPhoto" style="width:120px;height:140px;border:1px solid #ccc;object-fit:cover">
-
-</div>
-
-</div>
-
-<br>
-
-<table width="100%" border="1">
-
-<tr>
-<td>School Fees</td>
-<td id="rfees"></td>
-</tr>
-
-<tr>
-<td>Vehicle Fees</td>
-<td id="rvehicle"></td>
-</tr>
-
-<tr>
-<td>Old Fees</td>
-<td id="rold"></td>
-</tr>
-
-<tr>
-<td>Total Fees</td>
-<td id="rtotal"></td>
-</tr>
-
-<tr>
-<td>Last Paid</td>
-<td id="rlastpaid"></td>
-</tr>
-
-<tr>
-<td>Paid Date</td>
-<td id="rdate"></td>
-</tr>
-
-<tr>
-<td>Pending</td>
-<td id="rpending"></td>
-</tr>
+<tr><td>Pending</td><td id="rpending"></td></tr>
 
 </table>
 
@@ -342,15 +271,14 @@ const session = localStorage.getItem("activeSession") || "2025-26";
 
 let students=[];
 
-async function loadSchoolDetails(){
+async function loadSchool(){
 
 const ref=doc(db,"schools",schoolId);
-
 const snap=await getDoc(ref);
 
 if(snap.exists()){
 
-const d=snap.data();
+let d=snap.data();
 
 document.getElementById("schoolName").innerText=d.name||"";
 document.getElementById("schoolAddress").innerText=d.address||"";
@@ -361,24 +289,106 @@ document.getElementById("schoolLogo").src=d.logo||"";
 
 }
 
+async function loadStudents(){
+
+const snap=await getDocs(collection(db,"admissions"));
+
+let html="";
+let totalFees=0;
+let totalCollection=0;
+let totalPending=0;
+let totalOld=0;
+
+students=[];
+
+let cls=document.getElementById("classFilter").value;
+
+snap.forEach(docSnap=>{
+
+let s=docSnap.data();
+s.id=docSnap.id;
+
+if(s.schoolId!==schoolId) return;
+if(s.session!==session) return;
+if(cls && s.class!=cls) return;
+
+students.push(s);
+
+let fees=s.fees||0;
+let vehicle=s.vehicleFees||0;
+let old=s.oldFees||0;
+let paid=s.paid||0;
+
+let total=fees+vehicle+old;
+let pending=total-paid;
+
+totalFees+=total;
+totalCollection+=paid;
+totalPending+=pending;
+totalOld+=old;
+
+html+=`<tr>
+
+<td><input type="checkbox" value="${s.id}"></td>
+
+<td>${s.name||""}</td>
+<td>${s.village||""}</td>
+<td>${s.class||""}</td>
+<td>${s.mobile||""}</td>
+
+<td>
+<button class="call" onclick="callStudent('${s.mobile}')">Call</button>
+</td>
+
+<td>${fees}</td>
+<td>${vehicle}</td>
+<td>${old}</td>
+<td>${paid}</td>
+
+<td>
+<button class="deposit" onclick="depositFees('${s.id}')">Deposit</button>
+</td>
+
+<td>
+<button onclick="showReceipt('${s.id}')">Receipt</button>
+</td>
+
+<td>
+<button class="history" onclick="viewHistory('${s.id}')">History</button>
+</td>
+
+<td>
+<button class="whatsapp" onclick="sendWhatsApp('${s.id}')">WhatsApp</button>
+</td>
+
+</tr>`;
+
+});
+
+studentList.innerHTML=html;
+
+totalFees.innerText=totalFees;
+collection.innerText=totalCollection;
+pending.innerText=totalPending;
+oldPending.innerText=totalOld;
+
+}
+
 window.showReceipt=async function(id){
 
-await loadSchoolDetails();
+await loadSchool();
 
 let s=students.find(x=>x.id==id)
 
-document.getElementById("receiptBox").style.display="block"
+receiptBox.style.display="block"
 
-document.getElementById("rno").innerText="RC-"+Date.now()
+rno.innerText="RC-"+Date.now()
 
-document.getElementById("rname").innerText=s.name
-document.getElementById("rfather").innerText=s.father
-document.getElementById("rvillage").innerText=s.village
-document.getElementById("rmobile").innerText=s.mobile
-
-document.getElementById("studentPhoto").src=s.photo||""
-
-document.getElementById("rsession").innerText=session
+rname.innerText=s.name
+rfather.innerText=s.father
+rvillage.innerText=s.village
+rmobile.innerText=s.mobile
+rsession.innerText=session
 
 let fees=s.fees||0
 let vehicle=s.vehicleFees||0
@@ -388,14 +398,13 @@ let paid=s.paid||0
 let total=fees+vehicle+old
 let pending=total-paid
 
-document.getElementById("rfees").innerText=fees
-document.getElementById("rvehicle").innerText=vehicle
-document.getElementById("rold").innerText=old
-document.getElementById("rtotal").innerText=total
-document.getElementById("rpending").innerText=pending
+rfees.innerText=fees
+rvehicle.innerText=vehicle
+rold.innerText=old
+rtotal.innerText=total
+rpending.innerText=pending
 
 let q=query(collection(db,"fees_history"),where("studentId","==",id));
-
 let snap=await getDocs(q);
 
 let lastPaid=0
@@ -407,8 +416,8 @@ lastPaid=h.amount
 lastDate=h.date
 });
 
-document.getElementById("rlastpaid").innerText=lastPaid
-document.getElementById("rdate").innerText=lastDate
+rlastpaid.innerText=lastPaid
+rdate.innerText=lastDate
 
 }
 
@@ -419,4 +428,4 @@ window.print()
 </script>
 
 </body>
-</html>
+                            </html>
