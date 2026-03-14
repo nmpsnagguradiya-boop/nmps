@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Print Student ID Cards</title>
+<title>Print Student ID Cards - Professional</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
 body{font-family:Arial;margin:0;background:#f2f4f8;}
@@ -10,27 +10,28 @@ body{font-family:Arial;margin:0;background:#f2f4f8;}
 select,button{padding:10px;margin:5px;}
 button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
 .id-page{width:210mm;min-height:297mm;margin:auto;padding:5mm;page-break-after:always;display:grid;gap:5mm;}
-.id-card{border:2px solid #004aad;padding:10px;display:flex;flex-direction:column;font-size:12px;justify-content:space-between;}
-.school-header{display:flex;align-items:center;justify-content:space-between;border-bottom:3px solid #004aad;padding-bottom:5px;}
+.id-card{border:2px solid #000;padding:10px;display:flex;flex-direction:column;font-size:12px;justify-content:space-between;position:relative;overflow:hidden;}
+.school-header{display:flex;align-items:center;justify-content:space-between;padding-bottom:5px;}
 .school-header img{width:40px;height:40px;}
 .school-name{flex:1;text-align:center;font-size:16px;font-weight:bold;color:#004aad;}
 .school-info{text-align:center;font-size:10px;margin-top:2px;}
 .student-info{margin-top:5px;display:flex;justify-content:space-between;align-items:center;}
-.student-details{line-height:1.4;font-size:12px;}
+.student-details{line-height:1.4;font-size:12px;font-weight:bold;font-style:italic;}
 .student-photo{width:70px;height:80px;border:1px solid #000;object-fit:cover;}
 .qr-code{width:60px;height:60px;}
-.style1{background:#e3f2fd;border-left:5px solid #0d47a1;border-top:5px solid #1976d2;border-bottom:5px solid #64b5f6;}
-.style2{background:#e8f5e9;border-left:5px solid #1b5e20;border-top:5px solid #388e3c;border-bottom:5px solid #81c784;}
-.style3{background:#f3e5f5;border-left:5px solid #4a148c;border-top:5px solid #7b1fa2;border-bottom:5px solid #ba68c8;}
-.style4{background:#ffebee;border-left:5px solid #b71c1c;border-top:5px solid #c62828;border-bottom:5px solid #e57373;}
-.style5{background:#fff3e0;border-left:5px solid #e65100;border-top:5px solid #ef6c00;border-bottom:5px solid #ffb74d;}
-.style6{background:#e0f7fa;border-left:5px solid #006064;border-top:5px solid #00838f;border-bottom:5px solid #4dd0e1;}
-.style7{background:#eceff1;border-left:5px solid #263238;border-top:5px solid #37474f;border-bottom:5px solid #90a4ae;}
+/* Wave background */
+.style1{background: linear-gradient(to bottom, #e3f2fd 50%, #1976d2 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
+.style2{background: linear-gradient(to bottom, #e8f5e9 50%, #388e3c 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
+.style3{background: linear-gradient(to bottom, #f3e5f5 50%, #7b1fa2 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
+.style4{background: linear-gradient(to bottom, #ffebee 50%, #c62828 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
+.style5{background: linear-gradient(to bottom, #fff3e0 50%, #ef6c00 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
+.style6{background: linear-gradient(to bottom, #e0f7fa 50%, #00838f 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
+.style7{background: linear-gradient(to bottom, #eceff1 50%, #37474f 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
 </style>
 </head>
 <body>
 <div class="container">
-<h3>Print Student ID Cards</h3>
+<h3>Print Student ID Cards - Professional</h3>
 
 <select id="sessionSelect"></select>
 <select id="classSelect">
@@ -113,18 +114,18 @@ document.getElementById("generateBtn").addEventListener("click", async()=>{
       <div class="id-card ${style}">
         <div class="school-header">
           <img src="${schoolData.logo}">
-          <div class="school-name">${schoolData.name}</div>
+          <div class="school-name"><b>${schoolData.name}</b></div>
           <img src="${schoolData.logo}">
         </div>
-        <div class="school-info">${schoolData.address} | DISE: ${schoolData.dise} | Session: ${session}</div>
+        <div class="school-info"><i>${schoolData.address}</i> | DISE: ${schoolData.dise} | Session: ${session}</div>
         <div class="student-info">
           <div class="student-details">
-            Name: ${student.name}<br>
-            Father: ${student.father}<br>
-            Mobile: ${student.mobile||''}<br>
-            Village/City: ${student.village||student.city||''}<br>
-            Class: ${student.class}<br>
-            Roll: ${student.roll}
+            <b>Name:</b> ${student.name}<br>
+            <b>Father:</b> ${student.father}<br>
+            <b>Mobile:</b> ${student.mobile||''}<br>
+            <b>Village/City:</b> ${student.village||student.city||''}<br>
+            <b>Class:</b> ${student.class}<br>
+            <b>Roll:</b> ${student.roll}
           </div>
           <img class="student-photo" src="${student.photo||''}">
         </div>
