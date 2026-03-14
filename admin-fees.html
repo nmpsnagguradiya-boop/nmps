@@ -70,20 +70,43 @@ display:none;
 }
 
 .school{
+text-align:center;
 font-size:22px;
 font-weight:bold;
-text-align:center;
 }
 
 .address{
 text-align:center;
 font-size:14px;
-margin-bottom:15px;
+margin-bottom:10px;
 }
 
 .sign{
 margin-top:40px;
 text-align:right;
+}
+
+@media print{
+
+body *{
+visibility:hidden;
+}
+
+#receiptBox,#receiptBox *{
+visibility:visible;
+}
+
+#receiptBox{
+position:absolute;
+left:0;
+top:0;
+width:100%;
+}
+
+button{
+display:none;
+}
+
 }
 
 </style>
@@ -168,14 +191,22 @@ text-align:right;
 
 <div id="receiptBox" class="receipt">
 
-<div class="school">YOUR SCHOOL NAME</div>
-<div class="address">Village Nag Guradiya, District Ujjain</div>
+<div class="school">NEW MODEL PUBLIC SCHOOL</div>
+
+<div class="address">
+
+Village Nag Guradiya<br>
+District Ujjain (M.P.)<br>
+DISE Code : XXXXX<br>
+Session : <span id="rsession"></span>
+
+</div>
 
 <h3 style="text-align:center;">Fees Receipt</h3>
 
 <p><b>Receipt No :</b> <span id="rno"></span></p>
 
-<table width="100%" border="1" cellspacing="0">
+<table width="100%" border="1">
 
 <tr><td>Name</td><td id="rname"></td></tr>
 <tr><td>Father</td><td id="rfather"></td></tr>
@@ -184,13 +215,14 @@ text-align:right;
 
 <tr><td>School Fees</td><td id="rfees"></td></tr>
 <tr><td>Vehicle Fees</td><td id="rvehicle"></td></tr>
-<tr><td>Old Pending</td><td id="rold"></td></tr>
+<tr><td>Old Fees</td><td id="rold"></td></tr>
 
 <tr><td>Total Fees</td><td id="rtotal"></td></tr>
-<tr><td>Last Paid</td><td id="rpaid"></td></tr>
-<tr><td>Pending</td><td id="rpending"></td></tr>
 
+<tr><td>Last Paid</td><td id="rlastpaid"></td></tr>
 <tr><td>Paid Date</td><td id="rdate"></td></tr>
+
+<tr><td>Pending</td><td id="rpending"></td></tr>
 
 </table>
 
@@ -198,7 +230,7 @@ text-align:right;
 
 <br><br>
 
-Principal Signature
+Principal Sign
 
 </div>
 
@@ -243,7 +275,14 @@ const snap=await getDocs(collection(db,"admissions"));
 
 let html="";
 
+let totalFees=0;
+let totalCollection=0;
+let totalPending=0;
+let totalOld=0;
+
 students=[];
+
+let cls=document.getElementById("classFilter").value;
 
 snap.forEach(docSnap=>{
 
@@ -252,8 +291,22 @@ s.id=docSnap.id;
 
 if(s.schoolId!==schoolId) return;
 if(s.session!==session) return;
+if(cls && s.class!=cls) return;
 
 students.push(s);
+
+let fees=s.fees||0;
+let vehicle=s.vehicleFees||0;
+let old=s.oldFees||0;
+let paid=s.paid||0;
+
+let total=fees+vehicle+old;
+let pending=total-paid;
+
+totalFees+=total;
+totalCollection+=paid;
+totalPending+=pending;
+totalOld+=old;
 
 html+=`
 
@@ -270,10 +323,10 @@ html+=`
 <button class="call" onclick="callStudent('${s.mobile}')">Call</button>
 </td>
 
-<td>${s.fees||0}</td>
-<td>${s.vehicleFees||0}</td>
-<td>${s.oldFees||0}</td>
-<td>${s.paid||0}</td>
+<td>${fees}</td>
+<td>${vehicle}</td>
+<td>${old}</td>
+<td>${paid}</td>
 
 <td>
 <button class="deposit" onclick="depositFees('${s.id}')">Deposit</button>
@@ -299,6 +352,11 @@ html+=`
 
 document.getElementById("studentList").innerHTML=html;
 
+document.getElementById("totalFees").innerText=totalFees;
+document.getElementById("collection").innerText=totalCollection;
+document.getElementById("pending").innerText=totalPending;
+document.getElementById("oldPending").innerText=totalOld;
+
 }
 
 window.depositFees=async function(id){
@@ -319,12 +377,9 @@ paid:newPaid
 
 await addDoc(collection(db,"fees_history"),{
 studentId:id,
-name:s.name,
 amount:amount,
 date:new Date().toLocaleDateString()
 });
-
-alert("Payment Deposited");
 
 loadStudents();
 
@@ -340,24 +395,16 @@ let text="Fees History\n\n";
 
 snap.forEach(d=>{
 let h=d.data();
-text+="Date : "+h.date+"\nAmount : "+h.amount+"\n\n";
+text+="Date : "+h.date+"  Amount : "+h.amount+"\n";
 });
 
 alert(text);
 
 }
 
-window.showReceipt=function(id){
+window.showReceipt=async function(id){
 
 let s=students.find(x=>x.id==id)
-
-let fees=s.fees||0
-let vehicle=s.vehicleFees||0
-let old=s.oldFees||0
-
-let total=fees+vehicle+old
-let paid=s.paid||0
-let pending=total-paid
 
 document.getElementById("receiptBox").style.display="block"
 
@@ -367,16 +414,37 @@ document.getElementById("rname").innerText=s.name
 document.getElementById("rfather").innerText=s.father
 document.getElementById("rvillage").innerText=s.village
 document.getElementById("rmobile").innerText=s.mobile
+document.getElementById("rsession").innerText=session
+
+let fees=s.fees||0
+let vehicle=s.vehicleFees||0
+let old=s.oldFees||0
+let paid=s.paid||0
+
+let total=fees+vehicle+old
+let pending=total-paid
 
 document.getElementById("rfees").innerText=fees
 document.getElementById("rvehicle").innerText=vehicle
 document.getElementById("rold").innerText=old
-
 document.getElementById("rtotal").innerText=total
-document.getElementById("rpaid").innerText=paid
 document.getElementById("rpending").innerText=pending
 
-document.getElementById("rdate").innerText=new Date().toLocaleDateString()
+let q=query(collection(db,"fees_history"),where("studentId","==",id));
+
+let snap=await getDocs(q);
+
+let lastPaid=0
+let lastDate=""
+
+snap.forEach(d=>{
+let h=d.data();
+lastPaid=h.amount
+lastDate=h.date
+});
+
+document.getElementById("rlastpaid").innerText=lastPaid
+document.getElementById("rdate").innerText=lastDate
 
 }
 
@@ -392,13 +460,40 @@ window.sendWhatsApp=function(id){
 
 let s=students.find(x=>x.id==id);
 
-let msg="Fees Paid : ₹"+(s.paid||0)
+let msg="Fees Pending Reminder";
 
 window.open("https://wa.me/91"+s.mobile+"?text="+msg)
 
 }
 
-loadStudents()
+window.downloadExcel=function(){
+
+let csv="Name,Class,Mobile,Fees,Vehicle,Old,Paid\n";
+
+students.forEach(s=>{
+
+csv+=
+(s.name||"")+","+
+(s.class||"")+","+
+(s.mobile||"")+","+
+(s.fees||0)+","+
+(s.vehicleFees||0)+","+
+(s.oldFees||0)+","+
+(s.paid||0)+"\n";
+
+});
+
+let blob=new Blob([csv],{type:"text/csv"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="fees-report.csv";
+a.click();
+
+}
+
+document.getElementById("classFilter").addEventListener("change",loadStudents);
+
+loadStudents();
 
 </script>
 
