@@ -7,7 +7,6 @@
 <style>
 body{font-family:Arial;margin:0;background:#f2f4f8;}
 .container{max-width:1200px;margin:auto;padding:20px;}
-.card{padding:20px;}
 select,button{padding:10px;margin:5px;}
 button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
 .id-page{width:210mm;min-height:297mm;margin:auto;padding:5mm;page-break-after:always;display:grid;gap:5mm;}
@@ -20,7 +19,6 @@ button{background:#004aad;color:white;border:none;border-radius:5px;cursor:point
 .student-details{line-height:1.4;font-size:12px;}
 .student-photo{width:70px;height:80px;border:1px solid #000;object-fit:cover;}
 .qr-code{width:60px;height:60px;}
-/* 7 styles */
 .style1{background:#e3f2fd;border-left:5px solid #0d47a1;border-top:5px solid #1976d2;border-bottom:5px solid #64b5f6;}
 .style2{background:#e8f5e9;border-left:5px solid #1b5e20;border-top:5px solid #388e3c;border-bottom:5px solid #81c784;}
 .style3{background:#f3e5f5;border-left:5px solid #4a148c;border-top:5px solid #7b1fa2;border-bottom:5px solid #ba68c8;}
@@ -82,7 +80,7 @@ async function loadSchool(){
   const snap=await getDoc(doc(db,"schools",schoolId));
   if(snap.exists()){
     schoolData=snap.data();
-    sessionSelect.innerHTML='<option value="">Select Session</option>'+(schoolData.sessions||[]).map(s=>`<option value="${s}">${s}</option>`).join("");
+    sessionSelect.innerHTML='<option value="">Select Session</option>'+ (schoolData.sessions||[]).map(s=>`<option value="${s}">${s}</option>`).join("");
   }
 }
 loadSchool();
@@ -100,12 +98,18 @@ async function generateIDCards(){
     where("class","==",cls)
   ));
   const students=studentSnap.docs.map(d=>({id:d.id,...d.data()}));
+
+  if(students.length===0){
+    alert("No students found!");
+    document.getElementById("idArea").innerHTML="";
+    return;
+  }
+
   let html="";
   for(let i=0;i<students.length;i+=perPage){
     html+='<div class="id-page" style="grid-template-columns:repeat(2,1fr);">';
     const slice=students.slice(i,i+perPage);
     slice.forEach(student=>{
-      // QR code text
       const qrText=`${schoolData.name} | ${student.name} | ${student.roll}`;
       const qrURL=`https://api.qrserver.com/v1/create-qr-code/?size=60x60&data=${encodeURIComponent(qrText)}`;
       html+=`
@@ -139,4 +143,4 @@ async function generateIDCards(){
 }
 </script>
 </body>
-                                </html>
+</html>
