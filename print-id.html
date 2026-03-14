@@ -2,132 +2,247 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Print School ID Card</title>
+<title>Professional Student ID Cards</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <style>
-body{font-family:Arial;margin:0;background:#f2f4f8;}
-.container{max-width:1200px;margin:auto;padding:20px;}
-select,button{padding:10px;margin:5px;}
-button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
-.id-page{width:210mm;min-height:297mm;margin:auto;padding:5mm;page-break-after:always;display:flex;justify-content:center;align-items:center;}
-.id-card{width:85mm;height:55mm;border:2px solid #000;position:relative;overflow:hidden;font-size:10px;display:flex;flex-direction:column;justify-content:space-between;padding:5px;}
-.school-header{display:flex;align-items:center;justify-content:space-between;}
-.school-header img{width:30px;height:30px;}
-.school-name{flex:1;text-align:center;font-weight:bold;font-size:12px;color:#004aad;}
-.school-info{text-align:center;font-size:8px;margin-top:2px;}
-.student-info{display:flex;justify-content:space-between;align-items:center;margin-top:3px;}
-.student-details{line-height:1.2;font-size:9px;font-weight:bold;font-style:italic;width:60%;}
-.student-photo{width:40px;height:50px;border:1px solid #000;object-fit:cover;}
-.qr-code{width:35px;height:35px;margin-top:2px;}
-/* Wave backgrounds for 7 styles */
-.style1{background: linear-gradient(to bottom, #e3f2fd 50%, #1976d2 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
-.style2{background: linear-gradient(to bottom, #e8f5e9 50%, #388e3c 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
-.style3{background: linear-gradient(to bottom, #f3e5f5 50%, #7b1fa2 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
-.style4{background: linear-gradient(to bottom, #ffebee 50%, #c62828 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
-.style5{background: linear-gradient(to bottom, #fff3e0 50%, #ef6c00 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
-.style6{background: linear-gradient(to bottom, #e0f7fa 50%, #00838f 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
-.style7{background: linear-gradient(to bottom, #eceff1 50%, #37474f 50%); clip-path: polygon(0 0, 100% 0, 100% 50%, 0 100%);}
+
+/* Print layout for ID card (ISO ID-1 size approx) */
+body {
+  font-family: Arial, sans-serif;
+  background: #f2f4f8;
+  margin: 0;
+  padding: 20px;
+}
+
+.controls {
+  margin-bottom: 15px;
+}
+
+select, button {
+  padding: 10px;
+  margin: 5px 0;
+  border-radius: 5px;
+  border: 1px solid #ccc;
+}
+
+button {
+  background: #004aad;
+  color: white;
+  cursor: pointer;
+}
+
+/* ID card container */
+.id-page {
+  width: 85.60mm; /* Standard ID card width */
+  height: 53.98mm; /* Standard ID card height */
+  border: 2px solid #000;
+  margin: auto;
+  margin-bottom: 15px;
+  position: relative;
+  padding: 8px;
+  box-sizing: border-box;
+}
+
+/* Header colors & styles */
+.header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.header img {
+  width: 30px;
+  height: 30px;
+  object-fit: cover;
+}
+
+.school-name {
+  flex: 1;
+  text-align: center;
+  font-size: 14px;
+  font-weight: bold;
+  color: #004aad;
+  text-transform: uppercase;
+}
+
+.school-info {
+  text-align: center;
+  font-size: 8px;
+  line-height: 1.2;
+}
+
+/* Student info */
+.students-section {
+  display: flex;
+  align-items: center;
+  margin-top: 6px;
+}
+
+.photo-section img {
+  width: 50px;
+  height: 60px;
+  border: 1px solid #000;
+  object-fit: cover;
+}
+
+.details {
+  font-size: 9px;
+  font-weight: bold;
+  padding-left: 8px;
+  line-height: 1.3;
+}
+
+/* QR code */
+.qr {
+  text-align: center;
+  margin-top: 5px;
+}
+
+.qr img {
+  width: 35px;
+  height: 35px;
+}
+
+/* Styles for 7 different professional color options */
+.style1 { background: linear-gradient(to bottom, #ffffff 50%, #d0e2ff 50%); }
+.style2 { background: linear-gradient(to bottom, #ffffff 50%, #d6f7d6 50%); }
+.style3 { background: linear-gradient(to bottom, #ffffff 50%, #ead4f7 50%); }
+.style4 { background: linear-gradient(to bottom, #ffffff 50%, #ffd6d6 50%); }
+.style5 { background: linear-gradient(to bottom, #ffffff 50%, #ffefcc 50%); }
+.style6 { background: linear-gradient(to bottom, #ffffff 50%, #ccecf7 50%); }
+.style7 { background: linear-gradient(to bottom, #ffffff 50%, #e0e0e0 50%); }
+
 </style>
 </head>
 <body>
-<div class="container">
-<h3>Print Student ID Card - Professional</h3>
 
-<select id="sessionSelect"></select>
-<select id="classSelect">
-<option value="">Select Class</option>
-<option>Nursery</option><option>LKG</option><option>UKG</option>
-<option>1</option><option>2</option><option>3</option><option>4</option>
-<option>5</option><option>6</option><option>7</option><option>8</option>
-<option>9</option><option>10</option><option>11</option><option>12</option>
-</select>
-<select id="styleSelect">
-<option value="style1">Style 1</option>
-<option value="style2">Style 2</option>
-<option value="style3">Style 3</option>
-<option value="style4">Style 4</option>
-<option value="style5">Style 5</option>
-<option value="style6">Style 6</option>
-<option value="style7">Style 7</option>
-</select>
-<button id="generateBtn">Generate ID Card</button>
-<button onclick="window.print()">Print</button>
+<div class="container">
+  <div class="controls">
+    <select id="sessionSelect"></select><br>
+    <select id="classSelect">
+      <option value="">Select Class</option>
+      <option>Nursery</option><option>LKG</option><option>UKG</option>
+      <option>1</option><option>2</option><option>3</option><option>4</option>
+      <option>5</option><option>6</option><option>7</option><option>8</option>
+      <option>9</option><option>10</option><option>11</option><option>12</option>
+    </select><br>
+
+    <select id="styleSelect">
+      <option value="style1">Style 1</option>
+      <option value="style2">Style 2</option>
+      <option value="style3">Style 3</option>
+      <option value="style4">Style 4</option>
+      <option value="style5">Style 5</option>
+      <option value="style6">Style 6</option>
+      <option value="style7">Style 7</option>
+    </select><br>
+
+    <button onclick="generateCards()">Generate ID Cards</button>
+    <button onclick="window.print()">Print</button>
+  </div>
+</div>
 
 <div id="idArea"></div>
-</div>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, query, where, getDoc } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import {
+  getFirestore,
+  collection,
+  getDocs,
+  doc,
+  query,
+  where,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig={
-apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId:"nmpsnagguradiya-b9b94"
+const firebaseConfig = {
+  apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+  authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
+  projectId: "nmpsnagguradiya-b9b94"
 };
-const app=initializeApp(firebaseConfig);
-const db=getFirestore(app);
-const schoolId=localStorage.getItem("schoolId")||"school_001";
-let schoolData={};
 
-async function loadSchool(){
-  const snap=await getDoc(doc(db,"schools",schoolId));
-  if(snap.exists()){
-    schoolData=snap.data();
-    const sess=schoolData.sessions||[];
-    let html='<option value="">Select Session</option>';
-    sess.forEach(s=>{html+=`<option value="${s}">${s}</option>`;});
-    document.getElementById("sessionSelect").innerHTML=html;
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+const schoolId = localStorage.getItem("schoolId") || "school_001";
+let schoolData = {};
+
+async function loadSchool() {
+  const snap = await getDoc(doc(db,"schools",schoolId));
+  if (snap.exists()) {
+    schoolData = snap.data();
+    const sessions = schoolData.sessions || [];
+    let html = '<option value="">Select Session</option>';
+    sessions.forEach(s => {html += `<option value="${s}">${s}</option>`;});
+    document.getElementById("sessionSelect").innerHTML = html;
   }
 }
 loadSchool();
 
-document.getElementById("generateBtn").addEventListener("click", async()=>{
-  const session=document.getElementById("sessionSelect").value;
-  const cls=document.getElementById("classSelect").value;
-  const style=document.getElementById("styleSelect").value;
-  if(!session || !cls){alert("Select session and class"); return;}
+async function generateCards() {
+  const session = document.getElementById("sessionSelect").value;
+  const cls = document.getElementById("classSelect").value;
+  const style = document.getElementById("styleSelect").value;
+  if (!session || !cls) {
+    alert("Select session and class");
+    return;
+  }
 
-  const studentSnap=await getDocs(query(collection(db,"admissions"),
-    where("schoolId","==",schoolId),
-    where("session","==",session),
-    where("class","==",cls)
-  ));
-  const students=studentSnap.docs.map(d=>({id:d.id,...d.data()}));
-  if(students.length===0){alert("No students found!"); document.getElementById("idArea").innerHTML=""; return;}
+  const studentSnap = await getDocs(
+    query(collection(db,"admissions"),
+      where("schoolId","==",schoolId),
+      where("session","==",session),
+      where("class","==",cls)
+    )
+  );
 
-  let html="";
-  students.forEach(student=>{
-      const qrText=`${schoolData.name} | ${student.name} | ${student.roll}`;
-      const qrURL=`https://api.qrserver.com/v1/create-qr-code/?size=35x35&data=${encodeURIComponent(qrText)}`;
-      html+=`
+  const students = studentSnap.docs.map(d => ({id:d.id,...d.data()}));
+  if (students.length === 0) {
+    alert("No students found!");
+    return;
+  }
+
+  let html = "";
+  students.forEach(student => {
+    const qrText = `${schoolData.name} | ${student.name} | ${student.roll}`;
+    const qrURL = `https://api.qrserver.com/v1/create-qr-code/?size=35x35&data=${encodeURIComponent(qrText)}`;
+
+    html += `
       <div class="id-page">
-      <div class="id-card ${style}">
-        <div class="school-header">
-          <img src="${schoolData.logo}">
-          <div class="school-name"><b>${schoolData.name}</b></div>
-          <img src="${schoolData.logo}">
-        </div>
-        <div class="school-info"><i>${schoolData.address}</i> | DISE: ${schoolData.dise} | Session: ${session}</div>
-        <div class="student-info">
-          <div class="student-details">
-            <b>Name:</b> ${student.name}<br>
-            <b>Father:</b> ${student.father}<br>
-            <b>Mobile:</b> ${student.mobile||''}<br>
-            <b>Village/City:</b> ${student.village||student.city||''}<br>
-            <b>Class:</b> ${student.class}<br>
-            <b>Roll:</b> ${student.roll}
+        <div class="id-card ${style}">
+          <div class="header">
+            <img src="${schoolData.logo}">
+            <div class="school-name">${schoolData.name}</div>
+            <img src="${schoolData.logo}">
           </div>
-          <img class="student-photo" src="${student.photo||''}">
-        </div>
-        <div style="margin-top:2px;text-align:center;">
-          <img class="qr-code" src="${qrURL}">
+          <div class="school-info">
+            ${schoolData.address} | DISE: ${schoolData.dise} | Session: ${session}
+          </div>
+          <div class="students-section">
+            <div class="photo-section">
+              <img class="student-photo" src="${student.photo||''}">
+            </div>
+            <div class="details">
+              Name: ${student.name}<br>
+              Father: ${student.father}<br>
+              Mobile: ${student.mobile||''}<br>
+              Village/City: ${student.village||student.city||''}<br>
+              Class: ${student.class}<br>
+              Roll: ${student.roll}
+            </div>
+          </div>
+          <div class="qr">
+            <img src="${qrURL}">
+          </div>
         </div>
       </div>
-      </div>`;
+    `;
   });
-  document.getElementById("idArea").innerHTML=html;
-});
+
+  document.getElementById("idArea").innerHTML = html;
+}
+
 </script>
+
 </body>
 </html>
