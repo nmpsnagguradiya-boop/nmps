@@ -94,6 +94,8 @@ width:70px;
 text-align:center;
 }
 
+.gradeInput{width:60px;}
+
 </style>
 </head>
 
@@ -254,129 +256,85 @@ if(p>=33)return"D";
 return"F";
 }
 
-/* TAB */
-
 window.openTab=function(id){
-
 marksTab.style.display="none";
 sportsTab.style.display="none";
 attendanceTab.style.display="none";
-
 document.getElementById(id).style.display="block";
-
 }
 
 /* SESSION */
 
 async function loadSessions(){
-
 const snap=await getDoc(doc(db,"schools",schoolId));
-
-const sessions=snap.data().sessions||[];
-
-sessionSelect.innerHTML='<option>Select</option>'+
-sessions.map(s=>`<option>${s}</option>`).join("");
-
+const sessions=snap.data()?.sessions||[];
+sessionSelect.innerHTML='<option>Select</option>'+sessions.map(s=>`<option>${s}</option>`).join("");
 }
 
 loadSessions();
 
 sessionSelect.onchange=async function(){
-
 activeSession=this.value;
-
 sessionStatus.innerText="Active Session : "+activeSession;
-
 mainSystem.style.display="block";
-
 loadExams();
 loadSubjects();
-
 }
 
 /* EXAM */
 
 async function loadExams(){
-
-const q=query(collection(db,"exam_sessions"),
-where("schoolId","==",schoolId),
-where("session","==",activeSession));
-
+const q=query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",activeSession));
 const snap=await getDocs(q);
-
-examSelect.innerHTML='<option>Exam</option>'+
-snap.docs.map(d=>`<option value="${d.id}">${d.data().examName}</option>`).join("");
-
+examSelect.innerHTML='<option>Exam</option>'+snap.docs.map(d=>`<option value="${d.id}">${d.data().examName}</option>`).join("");
 }
 
 /* SUBJECT */
 
 async function loadSubjects(){
-
-const q=query(collection(db,"subjects"),
-where("schoolId","==",schoolId),
-where("session","==",activeSession));
-
+const q=query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",activeSession));
 const snap=await getDocs(q);
-
-subjectSelect.innerHTML='<option>Subject</option>'+
-snap.docs.map(d=>`<option value="${d.id}">${d.data().name}</option>`).join("");
-
+subjectSelect.innerHTML='<option>Subject</option>'+snap.docs.map(d=>`<option value="${d.id}">${d.data().name}</option>`).join("");
 }
 
 /* LOAD STUDENTS */
 
 window.loadStudents=async function(){
-
 const cls=classSelect.value;
-
-const q=query(collection(db,"admissions"),
-where("class","==",cls),
-where("session","==",activeSession),
-where("schoolId","==",schoolId));
-
+const q=query(collection(db,"admissions"),where("class","==",cls),where("session","==",activeSession),where("schoolId","==",schoolId));
 const snap=await getDocs(q);
-
 students=snap.docs.map(d=>({id:d.id,...d.data()}));
-
 renderTables();
-
 }
 
 /* TABLES */
 
 async function renderTables(){
-
 marksTable.innerHTML="";
 sportsTable.innerHTML="";
 attendanceTable.innerHTML="";
 
 for(const s of students){
 
-/* MARKS LOAD */
-
-let marksVal="";
-
+// MARKS LOAD
+let marksVal=0;
 const m=await getDoc(doc(db,"marks",`${s.id}_${examSelect.value}_${subjectSelect.value}`));
-
 if(m.exists()) marksVal=m.data().marks;
 
-/* ATTENDANCE LOAD */
+// SPORTS / ACTIVITY
+let sport="",act="";
+const sa=await getDoc(doc(db,"attendance",`${s.id}_${activeSession}`));
+if(sa.exists()){
+sport=sa.data().sports||"";
+act=sa.data().activity||"";
+}
 
-let sport="",act="",work="",present="",absent="";
-
-const a=await getDoc(doc(db,"attendance",`${s.id}_${activeSession}`));
-
-if(a.exists()){
-
-const d=a.data();
-
-sport=d.sports||"";
-act=d.activity||"";
-work=d.work||"";
-present=d.present||"";
-absent=d.absent||"";
-
+// ATTENDANCE
+let work=0,present=0,absent=0;
+if(sa.exists()){
+work=sa.data().work||0;
+present=sa.data().present||0;
+absent=work-present;
 }
 
 marksTable.innerHTML+=`
@@ -406,25 +364,29 @@ attendanceTable.innerHTML+=`
 <td><input class="present" value="${present}"></td>
 <td class="absent">${absent}</td>
 </tr>`;
-
 }
 
+// CALCULATE RANK
+document.querySelectorAll("#marksTable tr").forEach((r,i)=>{
+const marks=r.querySelector(".marks").value||0;
+const max=maxMarks.value||1;
+const percent=(marks/max)*100;
+r.querySelector(".percent").innerText=i+1; // Rank instead of %
+r.querySelector(".grade").innerText=grade(percent);
+r.querySelector(".result").innerText=percent>=33?"PASS":"FAIL";
+});
 }
 
 /* SAVE */
 
 window.saveAll=async function(){
-
 const rows=document.querySelectorAll("#marksTable tr");
-
 for(let i=0;i<rows.length;i++){
-
 const s=students[i];
-
 const marks=rows[i].querySelector(".marks").value||0;
 
+// SAVE MARKS
 await setDoc(doc(db,"marks",`${s.id}_${examSelect.value}_${subjectSelect.value}`),{
-
 studentId:s.id,
 marks,
 examId:examSelect.value,
@@ -432,19 +394,18 @@ subjectId:subjectSelect.value,
 class:classSelect.value,
 session:activeSession,
 schoolId
-
 });
 
+// SAVE SPORTS / ACTIVITY
 const sport=sportsTable.rows[i].querySelector(".sport").value||"";
 const activity=sportsTable.rows[i].querySelector(".activity").value||"";
 
+// SAVE ATTENDANCE
 const work=attendanceTable.rows[i].querySelector(".work").value||0;
 const present=attendanceTable.rows[i].querySelector(".present").value||0;
-
 const absent=work-present;
 
 await setDoc(doc(db,"attendance",`${s.id}_${activeSession}`),{
-
 studentId:s.id,
 sports:sport,
 activity:activity,
@@ -454,13 +415,10 @@ absent,
 class:classSelect.value,
 session:activeSession,
 schoolId
-
 });
-
 }
 
 alert("Saved Successfully");
-
 }
 
 </script>
