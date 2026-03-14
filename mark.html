@@ -83,6 +83,10 @@ width:70px;
 text-align:center;
 }
 
+.gradeInput{
+width:60px;
+}
+
 @media(max-width:768px){
 table,th,td{font-size:12px;}
 select,input,button{max-width:100%;}
@@ -153,19 +157,22 @@ select,input,button{max-width:100%;}
 
 <tr>
 
+<th>Rank</th>
 <th>Roll</th>
 <th>Name</th>
 <th>Father</th>
 
 <th>Marks</th>
+<th>%</th>
+<th>Grade</th>
+<th>Result</th>
+
+<th>Sports Grade</th>
+<th>Activity Grade</th>
 
 <th>Working Days</th>
 <th>Present</th>
 <th>Absent</th>
-<th>%</th>
-
-<th>Grade</th>
-<th>Result</th>
 
 </tr>
 
@@ -208,11 +215,7 @@ const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
 let students=[];
-let exams=[];
-let subjects=[];
-
 let activeSession=localStorage.getItem("activeSession")||"";
-
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 
 function getGrade(p){
@@ -244,9 +247,7 @@ const sessions=snap.data().sessions||[];
 let options='<option value="">Select Session</option>';
 
 sessions.forEach(s=>{
-
 options+=`<option value="${s}" ${s===activeSession?'selected':''}>${s}</option>`;
-
 });
 
 sessionSelect.innerHTML=options;
@@ -262,7 +263,6 @@ loadSessions();
 window.selectSession=function(){
 
 const sel=sessionSelect.value;
-
 if(!sel)return;
 
 activeSession=sel;
@@ -273,36 +273,17 @@ sessionStatus.innerText="Active Session: "+sel;
 
 document.getElementById("marksCard").style.display="block";
 
-loadExams();
-loadSubjects();
-
-}
-
-async function loadExams(){
-
-const snap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",activeSession)));
-
-exams=snap.docs.map(d=>({id:d.id,...d.data()}));
-
-examSelect.innerHTML='<option value="">Select Exam</option>'+exams.map(e=>`<option value="${e.id}">${e.examName}</option>`).join("");
-
-}
-
-async function loadSubjects(){
-
-const snap=await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",activeSession)));
-
-subjects=snap.docs.map(d=>({id:d.id,...d.data()}));
-
-subjectSelect.innerHTML='<option value="">Select Subject</option>'+subjects.map(s=>`<option value="${s.id}">${s.name}</option>`).join("");
-
 }
 
 window.loadStudents=async function(){
 
 const cls=classSelect.value;
 
-const q=query(collection(db,"admissions"),where("class","==",cls),where("schoolId","==",schoolId),where("session","==",activeSession));
+const q=query(collection(db,"admissions"),
+where("class","==",cls),
+where("schoolId","==",schoolId),
+where("session","==",activeSession)
+);
 
 const snap=await getDocs(q);
 
@@ -315,7 +296,6 @@ renderTable();
 function renderTable(){
 
 const tbody=document.getElementById("marksTable");
-
 tbody.innerHTML="";
 
 students.forEach(s=>{
@@ -324,6 +304,8 @@ const tr=document.createElement("tr");
 
 tr.innerHTML=`
 
+<td class="rank"></td>
+
 <td>${s.roll||""}</td>
 
 <td>${s.name}</td>
@@ -331,24 +313,19 @@ tr.innerHTML=`
 <td>${s.father||""}</td>
 
 <td>
-<input type="number" class="markInput" data-id="${s.id}">
+<input type="number" class="markInput" data-id="${s.id}" oninput="calculate()">
 </td>
-
-<td>
-<input type="number" class="workDays">
-</td>
-
-<td>
-<input type="number" class="presentDays">
-</td>
-
-<td class="absent"></td>
 
 <td class="percent"></td>
-
 <td class="grade"></td>
-
 <td class="result"></td>
+
+<td><input class="gradeInput sports"></td>
+<td><input class="gradeInput activity"></td>
+
+<td><input type="number" class="workDays"></td>
+<td><input type="number" class="presentDays"></td>
+<td class="absent"></td>
 
 `;
 
@@ -358,39 +335,59 @@ tbody.appendChild(tr);
 
 }
 
-window.saveAll=async function(){
+window.calculate=function(){
 
-const maxMarks=parseInt(document.getElementById("maxMarks").value);
+const max=parseInt(document.getElementById("maxMarks").value)||1;
 
 const rows=document.querySelectorAll("#marksTable tr");
+
+let list=[];
+
+rows.forEach(row=>{
+
+const marks=parseFloat(row.querySelector(".markInput").value)||0;
+
+const percent=((marks/max)*100).toFixed(2);
+
+row.querySelector(".percent").innerText=percent+"%";
+
+const grade=getGrade(percent);
+const result=getResult(percent);
+
+row.querySelector(".grade").innerText=grade;
+row.querySelector(".result").innerText=result;
+
+list.push({row,percent});
+
+});
+
+list.sort((a,b)=>b.percent-a.percent);
+
+list.forEach((s,i)=>{
+s.row.querySelector(".rank").innerText=i+1;
+});
+
+}
+
+window.saveAll=async function(){
+
+const rows=document.querySelectorAll("#marksTable tr");
+const maxMarks=parseInt(document.getElementById("maxMarks").value);
 
 for(const row of rows){
 
 const studentId=row.querySelector(".markInput").dataset.id;
 
-let marks=parseInt(row.querySelector(".markInput").value)||0;
+const marks=parseInt(row.querySelector(".markInput").value)||0;
+
+const sports=row.querySelector(".sports").value||"";
+
+const activity=row.querySelector(".activity").value||"";
 
 const work=parseInt(row.querySelector(".workDays").value)||0;
-
 const present=parseInt(row.querySelector(".presentDays").value)||0;
 
 const absent=work-present;
-
-const percent=((present/work)*100).toFixed(2);
-
-row.querySelector(".absent").innerText=absent;
-
-row.querySelector(".percent").innerText=percent+"%";
-
-const grade=getGrade(percent);
-
-const result=getResult(percent);
-
-row.querySelector(".grade").innerText=grade;
-
-row.querySelector(".result").innerText=result;
-
-/* SAVE MARKS */
 
 await setDoc(doc(db,"marks",`${studentId}_${examSelect.value}_${subjectSelect.value}`),{
 
@@ -399,13 +396,13 @@ examId:examSelect.value,
 subjectId:subjectSelect.value,
 marks,
 maxMarks,
+sportsGrade:sports,
+activityGrade:activity,
 class:classSelect.value,
 session:activeSession,
 schoolId
 
 });
-
-/* SAVE ATTENDANCE */
 
 await setDoc(doc(db,"attendance",`${studentId}_${activeSession}`),{
 
@@ -415,19 +412,17 @@ session:activeSession,
 schoolId,
 workingDays:work,
 present,
-absent,
-percentage:percent,
-updatedAt:new Date()
+absent
 
 });
 
 }
 
-alert("Marks + Attendance Saved");
+alert("Saved Successfully");
 
 }
 
 </script>
 
 </body>
-</html>
+  </html>
