@@ -9,7 +9,7 @@
 
 <style>
 body{font-family:Arial;margin:0;background:#f2f4f8;}
-header{display:none;} /* Header hidden in print */
+header{display:none;}
 .container{max-width:1200px;margin:auto;padding:20px;}
 .card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
 select,button{padding:10px;margin:5px;}
@@ -17,9 +17,9 @@ button{background:#004aad;color:white;border:none;border-radius:5px;cursor:point
 
 /* MARKSHEET */
 .marksheet{width:210mm;min-height:297mm;background:white;padding:20px;margin:auto;border:2px solid #004aad;page-break-after:always;position:relative;}
-.school-header{text-align:center;border-bottom:3px solid #004aad;padding-bottom:10px;margin-bottom:10px;}
-.school-header img{width:50px;vertical-align:middle;margin-right:10px;}
-.school-name{font-size:28px;font-weight:bold;color:#004aad;margin-bottom:5px;}
+.school-header{display:flex;justify-content:space-between;align-items:center;border-bottom:3px solid #004aad;padding-bottom:10px;margin-bottom:10px;}
+.school-header img{width:50px;}
+.school-name{flex:1;text-align:center;font-size:28px;font-weight:bold;color:#004aad;}
 .student{display:flex;justify-content:space-between;margin-top:15px;}
 .student-details{line-height:1.4;}
 .student img{width:80px;height:100px;object-fit:cover;border:1px solid #ccc;}
@@ -33,6 +33,8 @@ th{background:#004aad;color:white;}
 .signature-box .line{border-top:1px solid #000;width:150px;margin:auto;}
 .grade-system{margin-top:15px;}
 .grade-system th, .grade-system td{border:1px solid #004aad;padding:5px;text-align:center;font-size:12px;}
+.pass{color:green;font-weight:bold;}
+.fail{color:red;font-weight:bold;}
 
 /* Style Variants */
 .cbse{border-color:#004aad;} .cbse th{background:#004aad;}
@@ -43,10 +45,7 @@ th{background:#004aad;color:white;}
 .pro3{border-color:#17a2b8;} .pro3 th{background:#17a2b8;}
 .pro4{border-color:#e83e8c;} .pro4 th{background:#e83e8c;}
 
-.pass{color:green;font-weight:bold;}
-.fail{color:red;font-weight:bold;}
-
-@media print{.card{display:none;}}
+@media print{.card{display:none;} table, th, td{border:1px solid #000 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact;}}
 </style>
 </head>
 <body>
@@ -150,7 +149,7 @@ window.generateResults=async function(){
     let head="<tr><th>Subject</th>";
     exams.forEach(e=>{head+=`<th>${e.name}</th>`;});
     if(type=="percent"){head+="<th>Total</th><th>%</th><th>Grade</th><th>Result</th></tr>";}
-    else{head+="<th>Grade</th></tr>";}
+    else{head+="<th>Grade</th><th>Result</th></tr>";}
 
     let rows="";
     subjects.forEach(sub=>{
@@ -160,11 +159,16 @@ window.generateResults=async function(){
         if(type=="percent"){row+=`<td>${m}</td>`; total+=Number(m);}
         else{row+=`<td>${grade(m)}</td>`;}
       });
+      let pass=false;
       if(type=="percent"){
         const percent=(total/exams.length).toFixed(1);
         const g=grade(total/exams.length);
-        row+=`<td>${total}</td><td>${percent}</td><td>${g}</td><td class="${percent>=33?'pass':'fail'}">${percent>=33?'PASS':'FAIL'}</td></tr>`;
-      } else row+="</tr>";
+        pass=percent>=33;
+        row+=`<td>${total}</td><td>${percent}</td><td>${g}</td><td class="${pass?'pass':'fail'}">${pass?'PASS':'FAIL'}</td></tr>`;
+      } else {
+        pass=true; // grade only assume pass
+        row+=`<td class="${grade(exams.length)>='D'?'pass':'fail'}">${grade(total/exams.length)}</td><td class="${pass?'pass':'fail'}">${pass?'PASS':'FAIL'}</td></tr>`;
+      }
       rows+=row;
     });
 
@@ -188,7 +192,7 @@ window.generateResults=async function(){
       <div class="school-header">
         <img src="${schoolData.logo}">
         <div class="school-name">${schoolData.name}</div>
-        <div>${schoolData.address||""} | Session: ${session}</div>
+        <img src="${schoolData.logo}">
       </div>
       <div class="student">
         <div class="student-details">
@@ -196,7 +200,6 @@ window.generateResults=async function(){
           Father: ${student.father}<br>
           Class: ${student.class}<br>
           Roll: ${student.roll}<br>
-          SSSM ID: ${student.sssmId||""}<br>
           Aadhaar: ${student.aadhaar||""}<br>
           Village/City: ${student.city||student.village||""}<br>
           DOB: ${student.dob||""}
@@ -224,4 +227,4 @@ window.downloadPDF=function(){
 }
 </script>
 </body>
-  </html>
+</html>
