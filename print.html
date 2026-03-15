@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<meta charset="UTF-8">
+<title>Print Center</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<style>
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
+header{
+background:#004aad;
+color:white;
+padding:16px;
+text-align:center;
+font-size:22px;
+}
+
+/* container */
+
+.container{
+padding:20px;
+}
+
+/* button grid */
+
+.menu{
+display:grid;
+grid-template-columns:repeat(4,1fr);
+gap:20px;
+}
+
+/* buttons */
+
+.card{
+background:#004aad;
+color:white;
+border-radius:12px;
+padding:30px 15px;
+text-align:center;
+font-size:18px;
+font-weight:bold;
+cursor:pointer;
+box-shadow:0 4px 10px rgba(0,0,0,0.2);
+transition:0.3s;
+}
+
+.card:hover{
+transform:scale(1.05);
+}
+
+.icon{
+font-size:50px;
+display:block;
+margin-bottom:10px;
+}
+
+/* mobile */
+
+@media(max-width:768px){
+
+.menu{
+grid-template-columns:repeat(2,1fr);
+}
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>Print Center</header>
+
+<div class="container">
+
+<div class="menu">
+
+<div class="card"
+onclick="location.href='print-result.html'">
+
+<span class="icon">📊</span>
+
+Print Result
+
+</div>
+
+<div class="card"
+onclick="location.href='print-admit-card.html'">
+
+<span class="icon">🎫</span>
+
+Print Admit Card
+
+</div>
+
+<div class="card"
+onclick="location.href='print-id.html'">
+
+<span class="icon">🪪</span>
+
+Print ID Card
+
+</div>
+
+<div class="card"
+onclick="exportStudents()">
+
+<span class="icon">📥</span>
+
+Export Students
+
+</div>
+
+</div>
+
+</div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+getDocs
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+window.exportStudents=async function(){
+
+const schoolId=localStorage.getItem("schoolId");
+
+const snap=await getDocs(collection(db,"admissions"));
+
+let csv="Name,Class,Father,Mobile,Address\n";
+
+snap.forEach(doc=>{
+
+const s=doc.data();
+
+if(s.schoolId===schoolId){
+
+csv+=`${s.name||""},${s.class||""},${s.father||""},${s.mobile||""},${s.address||""}\n`;
+
+}
+
+});
+
+const blob=new Blob([csv],{type:"text/csv"});
+
+const url=URL.createObjectURL(blob);
+
+const a=document.createElement("a");
+
+a.href=url;
+a.download="students.csv";
+a.click();
+
+}
+
+</script>
+
+</body>
+</html>
