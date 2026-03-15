@@ -13,7 +13,7 @@
 body{
 font-family:Arial;
 margin:0;
-background:#f2f6ff;
+background:#f2f2f2;
 }
 
 /* LOGIN */
@@ -119,9 +119,9 @@ gap:15px;
 .card{
 background:white;
 padding:20px;
-border-radius:12px;
+border-radius:10px;
 text-align:center;
-box-shadow:0 4px 10px rgba(0,0,0,0.15);
+box-shadow:0 0 10px rgba(0,0,0,0.2);
 }
 
 .count{
@@ -141,11 +141,11 @@ gap:15px;
 
 .menuBtn{
 background:#004aad;
-border-radius:12px;
+border-radius:10px;
 padding:20px;
 text-align:center;
 cursor:pointer;
-box-shadow:0 3px 8px rgba(0,0,0,0.2);
+box-shadow:0 2px 6px rgba(0,0,0,0.2);
 transition:0.2s;
 }
 
@@ -222,11 +222,6 @@ font-size:45px;
 <div class="grid">
 
 <div class="card">
-<div class="count" id="students">0</div>
-Total Students
-</div>
-
-<div class="card">
 <div class="count" id="teachers">0</div>
 Total Teachers
 </div>
@@ -234,11 +229,6 @@ Total Teachers
 <div class="card">
 <div class="count" id="admissions">0</div>
 Total Admissions
-</div>
-
-<div class="card">
-<div class="count" id="results">0</div>
-Total Results
 </div>
 
 <div class="card">
@@ -263,64 +253,61 @@ Total Pending
 
 </div>
 
-<div class="buttons">
+<!-- BUTTON MENU -->
 
-<div class="menuBtn" onclick="location.href='admin_admissions.html'">
+<div class="buttons" id="buttonsArea">
+
+<div class="menuBtn" data-page="Admission Management" onclick="location.href='admin_admissions.html'">
 <i class="fas fa-user-graduate"></i>
 <span>Admission</span>
 </div>
 
-<div class="menuBtn" onclick="location.href='academy.html'">
+<div class="menuBtn" data-page="Exam Management" onclick="location.href='academy.html'">
 <i class="fas fa-book"></i>
 <span>Exam</span>
 </div>
 
-<div class="menuBtn" onclick="location.href='admin_results.html'">
+<div class="menuBtn" data-page="Result Management" onclick="location.href='admin_results.html'">
 <i class="fas fa-chart-line"></i>
 <span>Results</span>
 </div>
 
-<div class="menuBtn" onclick="location.href='admin-fees.html'">
+<div class="menuBtn" data-page="Fees Management" onclick="location.href='admin-fees.html'">
 <i class="fas fa-money-bill"></i>
 <span>Fees</span>
 </div>
 
-<div class="menuBtn" onclick="location.href='admin_complaints.html'">
+<div class="menuBtn" data-page="Complaint Management" onclick="location.href='admin_complaints.html'">
 <i class="fas fa-comment-dots"></i>
 <span>Complaints</span>
 </div>
 
-<div class="menuBtn" onclick="location.href='admin_study.html'">
+<div class="menuBtn" data-page="Study Material" onclick="location.href='admin_study.html'">
 <i class="fas fa-folder-open"></i>
 <span>Study Material</span>
 </div>
 
-<div class="menuBtn" onclick="location.href='admin-event.html'">
-<i class="fas fa-calendar-alt"></i>
-<span>Events</span>
-</div>
-
-<div class="menuBtn" onclick="location.href='admin.html'">
+<div class="menuBtn" data-page="Notice & Gallery" onclick="location.href='admin.html'">
 <i class="fas fa-bullhorn"></i>
 <span>Notice</span>
 </div>
 
-<div class="menuBtn" onclick="location.href='all-students.html'">
+<div class="menuBtn" data-page="All Students" onclick="location.href='all-students.html'">
 <i class="fas fa-users"></i>
 <span>Students</span>
 </div>
 
-<div class="menuBtn" onclick="location.href='print.html'">
+<div class="menuBtn" data-page="All Print" onclick="location.href='print.html'">
 <i class="fas fa-print"></i>
 <span>Print</span>
 </div>
 
-<div class="menuBtn" onclick="location.href='admin-teacher.html'">
+<div class="menuBtn" data-page="Create Teacher / Permission" onclick="location.href='admin-teacher.html'">
 <i class="fas fa-chalkboard-teacher"></i>
 <span>Teachers</span>
 </div>
 
-<div class="menuBtn" onclick="location.href='school-profile.html'">
+<div class="menuBtn" data-page="Add / Edit School Profile" onclick="location.href='school-profile.html'">
 <i class="fas fa-school"></i>
 <span>School Profile</span>
 </div>
@@ -351,60 +338,110 @@ const schoolId=document.getElementById("schoolId").value.trim();
 const email=document.getElementById("email").value.trim();
 const password=document.getElementById("password").value.trim();
 
-const schoolSnap=await getDoc(doc(db,"schools",schoolId));
-
-if(!schoolSnap.exists()){
-alert("Invalid School ID");
+if(!schoolId || !email || !password){
+alert("Enter School ID, Email & Password");
 return;
 }
 
-const schoolData=schoolSnap.data();
+const schoolSnap=await getDoc(doc(db,"schools",schoolId));
 
-if(schoolData.adminEmail===email && schoolData.adminPassword===password){
+if(schoolSnap.exists()){
+
+const s=schoolSnap.data();
+
+if(s.adminEmail===email && s.adminPassword===password){
 
 localStorage.setItem("schoolId",schoolId);
+localStorage.setItem("role","admin");
 
 document.getElementById("loginBox").style.display="none";
+loadDashboard();
+return;
+
+}
+
+}
+
+/* TEACHER LOGIN */
+
+const teachers=await getDocs(collection(db,"teachers"));
+
+let teacherData=null;
+
+teachers.forEach(d=>{
+const t=d.data();
+if(t.schoolId===schoolId && t.email===email && t.password===password){
+teacherData=t;
+}
+});
+
+if(!teacherData){
+alert("Invalid Login");
+return;
+}
+
+localStorage.setItem("schoolId",schoolId);
+localStorage.setItem("role","teacher");
+localStorage.setItem("permissions",JSON.stringify(teacherData.pages||[]));
+
+document.getElementById("loginBox").style.display="none";
+
+applyPermissions();
 
 loadDashboard();
 
 }
 
+/* PERMISSIONS */
+
+function applyPermissions(){
+
+const role=localStorage.getItem("role");
+
+if(role!=="teacher") return;
+
+const allowed=JSON.parse(localStorage.getItem("permissions")||"[]");
+
+document.querySelectorAll(".menuBtn").forEach(btn=>{
+
+const page=btn.dataset.page;
+
+if(!allowed.includes(page)){
+btn.style.display="none";
+}
+
+});
+
 }
 
 window.logout=function(){
+
 localStorage.removeItem("schoolId");
+localStorage.removeItem("role");
+localStorage.removeItem("permissions");
+
 location.reload();
+
 }
+
+/* DASHBOARD */
 
 async function loadDashboard(){
 
 const schoolId=localStorage.getItem("schoolId");
+
+applyPermissions();
 
 /* SCHOOL */
 
 const schoolSnap=await getDoc(doc(db,"schools",schoolId));
 
 if(schoolSnap.exists()){
-
 const data=schoolSnap.data();
-
 document.getElementById("schoolName").innerText=data.name;
 document.getElementById("schoolAddress").innerText=data.address||"";
 document.getElementById("schoolLogo").src=data.logo||"";
-
 }
-
-/* STUDENTS */
-
-let studentCount=0;
-const students=await getDocs(collection(db,"students"));
-
-students.forEach(d=>{
-if(d.data().schoolId===schoolId) studentCount++;
-});
-
-document.getElementById("students").innerText=studentCount;
 
 /* TEACHERS */
 
@@ -428,7 +465,7 @@ if(d.data().schoolId===schoolId) admissionCount++;
 
 document.getElementById("admissions").innerText=admissionCount;
 
-/* FEES SYSTEM */
+/* FEES */
 
 let totalFees=0;
 let totalCollection=0;
@@ -437,12 +474,12 @@ const fees=await getDocs(collection(db,"fees"));
 
 fees.forEach(d=>{
 
-const data=d.data();
+const f=d.data();
 
-if(data.schoolId===schoolId){
+if(f.schoolId===schoolId){
 
-totalFees+=Number(data.totalFees||0);
-totalCollection+=Number(data.paidFees||0);
+totalFees+=Number(f.totalFees||0);
+totalCollection+=Number(f.paidFees||0);
 
 }
 
@@ -454,7 +491,20 @@ document.getElementById("totalPending").innerText=totalFees-totalCollection;
 
 }
 
+document.addEventListener("DOMContentLoaded",()=>{
+
+const schoolId=localStorage.getItem("schoolId");
+
+if(schoolId){
+
+document.getElementById("loginBox").style.display="none";
+loadDashboard();
+
+}
+
+});
+
 </script>
 
 </body>
-  </html>
+</html>
