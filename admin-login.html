@@ -208,7 +208,7 @@ font-size:45px;
 <div class="centerHeader">
 <div id="schoolName">School Name</div>
 <div id="schoolAddress">School Address</div>
-<div id="activeSession">Session : 2025-26</div>
+<div id="activeSession">DISE Code : 000000</div>
 </div>
 
 <button id="logoutBtn" onclick="logout()">
@@ -312,6 +312,12 @@ Total Pending
 <span>School Profile</span>
 </div>
 
+<!-- Admin Event Button Added -->
+<div class="menuBtn" data-page="Admin Event" onclick="location.href='admin-event.html'">
+<i class="fas fa-calendar"></i>
+<span>Event</span>
+</div>
+
 </div>
 
 </div>
@@ -320,7 +326,7 @@ Total Pending
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
 
-import {getFirestore,doc,getDoc,collection,getDocs}
+import {getFirestore,doc,getDoc,collection,getDocs,query,where}
 from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
@@ -441,6 +447,7 @@ const data=schoolSnap.data();
 document.getElementById("schoolName").innerText=data.name;
 document.getElementById("schoolAddress").innerText=data.address||"";
 document.getElementById("schoolLogo").src=data.logo||"";
+document.getElementById("activeSession").innerText="DISE Code : "+(data.dise||"000000");
 }
 
 /* TEACHERS */
@@ -465,29 +472,28 @@ if(d.data().schoolId===schoolId) admissionCount++;
 
 document.getElementById("admissions").innerText=admissionCount;
 
-/* FEES */
+/* FEES - admin-fees.html database se */
 
 let totalFees=0;
 let totalCollection=0;
 
-const fees=await getDocs(collection(db,"fees"));
+const admissionsSnap=await getDocs(collection(db,"admissions"));
 
-fees.forEach(d=>{
-
-const f=d.data();
-
-if(f.schoolId===schoolId){
-
-totalFees+=Number(f.totalFees||0);
-totalCollection+=Number(f.paidFees||0);
-
+admissionsSnap.forEach(d=>{
+const s=d.data();
+if(s.schoolId===schoolId){
+const fees = Number(s.fees||0);
+const vehicle = Number(s.vehicleFees||0);
+const old = Number(s.oldFees||0);
+const paid = Number(s.paid||0);
+totalFees += fees + vehicle + old;
+totalCollection += paid;
 }
-
 });
 
-document.getElementById("totalFees").innerText=totalFees;
-document.getElementById("totalCollection").innerText=totalCollection;
-document.getElementById("totalPending").innerText=totalFees-totalCollection;
+document.getElementById("totalFees").innerText = totalFees;
+document.getElementById("totalCollection").innerText = totalCollection;
+document.getElementById("totalPending").innerText = totalFees - totalCollection;
 
 }
 
@@ -507,4 +513,4 @@ loadDashboard();
 </script>
 
 </body>
-</html>
+  </html>
