@@ -105,7 +105,7 @@ DISE Code : <span id="rdise"></span>
 <tr><td>Old Fees</td><td id="rold"></td></tr>
 <tr><td>Total Fees</td><td id="rtotal"></td></tr>
 <tr><td>Last Paid</td><td id="rlastpaid"></td></tr>
-<tr><td>Paid Date</td><td id="rdate"></td></tr>
+<tr><td>Paid Date & Time</td><td id="rdate"></td></tr>
 <tr><td>Pending</td><td id="rpending"></td></tr>
 </table>
 <div class="sign">Principal Sign</div><br>
@@ -211,20 +211,25 @@ window.depositFees = async function(id){
   if(!amount) return;
   let s = students.find(x=>x.id==id);
   let newPaid = (s.paid||0) + parseInt(amount);
+  let now = new Date();
   await updateDoc(doc(db,"admissions",id),{paid:newPaid});
   await addDoc(collection(db,"fees_history"),{
     studentId:id,
     amount:parseInt(amount),
-    date:new Date().toLocaleDateString()
+    date: now.toISOString()
   });
   loadStudents();
 }
 
 window.viewHistory = async function(id){
-  let q = query(collection(db,"fees_history"),where("studentId","==",id));
+  let q = query(collection(db,"fees_history"),where("studentId","==",id), orderBy("date","desc"));
   let snap = await getDocs(q);
   let text="Fees History\n\n";
-  snap.forEach(d=>{let h=d.data(); text+="Date : "+h.date+"  Amount : "+h.amount+"\n";});
+  snap.forEach(d=>{
+    let h=d.data();
+    let dt = new Date(h.date).toLocaleString();
+    text+="Date : "+dt+"  Amount : "+h.amount+"\n";
+  });
   alert(text);
 }
 
@@ -239,11 +244,15 @@ window.showReceipt = async function(id){
   let fees=s.fees||0, vehicle=s.vehicleFees||0, old=s.oldFees||0, paid=s.paid||0, total=fees+vehicle+old, pending=total-paid;
   rfees.innerText=fees; rvehicle.innerText=vehicle; rold.innerText=old; rtotal.innerText=total; rpending.innerText=pending;
 
-  // --- Get latest deposit ---
+  // --- Get latest deposit with time ---
   let q = query(collection(db,"fees_history"), where("studentId","==",id), orderBy("date","desc"), limit(1));
   let snap = await getDocs(q);
   let lastPaid=0, lastDate="";
-  snap.forEach(d=>{ let h=d.data(); lastPaid=h.amount; lastDate=h.date; });
+  snap.forEach(d=>{
+    let h=d.data();
+    lastPaid = h.amount;
+    lastDate = new Date(h.date).toLocaleString(); // includes date + time
+  });
   rlastpaid.innerText = lastPaid;
   rdate.innerText = lastDate;
 }
