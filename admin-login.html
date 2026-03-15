@@ -6,182 +6,425 @@
 <title>Ultimate School ERP - Multi School</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<!-- Font Awesome for icons -->
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
 
 <style>
-body{font-family:Arial;margin:0;background:#f2f2f2;}
+
+body{
+font-family:Arial;
+margin:0;
+background:#f2f2f2;
+}
+
 /* LOGIN */
-#loginBox{position:fixed;top:0;left:0;width:100%;height:100%;background:white;display:flex;align-items:center;justify-content:center;z-index:10;}
-.loginCard{background:white;padding:30px;box-shadow:0 0 10px rgba(0,0,0,0.3);border-radius:10px;width:90%;max-width:350px;}
-input{width:100%;padding:10px;margin:8px 0;}
-button{padding:12px;border:none;background:#004aad;color:white;font-size:16px;border-radius:8px;cursor:pointer;}
-button:hover{background:#003080;}
+
+#loginBox{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:white;
+display:flex;
+align-items:center;
+justify-content:center;
+z-index:10;
+}
+
+.loginCard{
+background:white;
+padding:30px;
+box-shadow:0 0 10px rgba(0,0,0,0.3);
+border-radius:10px;
+width:90%;
+max-width:350px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin:8px 0;
+}
+
+button{
+padding:12px;
+border:none;
+background:#004aad;
+color:white;
+font-size:16px;
+border-radius:8px;
+cursor:pointer;
+}
+
+button:hover{
+background:#003080;
+}
+
 /* HEADER */
-header{background:#004aad;color:white;padding:10px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;}
-#schoolLogo{width:60px;height:60px;border-radius:50%;object-fit:cover;background:white;}
-#schoolName{font-size:22px;font-weight:bold;}
-#schoolAddress{font-size:14px;}
-#logoutBtn{background:#f44336;padding:8px 12px;cursor:pointer;}
-.container{padding:15px;}
-.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:15px;}
-.card{background:white;padding:20px;border-radius:10px;text-align:center;box-shadow:0 0 10px rgba(0,0,0,0.2);}
-.count{font-size:28px;font-weight:bold;color:#004aad;}
-.buttons{margin-top:30px;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:15px;}
-.buttons button{display:flex;align-items:center;gap:10px;justify-content:center;}
+
+header{
+background:#004aad;
+color:white;
+padding:10px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+flex-wrap:wrap;
+}
+
+#schoolLogo{
+width:60px;
+height:60px;
+border-radius:50%;
+object-fit:cover;
+background:white;
+}
+
+.centerHeader{
+text-align:center;
+flex:1;
+}
+
+#schoolName{
+font-size:22px;
+font-weight:bold;
+}
+
+#schoolAddress{
+font-size:14px;
+}
+
+#activeSession{
+font-size:13px;
+}
+
+#logoutBtn{
+background:#f44336;
+padding:8px 12px;
+cursor:pointer;
+}
+
+/* DASHBOARD */
+
+.container{
+padding:15px;
+}
+
+.grid{
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(150px,1fr));
+gap:15px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+text-align:center;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
+}
+
+.count{
+font-size:28px;
+font-weight:bold;
+color:#004aad;
+}
+
+/* BUTTONS */
+
+.buttons{
+margin-top:30px;
+display:grid;
+grid-template-columns:repeat(auto-fit,minmax(200px,1fr));
+gap:15px;
+}
+
+.buttons button{
+display:flex;
+align-items:center;
+gap:10px;
+justify-content:center;
+font-size:16px;
+}
+
 </style>
 </head>
 
 <body>
 
 <!-- LOGIN -->
+
 <div id="loginBox">
+
 <div class="loginCard">
+
 <h3>Admin / Teacher Login</h3>
+
 <input id="schoolId" placeholder="School ID">
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
-<button onclick="login()"><i class="fas fa-right-to-bracket"></i> Login</button>
+
+<button onclick="login()">
+<i class="fas fa-right-to-bracket"></i> Login
+</button>
+
 </div>
+
 </div>
 
 <!-- HEADER -->
+
 <header>
+
 <div style="display:flex;align-items:center;gap:10px;">
 <img id="schoolLogo">
-<div>
+</div>
+
+<div class="centerHeader">
+
 <div id="schoolName">School Name</div>
 <div id="schoolAddress">School Address</div>
+<div id="activeSession">Session : 2025-26</div>
+
 </div>
-</div>
-<button id="logoutBtn" onclick="logout()"><i class="fas fa-sign-out-alt"></i> Logout</button>
+
+<button id="logoutBtn" onclick="logout()">
+<i class="fas fa-sign-out-alt"></i> Logout
+</button>
+
 </header>
 
 <div class="container">
 
 <div class="grid">
-<div class="card"><div class="count" id="students">0</div>Total Students</div>
-<div class="card"><div class="count" id="teachers">0</div>Total Teachers</div>
-<div class="card"><div class="count" id="complaints">0</div>Total Complaints</div>
-<div class="card"><div class="count" id="admissions">0</div>Total Admissions</div>
-<div class="card"><div class="count" id="results">0</div>Total Results</div>
+
+<div class="card">
+<div class="count" id="students">0</div>
+Total Students
+</div>
+
+<div class="card">
+<div class="count" id="teachers">0</div>
+Total Teachers
+</div>
+
+<div class="card">
+<div class="count" id="admissions">0</div>
+Total Admissions
+</div>
+
+<div class="card">
+<div class="count" id="results">0</div>
+Total Results
+</div>
+
+<div class="card">
+<div class="count" id="complaints">0</div>
+Total Complaints
+</div>
+
+<div class="card">
+<div class="count" id="totalFees">0</div>
+Total Fees
+</div>
+
+<div class="card">
+<div class="count" id="totalCollection">0</div>
+Total Collection
+</div>
+
+<div class="card">
+<div class="count" id="totalPending">0</div>
+Total Pending
+</div>
+
 </div>
 
 <div class="buttons" id="buttonsArea">
-<button onclick="location.href='admin_admissions.html'"><i class="fas fa-user-graduate"></i> Admission Management</button>
-<button onclick="location.href='academy.html'"><i class="fas fa-book"></i> Exam Management</button>
-<button onclick="location.href='admin_results.html'"><i class="fas fa-chart-line"></i> Result Management</button>
-<button onclick="location.href='admin-fees.html'"><i class="fas fa-money-bill"></i> Fees Management</button>
-<button onclick="location.href='admin_complaints.html'"><i class="fas fa-comment-dots"></i> Complaint Management</button>
-<button onclick="location.href='admin_study.html'"><i class="fas fa-folder-open"></i> Study Material</button>
-<button onclick="location.href='admin-event.html'"><i class="fas fa-calendar-alt"></i> Event Management</button>
-<button onclick="location.href='admin.html'"><i class="fas fa-bullhorn"></i> Notice & Gallery</button>
-<button onclick="location.href='all-students.html'"><i class="fas fa-users"></i> All Students</button>
-<button onclick="location.href='print.html'"><i class="fas fa-print"></i> All Print</button>
-<button onclick="location.href='admin-teacher.html'"><i class="fas fa-chalkboard-teacher"></i> Create Teacher / Permission</button>
-<button onclick="location.href='school-profile.html'"><i class="fas fa-school"></i> Add / Edit School Profile</button>
+
+<button onclick="location.href='admin_admissions.html'">
+<i class="fas fa-user-graduate"></i> Admission Management
+</button>
+
+<button onclick="location.href='academy.html'">
+<i class="fas fa-book"></i> Exam Management
+</button>
+
+<button onclick="location.href='admin_results.html'">
+<i class="fas fa-chart-line"></i> Result Management
+</button>
+
+<button onclick="location.href='admin-fees.html'">
+<i class="fas fa-money-bill"></i> Fees Management
+</button>
+
+<button onclick="location.href='admin_complaints.html'">
+<i class="fas fa-comment-dots"></i> Complaint Management
+</button>
+
+<button onclick="location.href='admin_study.html'">
+<i class="fas fa-folder-open"></i> Study Material
+</button>
+
+<button onclick="location.href='admin-event.html'">
+<i class="fas fa-calendar-alt"></i> Event Management
+</button>
+
+<button onclick="location.href='admin.html'">
+<i class="fas fa-bullhorn"></i> Notice & Gallery
+</button>
+
+<button onclick="location.href='all-students.html'">
+<i class="fas fa-users"></i> All Students
+</button>
+
+<button onclick="location.href='print.html'">
+<i class="fas fa-print"></i> All Print
+</button>
+
+<button onclick="location.href='admin-teacher.html'">
+<i class="fas fa-chalkboard-teacher"></i> Create Teacher / Permission
+</button>
+
+<button onclick="location.href='school-profile.html'">
+<i class="fas fa-school"></i> Add / Edit School Profile
+</button>
+
 </div>
+
 </div>
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, doc, getDoc, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+getFirestore,
+doc,
+getDoc,
+collection,
+getDocs
+}
+
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
-apiKey: "AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain: "nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId: "nmpsnagguradiya-b9b94",
-storageBucket: "nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId: "811957568318",
-appId: "1:811957568318:web:7058de9ba52df9d6bae26f"
+
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94"
+
 };
 
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// LOGIN (Admin OR Teacher)
-window.login = async function() {
-    const schoolId = document.getElementById("schoolId").value.trim();
-    const email = document.getElementById("email").value.trim();
-    const password = document.getElementById("password").value.trim();
-    if(!schoolId || !email || !password){ alert("Enter School ID, Email & Password"); return; }
+window.login = async function(){
 
-    const schoolRef = doc(db,"schools",schoolId);
-    const schoolSnap = await getDoc(schoolRef);
-    if(!schoolSnap.exists()){ alert("Invalid School ID"); return; }
+const schoolId=document.getElementById("schoolId").value;
+const email=document.getElementById("email").value;
+const password=document.getElementById("password").value;
 
-    const schoolData = schoolSnap.data();
-
-    // Check if admin login
-    if(schoolData.adminEmail === email && schoolData.adminPassword === password){
-        localStorage.setItem("schoolId",schoolId);
-        localStorage.setItem("role","admin");
-        document.getElementById("loginBox").style.display="none";
-        loadDashboard();
-        return;
-    }
-
-    // Check if teacher login
-    const teachersSnap = await getDocs(collection(db,"teachers"));
-    let found=false;
-    teachersSnap.forEach(t=>{
-        const tData = t.data();
-        if(tData.schoolId===schoolId && tData.email===email && tData.password===password){
-            found=true;
-            localStorage.setItem("schoolId",schoolId);
-            localStorage.setItem("role","teacher");
-            // Hide buttons according to teacher permission
-            const allowed = tData.pages || [];
-            document.querySelectorAll("#buttonsArea button").forEach(btn=>{
-                if(!allowed.includes(btn.innerText)) btn.style.display="none";
-            });
-        }
-    });
-    if(!found){ alert("Invalid Login"); return; }
-
-    document.getElementById("loginBox").style.display="none";
-    loadDashboard();
+if(!schoolId || !email || !password){
+alert("Enter School ID, Email & Password");
+return;
 }
 
-// LOGOUT
-window.logout = function(){
-    localStorage.removeItem("schoolId");
-    localStorage.removeItem("role");
-    location.reload();
+const schoolSnap=await getDoc(doc(db,"schools",schoolId));
+
+if(!schoolSnap.exists()){
+alert("Invalid School ID");
+return;
 }
 
-// Load dashboard counts & school profile
+const data=schoolSnap.data();
+
+if(data.adminEmail===email && data.adminPassword===password){
+
+localStorage.setItem("schoolId",schoolId);
+document.getElementById("loginBox").style.display="none";
+
+loadDashboard();
+
+}
+
+}
+
+window.logout=function(){
+
+localStorage.removeItem("schoolId");
+location.reload();
+
+}
+
 async function loadDashboard(){
-    const schoolId = localStorage.getItem("schoolId");
-    if(!schoolId){ document.getElementById("loginBox").style.display="flex"; return; }
 
-    // Load school profile
-    const schoolSnap = await getDoc(doc(db,"schools",schoolId));
-    if(schoolSnap.exists()){
-        const data = schoolSnap.data();
-        document.getElementById("schoolName").innerText = data.name;
-        document.getElementById("schoolAddress").innerText = data.address || "";
-        document.getElementById("schoolLogo").src = data.logo || "https://via.placeholder.com/60";
-    }
+const schoolId=localStorage.getItem("schoolId");
 
-    // Load counts (students, teachers etc.) from collections filtered by schoolId
-    const collections = ["students","teachers","complaints","admissions","results"];
-    for(let c of collections){
-        const snap = await getDocs(collection(db,c));
-        let count=0;
-        snap.forEach(d=>{
-            if(d.data().schoolId === schoolId) count++;
-        });
-        document.getElementById(c).innerText = count;
-    }
+const schoolSnap=await getDoc(doc(db,"schools",schoolId));
+
+if(schoolSnap.exists()){
+
+const data=schoolSnap.data();
+
+document.getElementById("schoolName").innerText=data.name;
+document.getElementById("schoolAddress").innerText=data.address||"";
+document.getElementById("schoolLogo").src=data.logo||"";
+
 }
 
-// Auto load on refresh
-document.addEventListener("DOMContentLoaded", ()=>{
-    const schoolId = localStorage.getItem("schoolId");
-    if(schoolId) loadDashboard();
+let totalFees=0;
+let totalCollection=0;
+
+const admissions=await getDocs(collection(db,"admissions"));
+
+let admissionCount=0;
+
+admissions.forEach(d=>{
+
+const s=d.data();
+
+if(s.schoolId===schoolId){
+
+admissionCount++;
+
+const fees=s.fees||0;
+const vehicle=s.vehicleFees||0;
+const old=s.oldFees||0;
+const paid=s.paid||0;
+
+totalFees+=fees+vehicle+old;
+totalCollection+=paid;
+
+}
+
 });
+
+document.getElementById("admissions").innerText=admissionCount;
+
+document.getElementById("totalFees").innerText=totalFees;
+
+document.getElementById("totalCollection").innerText=totalCollection;
+
+document.getElementById("totalPending").innerText=totalFees-totalCollection;
+
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+const schoolId=localStorage.getItem("schoolId");
+
+if(schoolId){
+
+document.getElementById("loginBox").style.display="none";
+
+loadDashboard();
+
+}
+
+});
+
 </script>
 
 </body>
-</html>
+    </html>
