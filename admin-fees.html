@@ -1,72 +1,97 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
 <meta charset="UTF-8">
 <title>School Fees Management</title>
+
 <style>
+
 body{font-family:Arial;margin:0;background:#f2f2f2;}
-header{background:#004aad;color:white;padding:15px;text-align:center;font-size:24px;font-weight:bold;}
+
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
+
 .container{padding:20px;}
 
-select,input,button{padding:10px;margin:5px;border-radius:5px;border:1px solid #ccc;font-size:16px;}
-button{cursor:pointer; font-weight:bold;}
-
-table{width:100%;border-collapse:collapse;background:white;margin-top:20px;}
-th,td{padding:12px;border:1px solid #ccc;text-align:center;}
-
-button.deposit, button.historyBtn, button.whatsapp, button.call{
-    border:none;
-    padding:10px 15px;
-    border-radius:5px;
-    font-size:14px;
-    font-weight:bold;
+select,input,button{
+padding:8px;
+margin:5px;
 }
-button.deposit{background:#004aad;color:white;}
-button.historyBtn{background:#004aad;color:white;}
-button.whatsapp{background:#25D366;color:white;}
-button.call{background:#17a2b8;color:white;}
 
-.report{background:white;padding:15px;margin-top:20px;border-radius:6px;}
+table{
+width:100%;
+border-collapse:collapse;
+background:white;
+margin-top:20px;
+}
+
+th{
+background:#004aad;
+color:white;
+padding:8px;
+}
+
+td{
+padding:8px;
+border:1px solid #ccc;
+text-align:center;
+}
+
+.deposit{background:#28a745;color:white;border:none}
+.history{background:#ffc107;border:none}
+.whatsapp{background:#25D366;color:white;border:none}
+.call{background:#17a2b8;color:white;border:none}
+
+.report{
+background:white;
+padding:15px;
+margin-top:20px;
+border-radius:6px;
+}
 
 .receipt{
-    width:700px;background:white;padding:20px;margin:auto;border:2px solid black;display:none;
+width:700px;
+background:white;
+padding:20px;
+margin:auto;
+border:2px solid black;
+display:none;
 }
-.logo{text-align:center;}
-.logo img{width:80px;}
-.school{text-align:center;font-size:22px;font-weight:bold;}
-.address{text-align:center;font-size:14px;margin-bottom:10px;}
-.sign{margin-top:40px;text-align:right;font-weight:bold;}
 
-.historyModal{
-  display:none;
-  position:fixed;
-  top:50%;left:50%;
-  transform:translate(-50%,-50%);
-  width:650px;
-  max-height:70%;
-  overflow:auto;
-  background:white;
-  border:2px solid #004aad;
-  padding:15px;
-  z-index:1000;
-  border-radius:10px;
-}
-.historyModal h3{text-align:center;color:#004aad;font-size:20px;margin-bottom:10px;}
-.historyModal table{width:100%;border-collapse:collapse;margin-top:10px;}
-.historyModal th, .historyModal td{border:1px solid #ccc;padding:8px;text-align:center;}
-.historyModalClose{
-    position:absolute;top:5px;right:10px;
-    background:red;color:white;border:none;padding:4px 8px;font-weight:bold;cursor:pointer;
-}
+.logo{text-align:center;}
+.logo img{width:70px;}
+
+.school{text-align:center;font-size:22px;font-weight:bold;}
+
+.address{text-align:center;font-size:14px;margin-bottom:10px;}
+
+.sign{margin-top:40px;text-align:right;}
 
 @media print{
+
 body *{visibility:hidden;}
+
 #receiptBox,#receiptBox *{visibility:visible;}
-#receiptBox{position:absolute;left:0;top:0;width:100%;}
-button{display:none;}
+
+#receiptBox{
+position:absolute;
+left:0;
+top:0;
+width:100%;
 }
+
+button{display:none;}
+
+}
+
 </style>
 </head>
+
 <body>
 
 <header>School Fees Management</header>
@@ -81,6 +106,8 @@ button{display:none;}
 <option>9</option><option>10</option><option>11</option><option>12</option>
 </select>
 
+<br>
+
 <input type="number" id="feesAmount" placeholder="School Fees">
 <button onclick="addFees()">Add Fees</button>
 
@@ -93,213 +120,426 @@ button{display:none;}
 <button onclick="downloadExcel()">Export Excel</button>
 
 <div class="report">
+
 <h3>Total Fees : ₹ <span id="totalFees">0</span></h3>
 <h3>Total Collection : ₹ <span id="collection">0</span></h3>
 <h3>Total Pending : ₹ <span id="pending">0</span></h3>
 <h3>Total Old Pending : ₹ <span id="oldPending">0</span></h3>
+
 </div>
 
 <table>
+
 <thead>
 <tr>
-<th>Select</th><th>Name</th><th>Village</th><th>Class</th><th>Mobile</th>
-<th>Call</th><th>Fees</th><th>Vehicle</th><th>Old</th><th>Paid</th>
-<th>Deposit</th><th>History</th><th>WhatsApp</th>
+<th>Select</th>
+<th>Name</th>
+<th>Village</th>
+<th>Class</th>
+<th>Mobile</th>
+<th>Call</th>
+<th>Fees</th>
+<th>Vehicle</th>
+<th>Old</th>
+<th>Paid</th>
+<th>Deposit</th>
+<th>Receipt</th>
+<th>History</th>
+<th>WhatsApp</th>
 </tr>
 </thead>
+
 <tbody id="studentList"></tbody>
+
 </table>
+
 </div>
 
-<!-- Receipt Box -->
+
 <div id="receiptBox" class="receipt">
-<div class="logo"><img id="rlogo"></div>
+
+<div class="logo">
+<img id="rlogo">
+</div>
+
 <div class="school" id="rschool"></div>
-<div class="address"><span id="raddress"></span><br>DISE Code: <span id="rdise"></span></div>
+
+<div class="address">
+<span id="raddress"></span><br>
+DISE Code : <span id="rdise"></span>
+</div>
+
 <h3 style="text-align:center;">Fees Receipt</h3>
+
 <p><b>Receipt No :</b> <span id="rno"></span></p>
+
 <table width="100%" border="1">
+
 <tr><td>Name</td><td id="rname"></td></tr>
 <tr><td>Father</td><td id="rfather"></td></tr>
 <tr><td>Village</td><td id="rvillage"></td></tr>
 <tr><td>Mobile</td><td id="rmobile"></td></tr>
+
 <tr><td>School Fees</td><td id="rfees"></td></tr>
 <tr><td>Vehicle Fees</td><td id="rvehicle"></td></tr>
 <tr><td>Old Fees</td><td id="rold"></td></tr>
+
 <tr><td>Total Fees</td><td id="rtotal"></td></tr>
-<tr><td>Paid Amount</td><td id="rlastpaid"></td></tr>
-<tr><td>Paid Date & Time</td><td id="rdate"></td></tr>
+
+<tr><td>Last Paid</td><td id="rlastpaid"></td></tr>
+<tr><td>Paid Date</td><td id="rdate"></td></tr>
+
 <tr><td>Pending</td><td id="rpending"></td></tr>
+
 </table>
-<div class="sign">Principal Sign</div>
-<br>
-<button onclick="printReceipt()">Print Receipt</button>
+
+<div class="sign">
+Principal Sign
 </div>
 
-<!-- History Modal -->
-<div id="historyModal" class="historyModal">
-<button class="historyModalClose" onclick="closeHistoryModal()">X</button>
-<h3>Fees History</h3>
-<table>
-<thead><tr><th>Amount</th><th>Date & Time</th><th>Receipt</th></tr></thead>
-<tbody id="historyBody"></tbody>
-</table>
+<br>
+
+<button onclick="printReceipt()">Print Receipt</button>
+
 </div>
+
 
 <script type="module">
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, getDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-const firebaseConfig = {
-  apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-  authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-  projectId:"nmpsnagguradiya-b9b94"
+import {
+getFirestore,
+collection,
+getDocs,
+doc,
+updateDoc,
+addDoc,
+getDoc,
+query,
+where
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94"
 };
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-const schoolId = localStorage.getItem("schoolId");
-const session = localStorage.getItem("activeSession") || "2025-26";
 
-let students = [];
-let schoolData = {};
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const schoolId=localStorage.getItem("schoolId");
+const session=localStorage.getItem("activeSession") || "2025-26";
+
+let students=[];
+let schoolData={};
 
 async function loadSchool(){
-  const snap = await getDoc(doc(db,"schools",schoolId));
-  if(snap.exists()){
-    schoolData = snap.data();
-    rschool.innerText = schoolData.name||"";
-    raddress.innerText = schoolData.address||"";
-    rdise.innerText = schoolData.dise||"";
-    rlogo.src = schoolData.logo||"";
-  }
+
+const snap=await getDoc(doc(db,"schools",schoolId));
+
+if(snap.exists()){
+schoolData=snap.data();
+
+rschool.innerText=schoolData.name||"";
+raddress.innerText=schoolData.address||"";
+rdise.innerText=schoolData.dise||"";
+rlogo.src=schoolData.logo||"";
 }
+
+}
+
 loadSchool();
 
 async function loadStudents(){
-  const snap = await getDocs(collection(db,"admissions"));
-  let html = "", totalFees=0, totalCollection=0, totalPending=0, totalOld=0;
-  students=[];
-  let cls = document.getElementById("classFilter").value;
 
-  snap.forEach(docSnap=>{
-    let s = docSnap.data(); s.id = docSnap.id;
-    if(s.schoolId!==schoolId) return; if(s.session!==session) return;
-    if(cls && s.class!=cls) return;
-    students.push(s);
+const snap=await getDocs(collection(db,"admissions"));
 
-    let fees=s.fees||0, vehicle=s.vehicleFees||0, old=s.oldFees||0, paid=s.paid||0;
-    let total=fees+vehicle+old, pending=total-paid;
-    totalFees+=total; totalCollection+=paid; totalPending+=pending; totalOld+=old;
+let html="";
 
-    html += `<tr>
-      <td><input type="checkbox" class="studentCheck" value="${s.id}"></td>
-      <td>${s.name||""}</td><td>${s.village||""}</td><td>${s.class||""}</td><td>${s.mobile||""}</td>
-      <td><button class="call" onclick="callStudent('${s.mobile}')">Call</button></td>
-      <td>${fees}</td><td>${vehicle}</td><td>${old}</td><td>${paid}</td>
-      <td><button class="deposit" onclick="depositFees('${s.id}')">Deposit</button></td>
-      <td><button class="historyBtn" onclick="openHistory('${s.id}')">History / Receipt</button></td>
-      <td><button class="whatsapp" onclick="sendWhatsApp('${s.id}')">WhatsApp</button></td>
-    </tr>`;
-  });
+let totalFees=0;
+let totalCollection=0;
+let totalPending=0;
+let totalOld=0;
 
-  studentList.innerHTML = html;
-  document.getElementById("totalFees").innerText = totalFees;
-  document.getElementById("collection").innerText = totalCollection;
-  document.getElementById("pending").innerText = totalPending;
-  document.getElementById("oldPending").innerText = totalOld;
+students=[];
+
+let cls=document.getElementById("classFilter").value;
+
+snap.forEach(docSnap=>{
+
+let s=docSnap.data();
+s.id=docSnap.id;
+
+if(s.schoolId!==schoolId) return;
+if(s.session!==session) return;
+if(cls && s.class!=cls) return;
+
+students.push(s);
+
+let fees=s.fees||0;
+let vehicle=s.vehicleFees||0;
+let old=s.oldFees||0;
+let paid=s.paid||0;
+
+let total=fees+vehicle+old;
+let pending=total-paid;
+
+totalFees+=total;
+totalCollection+=paid;
+totalPending+=pending;
+totalOld+=old;
+
+html+=`
+
+<tr>
+
+<td><input type="checkbox" class="studentCheck" value="${s.id}"></td>
+
+<td>${s.name||""}</td>
+<td>${s.village||""}</td>
+<td>${s.class||""}</td>
+<td>${s.mobile||""}</td>
+
+<td>
+<button class="call" onclick="callStudent('${s.mobile}')">Call</button>
+</td>
+
+<td>${fees}</td>
+<td>${vehicle}</td>
+<td>${old}</td>
+<td>${paid}</td>
+
+<td>
+<button class="deposit" onclick="depositFees('${s.id}')">Deposit</button>
+</td>
+
+<td>
+<button onclick="showReceipt('${s.id}')">Receipt</button>
+</td>
+
+<td>
+<button class="history" onclick="viewHistory('${s.id}')">History</button>
+</td>
+
+<td>
+<button class="whatsapp" onclick="sendWhatsApp('${s.id}')">WhatsApp</button>
+</td>
+
+</tr>
+
+`;
+
+});
+
+studentList.innerHTML=html;
+
+document.getElementById("totalFees").innerText=totalFees;
+document.getElementById("collection").innerText=totalCollection;
+document.getElementById("pending").innerText=totalPending;
+document.getElementById("oldPending").innerText=totalOld;
+
 }
 
 loadStudents();
+
 document.getElementById("classFilter").addEventListener("change",loadStudents);
 
 function getSelectedStudents(){
-  let ids=[];
-  document.querySelectorAll(".studentCheck:checked").forEach(c=>ids.push(c.value));
-  return ids;
+
+let ids=[];
+document.querySelectorAll(".studentCheck:checked").forEach(c=>{
+ids.push(c.value);
+});
+
+return ids;
+
 }
 
 window.addFees=async function(){
-  let amount=parseInt(document.getElementById("feesAmount").value); if(!amount) return;
-  let ids=getSelectedStudents();
-  for(let id of ids){ await updateDoc(doc(db,"admissions",id),{fees:amount}); }
-  loadStudents();
+
+let amount=parseInt(document.getElementById("feesAmount").value);
+if(!amount) return;
+
+let ids=getSelectedStudents();
+
+for(let id of ids){
+
+await updateDoc(doc(db,"admissions",id),{fees:amount});
+
+}
+
+loadStudents();
+
 }
 
 window.addVehicleFees=async function(){
-  let amount=parseInt(document.getElementById("vehicleFees").value); if(!amount) return;
-  let ids=getSelectedStudents();
-  for(let id of ids){ await updateDoc(doc(db,"admissions",id),{vehicleFees:amount}); }
-  loadStudents();
+
+let amount=parseInt(document.getElementById("vehicleFees").value);
+if(!amount) return;
+
+let ids=getSelectedStudents();
+
+for(let id of ids){
+
+await updateDoc(doc(db,"admissions",id),{vehicleFees:amount});
+
+}
+
+loadStudents();
+
 }
 
 window.addOldFees=async function(){
-  let amount=parseInt(document.getElementById("oldFees").value); if(!amount) return;
-  let ids=getSelectedStudents();
-  for(let id of ids){ await updateDoc(doc(db,"admissions",id),{oldFees:amount}); }
-  loadStudents();
+
+let amount=parseInt(document.getElementById("oldFees").value);
+if(!amount) return;
+
+let ids=getSelectedStudents();
+
+for(let id of ids){
+
+await updateDoc(doc(db,"admissions",id),{oldFees:amount});
+
+}
+
+loadStudents();
+
 }
 
 window.depositFees=async function(id){
-  let amount=prompt("Enter Deposit Amount"); if(!amount) return;
-  let s=students.find(x=>x.id==id);
-  let newPaid=(s.paid||0)+parseInt(amount);
-  await updateDoc(doc(db,"admissions",id),{paid:newPaid});
-  await addDoc(collection(db,"fees_history"),{studentId:id,amount:parseInt(amount),date:new Date().toLocaleString()});
-  loadStudents();
+
+let amount=prompt("Enter Deposit Amount");
+
+if(!amount) return;
+
+let s=students.find(x=>x.id==id);
+
+let newPaid=(s.paid||0)+parseInt(amount);
+
+await updateDoc(doc(db,"admissions",id),{
+paid:newPaid
+});
+
+await addDoc(collection(db,"fees_history"),{
+studentId:id,
+amount:parseInt(amount),
+date:new Date().toLocaleDateString()
+});
+
+loadStudents();
+
 }
 
-window.callStudent=function(mobile){window.location.href="tel:"+mobile;}
+window.viewHistory=async function(id){
+
+let q=query(collection(db,"fees_history"),where("studentId","==",id));
+
+let snap=await getDocs(q);
+
+let text="Fees History\n\n";
+
+snap.forEach(d=>{
+let h=d.data();
+text+="Date : "+h.date+"  Amount : "+h.amount+"\n";
+});
+
+alert(text);
+
+}
+
+window.showReceipt=async function(id){
+
+let s=students.find(x=>x.id==id)
+
+receiptBox.style.display="block"
+
+rno.innerText="RC-"+Date.now()
+
+rname.innerText=s.name
+rfather.innerText=s.father
+rvillage.innerText=s.village
+rmobile.innerText=s.mobile
+// Removed session display
+// rsession.innerText=session
+
+let fees=s.fees||0
+let vehicle=s.vehicleFees||0
+let old=s.oldFees||0
+let paid=s.paid||0
+
+let total=fees+vehicle+old
+let pending=total-paid
+
+rfees.innerText=fees
+rvehicle.innerText=vehicle
+rold.innerText=old
+rtotal.innerText=total
+rpending.innerText=pending
+
+let q=query(collection(db,"fees_history"),where("studentId","==",id));
+
+let snap=await getDocs(q);
+
+let lastPaid=0
+let lastDate=""
+
+snap.forEach(d=>{
+let h=d.data();
+lastPaid=h.amount
+lastDate=h.date
+});
+
+rlastpaid.innerText=lastPaid
+rdate.innerText=lastDate
+
+}
+
+window.printReceipt=function(){
+window.print()
+}
+
+window.callStudent=function(mobile){
+window.location.href="tel:"+mobile;
+}
+
 window.sendWhatsApp=function(id){
-  let s=students.find(x=>x.id==id);
-  window.open("https://wa.me/91"+s.mobile+"?text=Fees Pending Reminder");
+
+let s=students.find(x=>x.id==id);
+
+let msg="Fees Pending Reminder";
+
+window.open("https://wa.me/91"+s.mobile+"?text="+msg)
+
 }
+
 window.downloadExcel=function(){
-  let csv="Name,Class,Mobile,Fees,Vehicle,Old,Paid\n";
-  students.forEach(s=>{
-    csv+=(s.name||"")+","+(s.class||"")+","+(s.mobile||"")+","+(s.fees||0)+","+(s.vehicleFees||0)+","+(s.oldFees||0)+","+(s.paid||0)+"\n";
-  });
-  let blob=new Blob([csv],{type:"text/csv"});
-  let a=document.createElement("a");
-  a.href=URL.createObjectURL(blob);
-  a.download="fees-report.csv";
-  a.click();
+
+let csv="Name,Class,Mobile,Fees,Vehicle,Old,Paid\n";
+
+students.forEach(s=>{
+
+csv+=
+(s.name||"")+","+
+(s.class||"")+","+
+(s.mobile||"")+","+
+(s.fees||0)+","+
+(s.vehicleFees||0)+","+
+(s.oldFees||0)+","+
+(s.paid||0)+"\n";
+
+});
+
+let blob=new Blob([csv],{type:"text/csv"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="fees-report.csv";
+a.click();
+
 }
 
-// History / Receipt
-function openHistory(studentId){
-  const modal = document.getElementById("historyModal");
-  const tbody = document.getElementById("historyBody");
-  tbody.innerHTML = "";
-  const q = query(collection(db,"fees_history"), where("studentId","==",studentId), orderBy("date","asc"));
-  getDocs(q).then(snap=>{
-    snap.forEach(d=>{
-      let h=d.data();
-      tbody.innerHTML += `<tr>
-        <td>${h.amount}</td>
-        <td>${h.date}</td>
-        <td><button style="background:#004aad;color:white;padding:5px;border:none;border-radius:4px;" onclick="printHistoryReceipt('${studentId}','${h.amount}','${h.date}')">Receipt</button></td>
-      </tr>`;
-    });
-    modal.style.display="block";
-  });
-}
-function closeHistoryModal(){document.getElementById("historyModal").style.display="none";}
-
-function printHistoryReceipt(studentId,amount,date){
-  const s = students.find(x=>x.id==studentId);
-  receiptBox.style.display="block";
-  rno.innerText="RC-"+Date.now();
-  rname.innerText=s.name; rfather.innerText=s.father; rvillage.innerText=s.village; rmobile.innerText=s.mobile;
-  rfees.innerText = s.fees||0; rvehicle.innerText = s.vehicleFees||0; rold.innerText = s.oldFees||0;
-  rtotal.innerText = (s.fees||0)+(s.vehicleFees||0)+(s.oldFees||0);
-  rlastpaid.innerText = amount;
-  rdate.innerText = date;
-  rpending.innerText = rtotal.innerText - s.paid;
-  closeHistoryModal();
-  window.print();
-}
-
-window.printReceipt=function(){window.print();}
 </script>
+
 </body>
     </html>
