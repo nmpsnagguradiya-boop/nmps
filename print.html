@@ -83,38 +83,30 @@ grid-template-columns:repeat(2,1fr);
 
 <div class="menu">
 
-<div class="card"
-onclick="location.href='print-result.html'">
+<div class="card" onclick="location.href='print-result.html'">
 
 <span class="icon">📊</span>
-
 Print Result
 
 </div>
 
-<div class="card"
-onclick="location.href='print-admit-card.html'">
+<div class="card" onclick="location.href='print-admit-card.html'">
 
 <span class="icon">🎫</span>
-
 Print Admit Card
 
 </div>
 
-<div class="card"
-onclick="location.href='print-id.html'">
+<div class="card" onclick="location.href='print-id.html'">
 
 <span class="icon">🪪</span>
-
 Print ID Card
 
 </div>
 
-<div class="card"
-onclick="exportStudents()">
+<div class="card" onclick="exportStudents()">
 
 <span class="icon">📥</span>
-
 Export Students
 
 </div>
@@ -142,9 +134,16 @@ projectId:"nmpsnagguradiya-b9b94"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
+/* EXPORT STUDENTS */
+
 window.exportStudents=async function(){
 
 const schoolId=localStorage.getItem("schoolId");
+
+if(!schoolId){
+alert("Login Required");
+return;
+}
 
 const snap=await getDocs(collection(db,"admissions"));
 
@@ -153,6 +152,8 @@ let csv="Name,Class,Father,Mobile,Address\n";
 snap.forEach(doc=>{
 
 const s=doc.data();
+
+/* MULTI SCHOOL FILTER */
 
 if(s.schoolId===schoolId){
 
@@ -169,7 +170,7 @@ const url=URL.createObjectURL(blob);
 const a=document.createElement("a");
 
 a.href=url;
-a.download="students.csv";
+a.download="students_export.csv";
 a.click();
 
 }
