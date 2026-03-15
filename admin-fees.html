@@ -6,11 +6,7 @@
 
 <style>
 
-body{
-font-family:Arial;
-margin:0;
-background:#f2f2f2;
-}
+body{font-family:Arial;margin:0;background:#f2f2f2;}
 
 header{
 background:#004aad;
@@ -20,9 +16,7 @@ text-align:center;
 font-size:22px;
 }
 
-.container{
-padding:20px;
-}
+.container{padding:20px;}
 
 select,input,button{
 padding:8px;
@@ -69,40 +63,20 @@ border:2px solid black;
 display:none;
 }
 
-.school{
-text-align:center;
-font-size:22px;
-font-weight:bold;
-}
+.logo{text-align:center;}
+.logo img{width:70px;}
 
-.address{
-text-align:center;
-font-size:14px;
-margin-bottom:10px;
-}
+.school{text-align:center;font-size:22px;font-weight:bold;}
 
-.logo{
-text-align:center;
-}
+.address{text-align:center;font-size:14px;margin-bottom:10px;}
 
-.logo img{
-width:70px;
-}
-
-.sign{
-margin-top:40px;
-text-align:right;
-}
+.sign{margin-top:40px;text-align:right;}
 
 @media print{
 
-body *{
-visibility:hidden;
-}
+body *{visibility:hidden;}
 
-#receiptBox,#receiptBox *{
-visibility:visible;
-}
+#receiptBox,#receiptBox *{visibility:visible;}
 
 #receiptBox{
 position:absolute;
@@ -111,9 +85,7 @@ top:0;
 width:100%;
 }
 
-button{
-display:none;
-}
+button{display:none;}
 
 }
 
@@ -159,7 +131,6 @@ display:none;
 <table>
 
 <thead>
-
 <tr>
 <th>Select</th>
 <th>Name</th>
@@ -176,7 +147,6 @@ display:none;
 <th>History</th>
 <th>WhatsApp</th>
 </tr>
-
 </thead>
 
 <tbody id="studentList"></tbody>
@@ -184,6 +154,7 @@ display:none;
 </table>
 
 </div>
+
 
 <div id="receiptBox" class="receipt">
 
@@ -194,11 +165,9 @@ display:none;
 <div class="school" id="rschool"></div>
 
 <div class="address">
-
 <span id="raddress"></span><br>
 DISE Code : <span id="rdise"></span><br>
 Session : <span id="rsession"></span>
-
 </div>
 
 <h3 style="text-align:center;">Fees Receipt</h3>
@@ -235,6 +204,7 @@ Principal Sign
 
 </div>
 
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
@@ -260,46 +230,43 @@ projectId:"nmpsnagguradiya-b9b94"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-const schoolId = localStorage.getItem("schoolId");
-const session = localStorage.getItem("activeSession") || "2025-26";
+const schoolId=localStorage.getItem("schoolId");
+const session=localStorage.getItem("activeSession") || "2025-26";
 
 let students=[];
 let schoolData={};
-
-/* LOAD SCHOOL */
 
 async function loadSchool(){
 
 const snap=await getDoc(doc(db,"schools",schoolId));
 
 if(snap.exists()){
-
 schoolData=snap.data();
 
-document.getElementById("rschool").innerText=schoolData.name||"";
-document.getElementById("raddress").innerText=schoolData.address||"";
-document.getElementById("rdise").innerText=schoolData.dise||"";
-document.getElementById("rlogo").src=schoolData.logo||"";
-
+rschool.innerText=schoolData.name||"";
+raddress.innerText=schoolData.address||"";
+rdise.innerText=schoolData.dise||"";
+rlogo.src=schoolData.logo||"";
 }
 
 }
 
 loadSchool();
 
-/* LOAD STUDENTS */
-
 async function loadStudents(){
 
 const snap=await getDocs(collection(db,"admissions"));
 
 let html="";
+
 let totalFees=0;
 let totalCollection=0;
 let totalPending=0;
 let totalOld=0;
 
 students=[];
+
+let cls=document.getElementById("classFilter").value;
 
 snap.forEach(docSnap=>{
 
@@ -308,6 +275,7 @@ s.id=docSnap.id;
 
 if(s.schoolId!==schoolId) return;
 if(s.session!==session) return;
+if(cls && s.class!=cls) return;
 
 students.push(s);
 
@@ -328,10 +296,12 @@ html+=`
 
 <tr>
 
-<td>${s.name}</td>
+<td><input type="checkbox" class="studentCheck" value="${s.id}"></td>
+
+<td>${s.name||""}</td>
 <td>${s.village||""}</td>
-<td>${s.class}</td>
-<td>${s.mobile}</td>
+<td>${s.class||""}</td>
+<td>${s.mobile||""}</td>
 
 <td>
 <button class="call" onclick="callStudent('${s.mobile}')">Call</button>
@@ -366,72 +336,210 @@ html+=`
 
 studentList.innerHTML=html;
 
-totalFees.innerText=totalFees;
-collection.innerText=totalCollection;
-pending.innerText=totalPending;
-oldPending.innerText=totalOld;
+document.getElementById("totalFees").innerText=totalFees;
+document.getElementById("collection").innerText=totalCollection;
+document.getElementById("pending").innerText=totalPending;
+document.getElementById("oldPending").innerText=totalOld;
 
 }
 
 loadStudents();
 
-/* ADD FEES */
+document.getElementById("classFilter").addEventListener("change",loadStudents);
+
+function getSelectedStudents(){
+
+let ids=[];
+document.querySelectorAll(".studentCheck:checked").forEach(c=>{
+ids.push(c.value);
+});
+
+return ids;
+
+}
 
 window.addFees=async function(){
 
 let amount=parseInt(document.getElementById("feesAmount").value);
-
 if(!amount) return;
 
-students.forEach(async s=>{
-await updateDoc(doc(db,"admissions",s.id),{
-fees:amount
-});
-});
+let ids=getSelectedStudents();
+
+for(let id of ids){
+
+await updateDoc(doc(db,"admissions",id),{fees:amount});
+
+}
 
 loadStudents();
 
 }
-
-/* ADD VEHICLE FEES */
 
 window.addVehicleFees=async function(){
 
 let amount=parseInt(document.getElementById("vehicleFees").value);
-
 if(!amount) return;
 
-students.forEach(async s=>{
-await updateDoc(doc(db,"admissions",s.id),{
-vehicleFees:amount
-});
-});
+let ids=getSelectedStudents();
+
+for(let id of ids){
+
+await updateDoc(doc(db,"admissions",id),{vehicleFees:amount});
+
+}
 
 loadStudents();
 
 }
-
-/* ADD OLD FEES */
 
 window.addOldFees=async function(){
 
 let amount=parseInt(document.getElementById("oldFees").value);
+if(!amount) return;
+
+let ids=getSelectedStudents();
+
+for(let id of ids){
+
+await updateDoc(doc(db,"admissions",id),{oldFees:amount});
+
+}
+
+loadStudents();
+
+}
+
+window.depositFees=async function(id){
+
+let amount=prompt("Enter Deposit Amount");
 
 if(!amount) return;
 
-students.forEach(async s=>{
-await updateDoc(doc(db,"admissions",s.id),{
-oldFees:amount
+let s=students.find(x=>x.id==id);
+
+let newPaid=(s.paid||0)+parseInt(amount);
+
+await updateDoc(doc(db,"admissions",id),{
+paid:newPaid
 });
+
+await addDoc(collection(db,"fees_history"),{
+studentId:id,
+amount:parseInt(amount),
+date:new Date().toLocaleDateString()
 });
 
 loadStudents();
 
 }
 
-/* बाकी functions same */
+window.viewHistory=async function(id){
+
+let q=query(collection(db,"fees_history"),where("studentId","==",id));
+
+let snap=await getDocs(q);
+
+let text="Fees History\n\n";
+
+snap.forEach(d=>{
+let h=d.data();
+text+="Date : "+h.date+"  Amount : "+h.amount+"\n";
+});
+
+alert(text);
+
+}
+
+window.showReceipt=async function(id){
+
+let s=students.find(x=>x.id==id)
+
+receiptBox.style.display="block"
+
+rno.innerText="RC-"+Date.now()
+
+rname.innerText=s.name
+rfather.innerText=s.father
+rvillage.innerText=s.village
+rmobile.innerText=s.mobile
+rsession.innerText=session
+
+let fees=s.fees||0
+let vehicle=s.vehicleFees||0
+let old=s.oldFees||0
+let paid=s.paid||0
+
+let total=fees+vehicle+old
+let pending=total-paid
+
+rfees.innerText=fees
+rvehicle.innerText=vehicle
+rold.innerText=old
+rtotal.innerText=total
+rpending.innerText=pending
+
+let q=query(collection(db,"fees_history"),where("studentId","==",id));
+
+let snap=await getDocs(q);
+
+let lastPaid=0
+let lastDate=""
+
+snap.forEach(d=>{
+let h=d.data();
+lastPaid=h.amount
+lastDate=h.date
+});
+
+rlastpaid.innerText=lastPaid
+rdate.innerText=lastDate
+
+}
+
+window.printReceipt=function(){
+window.print()
+}
+
+window.callStudent=function(mobile){
+window.location.href="tel:"+mobile;
+}
+
+window.sendWhatsApp=function(id){
+
+let s=students.find(x=>x.id==id);
+
+let msg="Fees Pending Reminder";
+
+window.open("https://wa.me/91"+s.mobile+"?text="+msg)
+
+}
+
+window.downloadExcel=function(){
+
+let csv="Name,Class,Mobile,Fees,Vehicle,Old,Paid\n";
+
+students.forEach(s=>{
+
+csv+=
+(s.name||"")+","+
+(s.class||"")+","+
+(s.mobile||"")+","+
+(s.fees||0)+","+
+(s.vehicleFees||0)+","+
+(s.oldFees||0)+","+
+(s.paid||0)+"\n";
+
+});
+
+let blob=new Blob([csv],{type:"text/csv"});
+let a=document.createElement("a");
+a.href=URL.createObjectURL(blob);
+a.download="fees-report.csv";
+a.click();
+
+}
 
 </script>
 
 </body>
-                                </html>
+  </html>
