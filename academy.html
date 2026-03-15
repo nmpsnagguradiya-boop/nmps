@@ -4,6 +4,7 @@
 
 <meta charset="UTF-8">
 <title>Exam Management</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <style>
 
@@ -13,6 +14,8 @@ margin:0;
 background:#f2f2f2;
 }
 
+/* HEADER */
+
 header{
 background:#004aad;
 color:white;
@@ -21,62 +24,59 @@ text-align:center;
 font-size:22px;
 }
 
-/* container */
+/* CONTAINER */
 
 .container{
 padding:20px;
 }
 
-/* buttons */
+/* BUTTON GRID */
 
 .menu{
-display:flex;
+display:grid;
+grid-template-columns:repeat(4,1fr);
 gap:20px;
-flex-wrap:wrap;
 }
 
+/* BUTTON CARD */
+
 .card{
-flex:1;
-min-width:220px;
-background:white;
-padding:25px;
+background:#004aad;
+color:white;
 border-radius:12px;
-display:flex;
-align-items:center;
-gap:15px;
-font-size:20px;
+padding:30px 15px;
+text-align:center;
+font-size:18px;
 font-weight:bold;
 cursor:pointer;
-box-shadow:0 0 10px rgba(0,0,0,0.15);
+box-shadow:0 4px 10px rgba(0,0,0,0.2);
 transition:0.3s;
 }
+
+/* ICON */
+
+.icon{
+font-size:48px;
+display:block;
+margin-bottom:10px;
+}
+
+/* HOVER */
 
 .card:hover{
 transform:scale(1.05);
 }
 
-/* icons */
+/* MOBILE */
 
-.icon{
-font-size:32px;
-}
-
-/* colors */
-
-.exam{
-border-left:6px solid #28a745;
-}
-
-.mark{
-border-left:6px solid #ff9800;
-}
-
-/* mobile */
-
-@media(max-width:700px){
+@media(max-width:768px){
 
 .menu{
-flex-direction:column;
+grid-template-columns:repeat(2,1fr);
+}
+
+.icon{
+font-size:50px;
 }
 
 }
@@ -93,7 +93,7 @@ flex-direction:column;
 
 <div class="menu">
 
-<div class="card exam"
+<div class="card"
 onclick="window.location.href='exam.html'">
 
 <span class="icon">📚</span>
@@ -102,12 +102,30 @@ Exam Setup
 
 </div>
 
-<div class="card mark"
+<div class="card"
 onclick="window.location.href='mark.html'">
 
 <span class="icon">📝</span>
 
 Marks Entry
+
+</div>
+
+<div class="card"
+onclick="window.location.href='print-result.html'">
+
+<span class="icon">📊</span>
+
+Print Result
+
+</div>
+
+<div class="card"
+onclick="window.location.href='print-admit-card.html'">
+
+<span class="icon">🎫</span>
+
+Print Admit Card
 
 </div>
 
