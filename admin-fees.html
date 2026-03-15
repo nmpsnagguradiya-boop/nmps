@@ -44,7 +44,6 @@ button{display:none;}
 </select>
 
 <br>
-
 <input type="number" id="feesAmount" placeholder="School Fees">
 <button onclick="addFees()">Add Fees</button>
 
@@ -77,7 +76,6 @@ button{display:none;}
 <th>Old</th>
 <th>Paid</th>
 <th>Deposit</th>
-<th>Receipt</th>
 <th>History</th>
 <th>WhatsApp</th>
 </tr>
@@ -104,7 +102,7 @@ DISE Code : <span id="rdise"></span>
 <tr><td>Vehicle Fees</td><td id="rvehicle"></td></tr>
 <tr><td>Old Fees</td><td id="rold"></td></tr>
 <tr><td>Total Fees</td><td id="rtotal"></td></tr>
-<tr><td>Last Paid</td><td id="rlastpaid"></td></tr>
+<tr><td>Paid Amount</td><td id="rlastpaid"></td></tr>
 <tr><td>Paid Date & Time</td><td id="rdate"></td></tr>
 <tr><td>Pending</td><td id="rpending"></td></tr>
 </table>
@@ -145,7 +143,8 @@ loadSchool();
 async function loadStudents(){
   const snap = await getDocs(collection(db,"admissions"));
   let html="", totalFees=0, totalCollection=0, totalPending=0, totalOld=0;
-  students=[]; let cls=document.getElementById("classFilter").value;
+  students=[];
+  let cls=document.getElementById("classFilter").value;
   snap.forEach(docSnap=>{
     let s = docSnap.data(); s.id = docSnap.id;
     if(s.schoolId!==schoolId) return;
@@ -168,7 +167,6 @@ async function loadStudents(){
 <td>${old}</td>
 <td>${paid}</td>
 <td><button class="deposit" onclick="depositFees('${s.id}')">Deposit</button></td>
-<td><button onclick="showReceipt('${s.id}')">Receipt</button></td>
 <td><button class="history" onclick="viewHistory('${s.id}')">History</button></td>
 <td><button class="whatsapp" onclick="sendWhatsApp('${s.id}')">WhatsApp</button></td>
 </tr>`;
@@ -221,40 +219,38 @@ window.depositFees = async function(id){
   loadStudents();
 }
 
+// --- NEW: history with selectable receipt ---
 window.viewHistory = async function(id){
-  let q = query(collection(db,"fees_history"),where("studentId","==",id), orderBy("date","desc"));
-  let snap = await getDocs(q);
-  let text="Fees History\n\n";
-  snap.forEach(d=>{
-    let h=d.data();
-    let dt = new Date(h.date).toLocaleString();
-    text+="Date : "+dt+"  Amount : "+h.amount+"\n";
-  });
-  alert(text);
-}
+  const q = query(collection(db,"fees_history"), where("studentId","==",id), orderBy("date","desc"));
+  const snap = await getDocs(q);
+  if(snap.empty){ alert("No history found"); return; }
 
-window.showReceipt = async function(id){
-  let s = students.find(x=>x.id==id);
+  let options = "";
+  let histories = [];
+  snap.forEach(d=>{
+    const h = d.data();
+    const dt = new Date(h.date).toLocaleString();
+    histories.push(h);
+    options += histories.length + ": ₹"+h.amount+" on "+dt + "\n";
+  });
+
+  const sel = prompt("Select transaction to print receipt:\n"+options+"\nEnter number:");
+  const idx = parseInt(sel)-1;
+  if(idx<0 || idx>=histories.length) return;
+
+  const selected = histories[idx];
+  const s = students.find(x=>x.id==id);
+  // Show receipt
   receiptBox.style.display="block";
   rno.innerText = "RC-"+Date.now();
   rname.innerText = s.name;
   rfather.innerText = s.father;
   rvillage.innerText = s.village;
   rmobile.innerText = s.mobile;
-  let fees=s.fees||0, vehicle=s.vehicleFees||0, old=s.oldFees||0, paid=s.paid||0, total=fees+vehicle+old, pending=total-paid;
+  let fees=s.fees||0, vehicle=s.vehicleFees||0, old=s.oldFees||0, total=fees+vehicle+old, pending=total-(s.paid||0);
   rfees.innerText=fees; rvehicle.innerText=vehicle; rold.innerText=old; rtotal.innerText=total; rpending.innerText=pending;
-
-  // --- latest deposit with time ---
-  const q = query(collection(db,"fees_history"), where("studentId","==",id), orderBy("date","desc"), limit(1));
-  const snap = await getDocs(q);
-  let lastPaid = 0, lastDate = "";
-  snap.forEach(d=>{
-    const h = d.data();
-    lastPaid = h.amount;
-    lastDate = new Date(h.date).toLocaleString(); // date + time
-  });
-  rlastpaid.innerText = lastPaid;
-  rdate.innerText = lastDate;
+  rlastpaid.innerText = selected.amount;
+  rdate.innerText = new Date(selected.date).toLocaleString();
 }
 
 window.printReceipt = function(){ window.print(); }
@@ -278,4 +274,4 @@ window.downloadExcel = function(){
 </script>
 
 </body>
-</html>
+  </html>
