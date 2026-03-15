@@ -12,7 +12,7 @@ table{width:100%;border-collapse:collapse;background:white;margin-top:20px;}
 th{background:#004aad;color:white;padding:8px;}
 td{padding:8px;border:1px solid #ccc;text-align:center;}
 .deposit{background:#28a745;color:white;border:none;}
-.history{background:#ffc107;border:none;}
+.receiptBtn{background:#ffc107;border:none;color:white;}
 .whatsapp{background:#25D366;color:white;border:none;}
 .call{background:#17a2b8;color:white;border:none;}
 .report{background:white;padding:15px;margin-top:20px;border-radius:6px;}
@@ -76,7 +76,7 @@ button{display:none;}
 <th>Old</th>
 <th>Paid</th>
 <th>Deposit</th>
-<th>History</th>
+<th>Receipt</th>
 <th>WhatsApp</th>
 </tr>
 </thead>
@@ -112,7 +112,7 @@ DISE Code : <span id="rdise"></span>
 
 <script type="module">
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, getDoc, query, where, orderBy, limit } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+import { getFirestore, collection, getDocs, doc, updateDoc, addDoc, getDoc, query, where, orderBy } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -167,7 +167,7 @@ async function loadStudents(){
 <td>${old}</td>
 <td>${paid}</td>
 <td><button class="deposit" onclick="depositFees('${s.id}')">Deposit</button></td>
-<td><button class="history" onclick="viewHistory('${s.id}')">History</button></td>
+<td><button class="receiptBtn" onclick="viewHistory('${s.id}')">Receipt</button></td>
 <td><button class="whatsapp" onclick="sendWhatsApp('${s.id}')">WhatsApp</button></td>
 </tr>`;
   });
@@ -219,7 +219,6 @@ window.depositFees = async function(id){
   loadStudents();
 }
 
-// --- NEW: history with selectable receipt ---
 window.viewHistory = async function(id){
   const q = query(collection(db,"fees_history"), where("studentId","==",id), orderBy("date","desc"));
   const snap = await getDocs(q);
