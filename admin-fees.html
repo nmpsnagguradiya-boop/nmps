@@ -234,7 +234,7 @@ window.viewHistory = async function(id){
 }
 
 window.showReceipt = async function(id){
-  let s=students.find(x=>x.id==id);
+  let s = students.find(x=>x.id==id);
   receiptBox.style.display="block";
   rno.innerText = "RC-"+Date.now();
   rname.innerText = s.name;
@@ -244,14 +244,14 @@ window.showReceipt = async function(id){
   let fees=s.fees||0, vehicle=s.vehicleFees||0, old=s.oldFees||0, paid=s.paid||0, total=fees+vehicle+old, pending=total-paid;
   rfees.innerText=fees; rvehicle.innerText=vehicle; rold.innerText=old; rtotal.innerText=total; rpending.innerText=pending;
 
-  // --- Get latest deposit with time ---
-  let q = query(collection(db,"fees_history"), where("studentId","==",id), orderBy("date","desc"), limit(1));
-  let snap = await getDocs(q);
-  let lastPaid=0, lastDate="";
+  // --- latest deposit with time ---
+  const q = query(collection(db,"fees_history"), where("studentId","==",id), orderBy("date","desc"), limit(1));
+  const snap = await getDocs(q);
+  let lastPaid = 0, lastDate = "";
   snap.forEach(d=>{
-    let h=d.data();
+    const h = d.data();
     lastPaid = h.amount;
-    lastDate = new Date(h.date).toLocaleString(); // includes date + time
+    lastDate = new Date(h.date).toLocaleString(); // date + time
   });
   rlastpaid.innerText = lastPaid;
   rdate.innerText = lastDate;
@@ -278,4 +278,4 @@ window.downloadExcel = function(){
 </script>
 
 </body>
-  </html>
+</html>
