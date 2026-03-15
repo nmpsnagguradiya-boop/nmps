@@ -265,6 +265,7 @@ window.downloadExcel=function(){
   a.click();
 }
 
+// History / Receipt
 function openHistory(studentId){
   const modal = document.getElementById("historyModal");
   const tbody = document.getElementById("historyBody");
@@ -282,7 +283,6 @@ function openHistory(studentId){
     modal.style.display="block";
   });
 }
-
 function closeHistoryModal(){document.getElementById("historyModal").style.display="none";}
 
 function printHistoryReceipt(studentId,amount,date){
@@ -302,4 +302,4 @@ function printHistoryReceipt(studentId,amount,date){
 window.printReceipt=function(){window.print();}
 </script>
 </body>
-                                                                 </html>
+    </html>
