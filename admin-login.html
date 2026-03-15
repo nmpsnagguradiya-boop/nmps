@@ -292,11 +292,6 @@ Total Pending
 <span>Notice</span>
 </div>
 
-<div class="menuBtn" onclick="location.href='admin-event.html'">
-<i class="fas fa-calendar-alt"></i>
-<span>Events</span>
-</div>
-
 <div class="menuBtn" data-page="All Students" onclick="location.href='all-students.html'">
 <i class="fas fa-users"></i>
 <span>Students</span>
@@ -320,3 +315,196 @@ Total Pending
 </div>
 
 </div>
+
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {getFirestore,doc,getDoc,collection,getDocs}
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+window.login=async function(){
+
+const schoolId=document.getElementById("schoolId").value.trim();
+const email=document.getElementById("email").value.trim();
+const password=document.getElementById("password").value.trim();
+
+if(!schoolId || !email || !password){
+alert("Enter School ID, Email & Password");
+return;
+}
+
+const schoolSnap=await getDoc(doc(db,"schools",schoolId));
+
+if(schoolSnap.exists()){
+
+const s=schoolSnap.data();
+
+if(s.adminEmail===email && s.adminPassword===password){
+
+localStorage.setItem("schoolId",schoolId);
+localStorage.setItem("role","admin");
+
+document.getElementById("loginBox").style.display="none";
+loadDashboard();
+return;
+
+}
+
+}
+
+/* TEACHER LOGIN */
+
+const teachers=await getDocs(collection(db,"teachers"));
+
+let teacherData=null;
+
+teachers.forEach(d=>{
+const t=d.data();
+if(t.schoolId===schoolId && t.email===email && t.password===password){
+teacherData=t;
+}
+});
+
+if(!teacherData){
+alert("Invalid Login");
+return;
+}
+
+localStorage.setItem("schoolId",schoolId);
+localStorage.setItem("role","teacher");
+localStorage.setItem("permissions",JSON.stringify(teacherData.pages||[]));
+
+document.getElementById("loginBox").style.display="none";
+
+applyPermissions();
+
+loadDashboard();
+
+}
+
+/* PERMISSIONS */
+
+function applyPermissions(){
+
+const role=localStorage.getItem("role");
+
+if(role!=="teacher") return;
+
+const allowed=JSON.parse(localStorage.getItem("permissions")||"[]");
+
+document.querySelectorAll(".menuBtn").forEach(btn=>{
+
+const page=btn.dataset.page;
+
+if(!allowed.includes(page)){
+btn.style.display="none";
+}
+
+});
+
+}
+
+window.logout=function(){
+
+localStorage.removeItem("schoolId");
+localStorage.removeItem("role");
+localStorage.removeItem("permissions");
+
+location.reload();
+
+}
+
+/* DASHBOARD */
+
+async function loadDashboard(){
+
+const schoolId=localStorage.getItem("schoolId");
+
+applyPermissions();
+
+/* SCHOOL */
+
+const schoolSnap=await getDoc(doc(db,"schools",schoolId));
+
+if(schoolSnap.exists()){
+const data=schoolSnap.data();
+document.getElementById("schoolName").innerText=data.name;
+document.getElementById("schoolAddress").innerText=data.address||"";
+document.getElementById("schoolLogo").src=data.logo||"";
+}
+
+/* TEACHERS */
+
+let teacherCount=0;
+const teachers=await getDocs(collection(db,"teachers"));
+
+teachers.forEach(d=>{
+if(d.data().schoolId===schoolId) teacherCount++;
+});
+
+document.getElementById("teachers").innerText=teacherCount;
+
+/* ADMISSIONS */
+
+let admissionCount=0;
+const admissions=await getDocs(collection(db,"admissions"));
+
+admissions.forEach(d=>{
+if(d.data().schoolId===schoolId) admissionCount++;
+});
+
+document.getElementById("admissions").innerText=admissionCount;
+
+/* FEES */
+
+let totalFees=0;
+let totalCollection=0;
+
+const fees=await getDocs(collection(db,"fees"));
+
+fees.forEach(d=>{
+
+const f=d.data();
+
+if(f.schoolId===schoolId){
+
+totalFees+=Number(f.totalFees||0);
+totalCollection+=Number(f.paidFees||0);
+
+}
+
+});
+
+document.getElementById("totalFees").innerText=totalFees;
+document.getElementById("totalCollection").innerText=totalCollection;
+document.getElementById("totalPending").innerText=totalFees-totalCollection;
+
+}
+
+document.addEventListener("DOMContentLoaded",()=>{
+
+const schoolId=localStorage.getItem("schoolId");
+
+if(schoolId){
+
+document.getElementById("loginBox").style.display="none";
+loadDashboard();
+
+}
+
+});
+
+</script>
+
+</body>
+</html>
