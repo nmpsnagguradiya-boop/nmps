@@ -3,79 +3,75 @@
 <head>
 <meta charset="UTF-8">
 <title>School Fees Management</title>
-<link rel="stylesheet" href="admin-login.css"> <!-- Same theme CSS as admin-login.html -->
-
 <style>
-/* Additional styling for table & receipt */
-table{
-  width:100%;
-  border-collapse:collapse;
-  background:white;
-  margin-top:20px;
-}
-th, td{
-  padding:8px;
-  border:1px solid #ccc;
-  text-align:center;
-}
-button{cursor:pointer;}
+body{font-family:Arial;margin:0;background:#f2f2f2;}
+header{background:#004aad;color:white;padding:15px;text-align:center;font-size:24px;font-weight:bold;}
+.container{padding:20px;}
 
-.deposit{background:#28a745;color:white;border:none;padding:5px 10px;}
-.history{background:#ffc107;border:none;padding:5px 10px;}
-.whatsapp{background:#25D366;color:white;border:none;padding:5px 10px;}
-.call{background:#17a2b8;color:white;border:none;padding:5px 10px;}
+select,input,button{padding:10px;margin:5px;border-radius:5px;border:1px solid #ccc;font-size:16px;}
+button{cursor:pointer; font-weight:bold;}
+
+table{width:100%;border-collapse:collapse;background:white;margin-top:20px;}
+th,td{padding:12px;border:1px solid #ccc;text-align:center;}
+
+button.deposit, button.historyBtn, button.whatsapp, button.call{
+    border:none;
+    padding:10px 15px;
+    border-radius:5px;
+    font-size:14px;
+    font-weight:bold;
+}
+button.deposit{background:#004aad;color:white;}
+button.historyBtn{background:#004aad;color:white;}
+button.whatsapp{background:#25D366;color:white;}
+button.call{background:#17a2b8;color:white;}
+
+.report{background:white;padding:15px;margin-top:20px;border-radius:6px;}
 
 .receipt{
-  width:700px;
-  background:white;
-  padding:20px;
-  margin:auto;
-  border:2px solid black;
-  display:none;
+    width:700px;background:white;padding:20px;margin:auto;border:2px solid black;display:none;
 }
 .logo{text-align:center;}
-.logo img{width:70px;}
+.logo img{width:80px;}
 .school{text-align:center;font-size:22px;font-weight:bold;}
 .address{text-align:center;font-size:14px;margin-bottom:10px;}
-.sign{margin-top:40px;text-align:right;}
+.sign{margin-top:40px;text-align:right;font-weight:bold;}
 
 .historyModal{
   display:none;
   position:fixed;
-  top:50%;
-  left:50%;
-  transform:translate(-50%, -50%);
-  width:600px;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%);
+  width:650px;
   max-height:70%;
   overflow:auto;
   background:white;
-  border:2px solid #333;
+  border:2px solid #004aad;
   padding:15px;
   z-index:1000;
+  border-radius:10px;
 }
-.historyModal h3{text-align:center;}
+.historyModal h3{text-align:center;color:#004aad;font-size:20px;margin-bottom:10px;}
 .historyModal table{width:100%;border-collapse:collapse;margin-top:10px;}
 .historyModal th, .historyModal td{border:1px solid #ccc;padding:8px;text-align:center;}
 .historyModalClose{
-  position:absolute;
-  top:5px; right:10px;
-  background:red;color:white;border:none;padding:2px 6px;font-weight:bold;
-  cursor:pointer;
+    position:absolute;top:5px;right:10px;
+    background:red;color:white;border:none;padding:4px 8px;font-weight:bold;cursor:pointer;
 }
 
 @media print{
-  body *{visibility:hidden;}
-  #receiptBox,#receiptBox *{visibility:visible;}
-  #receiptBox{position:absolute;left:0;top:0;width:100%;}
-  button{display:none;}
+body *{visibility:hidden;}
+#receiptBox,#receiptBox *{visibility:visible;}
+#receiptBox{position:absolute;left:0;top:0;width:100%;}
+button{display:none;}
 }
 </style>
 </head>
 <body>
 
-<header class="admin-header">School Fees Management</header>
+<header>School Fees Management</header>
 
-<div class="container admin-container">
+<div class="container">
 
 <select id="classFilter">
 <option value="">All Classes</option>
@@ -117,37 +113,37 @@ button{cursor:pointer;}
 
 <!-- Receipt Box -->
 <div id="receiptBox" class="receipt">
-  <div class="logo"><img id="rlogo"></div>
-  <div class="school" id="rschool"></div>
-  <div class="address"><span id="raddress"></span><br>DISE Code: <span id="rdise"></span></div>
-  <h3 style="text-align:center;">Fees Receipt</h3>
-  <p><b>Receipt No :</b> <span id="rno"></span></p>
-  <table width="100%" border="1">
-    <tr><td>Name</td><td id="rname"></td></tr>
-    <tr><td>Father</td><td id="rfather"></td></tr>
-    <tr><td>Village</td><td id="rvillage"></td></tr>
-    <tr><td>Mobile</td><td id="rmobile"></td></tr>
-    <tr><td>School Fees</td><td id="rfees"></td></tr>
-    <tr><td>Vehicle Fees</td><td id="rvehicle"></td></tr>
-    <tr><td>Old Fees</td><td id="rold"></td></tr>
-    <tr><td>Total Fees</td><td id="rtotal"></td></tr>
-    <tr><td>Paid Amount</td><td id="rlastpaid"></td></tr>
-    <tr><td>Paid Date & Time</td><td id="rdate"></td></tr>
-    <tr><td>Pending</td><td id="rpending"></td></tr>
-  </table>
-  <div class="sign">Principal Sign</div>
-  <br>
-  <button onclick="printReceipt()">Print Receipt</button>
+<div class="logo"><img id="rlogo"></div>
+<div class="school" id="rschool"></div>
+<div class="address"><span id="raddress"></span><br>DISE Code: <span id="rdise"></span></div>
+<h3 style="text-align:center;">Fees Receipt</h3>
+<p><b>Receipt No :</b> <span id="rno"></span></p>
+<table width="100%" border="1">
+<tr><td>Name</td><td id="rname"></td></tr>
+<tr><td>Father</td><td id="rfather"></td></tr>
+<tr><td>Village</td><td id="rvillage"></td></tr>
+<tr><td>Mobile</td><td id="rmobile"></td></tr>
+<tr><td>School Fees</td><td id="rfees"></td></tr>
+<tr><td>Vehicle Fees</td><td id="rvehicle"></td></tr>
+<tr><td>Old Fees</td><td id="rold"></td></tr>
+<tr><td>Total Fees</td><td id="rtotal"></td></tr>
+<tr><td>Paid Amount</td><td id="rlastpaid"></td></tr>
+<tr><td>Paid Date & Time</td><td id="rdate"></td></tr>
+<tr><td>Pending</td><td id="rpending"></td></tr>
+</table>
+<div class="sign">Principal Sign</div>
+<br>
+<button onclick="printReceipt()">Print Receipt</button>
 </div>
 
 <!-- History Modal -->
 <div id="historyModal" class="historyModal">
-  <button class="historyModalClose" onclick="closeHistoryModal()">X</button>
-  <h3>Fees History</h3>
-  <table>
-    <thead><tr><th>Amount</th><th>Date & Time</th><th>Action</th></tr></thead>
-    <tbody id="historyBody"></tbody>
-  </table>
+<button class="historyModalClose" onclick="closeHistoryModal()">X</button>
+<h3>Fees History</h3>
+<table>
+<thead><tr><th>Amount</th><th>Date & Time</th><th>Receipt</th></tr></thead>
+<tbody id="historyBody"></tbody>
+</table>
 </div>
 
 <script type="module">
@@ -161,7 +157,6 @@ const firebaseConfig = {
 };
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
-
 const schoolId = localStorage.getItem("schoolId");
 const session = localStorage.getItem("activeSession") || "2025-26";
 
@@ -202,7 +197,7 @@ async function loadStudents(){
       <td><button class="call" onclick="callStudent('${s.mobile}')">Call</button></td>
       <td>${fees}</td><td>${vehicle}</td><td>${old}</td><td>${paid}</td>
       <td><button class="deposit" onclick="depositFees('${s.id}')">Deposit</button></td>
-      <td><button class="history" onclick="openHistory('${s.id}')">History & Receipt</button></td>
+      <td><button class="historyBtn" onclick="openHistory('${s.id}')">History / Receipt</button></td>
       <td><button class="whatsapp" onclick="sendWhatsApp('${s.id}')">WhatsApp</button></td>
     </tr>`;
   });
@@ -281,7 +276,7 @@ function openHistory(studentId){
       tbody.innerHTML += `<tr>
         <td>${h.amount}</td>
         <td>${h.date}</td>
-        <td><button onclick="printHistoryReceipt('${studentId}','${h.amount}','${h.date}')">Receipt</button></td>
+        <td><button style="background:#004aad;color:white;padding:5px;border:none;border-radius:4px;" onclick="printHistoryReceipt('${studentId}','${h.amount}','${h.date}')">Receipt</button></td>
       </tr>`;
     });
     modal.style.display="block";
@@ -294,13 +289,8 @@ function printHistoryReceipt(studentId,amount,date){
   const s = students.find(x=>x.id==studentId);
   receiptBox.style.display="block";
   rno.innerText="RC-"+Date.now();
-  rname.innerText=s.name;
-  rfather.innerText=s.father;
-  rvillage.innerText=s.village;
-  rmobile.innerText=s.mobile;
-  rfees.innerText = s.fees||0;
-  rvehicle.innerText = s.vehicleFees||0;
-  rold.innerText = s.oldFees||0;
+  rname.innerText=s.name; rfather.innerText=s.father; rvillage.innerText=s.village; rmobile.innerText=s.mobile;
+  rfees.innerText = s.fees||0; rvehicle.innerText = s.vehicleFees||0; rold.innerText = s.oldFees||0;
   rtotal.innerText = (s.fees||0)+(s.vehicleFees||0)+(s.oldFees||0);
   rlastpaid.innerText = amount;
   rdate.innerText = date;
@@ -311,6 +301,5 @@ function printHistoryReceipt(studentId,amount,date){
 
 window.printReceipt=function(){window.print();}
 </script>
-
 </body>
-  </html>
+                                                                 </html>
