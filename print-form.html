@@ -26,7 +26,7 @@ cursor:pointer;
 
 .form{
 width:210mm;
-min-height:297mm;
+min-height:290mm;
 background:white;
 margin:auto;
 padding:20px;
@@ -109,26 +109,21 @@ justify-content:space-between;
 
 @page{
 size:A4;
-margin:0;
+margin:10mm;
 }
 
 @media print{
+
+.controls{
+display:none;
+}
 
 body{
 background:white;
 padding:0;
 }
 
-.controls{
-display:none;
-}
-
 .form{
-transform:scale(0.96);
-transform-origin:top left;
-width:100%;
-min-height:auto;
-border:3px solid #000;
 page-break-after:avoid;
 }
 
@@ -149,7 +144,6 @@ page-break-after:avoid;
 </select>
 
 <button onclick="window.print()">Print</button>
-<button onclick="downloadPDF()">Download PDF</button>
 
 </div>
 
@@ -183,117 +177,33 @@ Student ID : <span id="studentID"></span>
 
 <table>
 
-<tr>
-<td class="label">Student Name</td>
-<td id="name"></td>
-</tr>
-
-<tr>
-<td class="label">Father Name</td>
-<td id="father"></td>
-</tr>
-
-<tr>
-<td class="label">Mother Name</td>
-<td id="mother"></td>
-</tr>
-
-<tr>
-<td class="label">Mobile</td>
-<td id="mobile"></td>
-</tr>
-
-<tr>
-<td class="label">Class</td>
-<td id="class"></td>
-</tr>
-
-<tr>
-<td class="label">Date of Birth</td>
-<td id="dob"></td>
-</tr>
-
-<tr>
-<td class="label">Admission Date</td>
-<td id="admissionDate"></td>
-</tr>
-
-<tr>
-<td class="label">Village</td>
-<td id="village"></td>
-</tr>
-
-<tr>
-<td class="label">City</td>
-<td id="city"></td>
-</tr>
-
-<tr>
-<td class="label">Post</td>
-<td id="post"></td>
-</tr>
-
-<tr>
-<td class="label">District</td>
-<td id="district"></td>
-</tr>
-
-<tr>
-<td class="label">State</td>
-<td id="state"></td>
-</tr>
-
-<tr>
-<td class="label">Aadhar</td>
-<td id="adhar"></td>
-</tr>
-
-<tr>
-<td class="label">APAR ID</td>
-<td id="apar"></td>
-</tr>
-
-<tr>
-<td class="label">SSSM ID</td>
-<td id="sssm"></td>
-</tr>
-
-<tr>
-<td class="label">Family ID</td>
-<td id="family"></td>
-</tr>
-
-<tr>
-<td class="label">Roll Number</td>
-<td id="roll"></td>
-</tr>
-
-<tr>
-<td class="label">Scholar Number</td>
-<td id="scholer"></td>
-</tr>
-
-<tr>
-<td class="label">Caste</td>
-<td id="caste"></td>
-</tr>
-
-<tr>
-<td class="label">Category</td>
-<td id="category"></td>
-</tr>
+<tr><td class="label">Student Name</td><td id="name"></td></tr>
+<tr><td class="label">Father Name</td><td id="father"></td></tr>
+<tr><td class="label">Mother Name</td><td id="mother"></td></tr>
+<tr><td class="label">Mobile</td><td id="mobile"></td></tr>
+<tr><td class="label">Class</td><td id="class"></td></tr>
+<tr><td class="label">Date of Birth</td><td id="dob"></td></tr>
+<tr><td class="label">Admission Date</td><td id="admissionDate"></td></tr>
+<tr><td class="label">Village</td><td id="village"></td></tr>
+<tr><td class="label">City</td><td id="city"></td></tr>
+<tr><td class="label">Post</td><td id="post"></td></tr>
+<tr><td class="label">District</td><td id="district"></td></tr>
+<tr><td class="label">State</td><td id="state"></td></tr>
+<tr><td class="label">Aadhar</td><td id="adhar"></td></tr>
+<tr><td class="label">APAR ID</td><td id="apar"></td></tr>
+<tr><td class="label">SSSM ID</td><td id="sssm"></td></tr>
+<tr><td class="label">Family ID</td><td id="family"></td></tr>
+<tr><td class="label">Roll Number</td><td id="roll"></td></tr>
+<tr><td class="label">Scholar Number</td><td id="scholer"></td></tr>
+<tr><td class="label">Caste</td><td id="caste"></td></tr>
+<tr><td class="label">Category</td><td id="category"></td></tr>
 
 </table>
 
 <div class="signature">
 
-<div>
-Parent Signature
-</div>
-
-<div>
-Principal Signature
-</div>
+<div>Parent Signature</div>
+<div>Principal Signature</div>
 
 </div>
 
@@ -329,11 +239,12 @@ if(snap.exists()){
 
 let s=snap.data();
 
-schoolName.innerText=s.name||"";
-schoolAddress.innerText="Address : "+(s.address||"");
-schoolDise.innerText=s.dise||"";
-schoolSession.innerText=session;
-schoolLogo.src=s.logo||"";
+document.getElementById("schoolName").innerText=s.name||"";
+document.getElementById("schoolAddress").innerText="Address : "+(s.address||"");
+document.getElementById("schoolDise").innerText=s.dise||"";
+document.getElementById("schoolSession").innerText=session;
+
+document.getElementById("schoolLogo").src=s.logo||"";
 
 }
 
@@ -348,30 +259,30 @@ if(snap.exists()){
 
 let s=snap.data();
 
-studentID.innerText="STU-"+id.substring(0,6).toUpperCase();
+document.getElementById("studentID").innerText="STU-"+id.substring(0,6).toUpperCase();
 
-name.innerText=s.name||"";
-father.innerText=s.father||"";
-mother.innerText=s.mother||"";
-mobile.innerText=s.mobile||"";
-class.innerText=s.class||"";
-dob.innerText=s.dob||"";
-admissionDate.innerText=s.admissionDate||"";
-village.innerText=s.village||"";
-city.innerText=s.city||"";
-post.innerText=s.post||"";
-district.innerText=s.district||"";
-state.innerText=s.state||"";
-adhar.innerText=s.adhar||"";
-apar.innerText=s.apar||"";
-sssm.innerText=s.sssm||"";
-family.innerText=s.family||"";
-roll.innerText=s.roll||"";
-scholer.innerText=s.scholer||"";
-caste.innerText=s.caste||"";
-category.innerText=s.category||"";
+document.getElementById("name").innerText=s.name||"";
+document.getElementById("father").innerText=s.father||"";
+document.getElementById("mother").innerText=s.mother||"";
+document.getElementById("mobile").innerText=s.mobile||"";
+document.getElementById("class").innerText=s.class||"";
+document.getElementById("dob").innerText=s.dob||"";
+document.getElementById("admissionDate").innerText=s.admissionDate||"";
+document.getElementById("village").innerText=s.village||"";
+document.getElementById("city").innerText=s.city||"";
+document.getElementById("post").innerText=s.post||"";
+document.getElementById("district").innerText=s.district||"";
+document.getElementById("state").innerText=s.state||"";
+document.getElementById("adhar").innerText=s.adhar||"";
+document.getElementById("apar").innerText=s.apar||"";
+document.getElementById("sssm").innerText=s.sssm||"";
+document.getElementById("family").innerText=s.family||"";
+document.getElementById("roll").innerText=s.roll||"";
+document.getElementById("scholer").innerText=s.scholer||"";
+document.getElementById("caste").innerText=s.caste||"";
+document.getElementById("category").innerText=s.category||"";
 
-photo.src=s.photo||"";
+document.getElementById("photo").src=s.photo||"";
 
 QRCode.toCanvas(document.getElementById("qr"),window.location.href);
 
@@ -379,13 +290,12 @@ QRCode.toCanvas(document.getElementById("qr"),window.location.href);
 
 }
 
-function downloadPDF(){
-window.print();
-}
+document.getElementById("designSelect").addEventListener("change",function(){
 
-designSelect.addEventListener("change",function(){
+let form=document.getElementById("form");
 
 form.classList.remove("design1","design2","design3");
+
 form.classList.add(this.value);
 
 });
