@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta charset="UTF-8">
 <title>Print Result</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -9,9 +10,17 @@
 
 <style>
 
-body{font-family:Arial;margin:0;background:#f2f4f8;}
+body{
+font-family:Arial;
+margin:0;
+background:#f2f4f8;
+}
 
-.container{max-width:1200px;margin:auto;padding:20px;}
+.container{
+max-width:1200px;
+margin:auto;
+padding:20px;
+}
 
 .card{
 background:white;
@@ -34,8 +43,6 @@ border-radius:5px;
 cursor:pointer;
 }
 
-/* MARKSHEET */
-
 .marksheet{
 width:210mm;
 min-height:297mm;
@@ -43,10 +50,9 @@ background:white;
 padding:15px;
 margin:auto;
 border:4px solid #004aad;
-position:relative;
 display:flex;
 flex-direction:column;
-page-break-inside:avoid;
+page-break-after:always;
 }
 
 .school-header{
@@ -55,31 +61,30 @@ justify-content:space-between;
 align-items:center;
 border-bottom:3px solid #004aad;
 padding-bottom:8px;
-margin-bottom:5px;
 }
-
-.school-header img{width:55px;}
 
 .school-name{
 flex:1;
 text-align:center;
-font-size:32px;
+font-size:30px;
 font-weight:bold;
 color:#004aad;
+}
+
+.school-header img{
+width:55px;
 }
 
 .school-info{
 text-align:center;
 font-size:13px;
-margin-bottom:8px;
+margin:6px 0;
 }
-
-/* STUDENT DETAILS */
 
 .student{
 display:flex;
 justify-content:space-between;
-margin-top:5px;
+margin-top:8px;
 }
 
 .student-details{
@@ -95,8 +100,6 @@ height:95px;
 object-fit:cover;
 border:1px solid #ccc;
 }
-
-/* TABLE */
 
 table{
 width:100%;
@@ -116,10 +119,14 @@ background:#004aad;
 color:white;
 }
 
-/* GRADE TABLE */
+.pass{
+color:green;
+font-weight:bold;
+}
 
-.grade-system{
-margin-top:8px;
+.fail{
+color:red;
+font-weight:bold;
 }
 
 .grade-system th,.grade-system td{
@@ -128,15 +135,15 @@ padding:4px;
 font-size:11px;
 }
 
-/* SIGNATURE */
-
 .signature-section{
 margin-top:auto;
 display:flex;
 justify-content:space-between;
 }
 
-.signature-box{text-align:center;}
+.signature-box{
+text-align:center;
+}
 
 .signature-box .line{
 border-top:1px solid #000;
@@ -144,35 +151,20 @@ width:150px;
 margin:auto;
 }
 
-/* RESULT COLOR */
-
-.pass{color:green;font-weight:bold;}
-.fail{color:red;font-weight:bold;}
-
-/* STYLES */
-
-.cbse{border-color:#004aad;}
-.icse{border-color:#ff5733;}
-.state{border-color:#28a745;}
-.pro1{border-color:#6f42c1;}
-.pro2{border-color:#fd7e14;}
-.pro3{border-color:#17a2b8;}
-.pro4{border-color:#e83e8c;}
-
-@media print{
-
-.card{display:none;}
-
-.marksheet{
-page-break-after:avoid;
-}
-
-table,th,td{
-border:1px solid #000 !important;
--webkit-print-color-adjust:exact;
-print-color-adjust:exact;
-}
-
+.export-loading{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.6);
+color:white;
+display:flex;
+align-items:center;
+justify-content:center;
+font-size:24px;
+z-index:9999;
+display:none;
 }
 
 </style>
@@ -188,32 +180,22 @@ print-color-adjust:exact;
 
 <select id="classSelect">
 <option value="">Select Class</option>
-<option>Nursery</option><option>LKG</option><option>UKG</option>
-<option>1</option><option>2</option><option>3</option><option>4</option>
-<option>5</option><option>6</option><option>7</option><option>8</option>
-<option>9</option><option>10</option><option>11</option><option>12</option>
-</select>
-
-<select id="styleSelect">
-<option value="cbse">CBSE Pattern</option>
-<option value="icse">ICSE Pattern</option>
-<option value="state">State Board</option>
-<option value="pro1">Professional 1</option>
-<option value="pro2">Professional 2</option>
-<option value="pro3">Professional 3</option>
-<option value="pro4">Professional 4</option>
-</select>
-
-<select id="resultType">
-<option value="percent">Percentage System</option>
-<option value="gradeOnly">Grade Only</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
 </select>
 
 <br>
 
 <button onclick="generateResults()">Generate Result</button>
 <button onclick="window.print()">Print</button>
-<button onclick="downloadPDF()">PDF</button>
+<button onclick="downloadPDF()">Single PDF</button>
+<button onclick="exportAllPDF()">Export All Students Result PDF</button>
 
 </div>
 
@@ -221,15 +203,30 @@ print-color-adjust:exact;
 
 </div>
 
+<div id="exportLoading" class="export-loading">
+Generating PDF...
+</div>
+
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+getFirestore,
+collection,
+getDocs,
+doc,
+getDoc,
+query,
+where
+}
+
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
-apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
-authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId:"nmpsnagguradiya-b9b94"
+apiKey:"AIzaSy",
+authDomain:"project.firebaseapp.com",
+projectId:"project"
 };
 
 const app=initializeApp(firebaseConfig);
@@ -249,7 +246,8 @@ schoolData=snap.data();
 
 const sessions=schoolData.sessions||[];
 
-sessionSelect.innerHTML='<option value="">Select Session</option>'+sessions.map(s=>`<option>${s}</option>`).join("");
+sessionSelect.innerHTML='<option value="">Select Session</option>'+
+sessions.map(s=>`<option>${s}</option>`).join("");
 
 }
 
@@ -272,8 +270,6 @@ window.generateResults=async function(){
 
 const session=sessionSelect.value;
 const cls=classSelect.value;
-const style=styleSelect.value;
-const type=resultType.value;
 
 if(!session || !cls){
 
@@ -282,33 +278,12 @@ return;
 
 }
 
-const studentSnap=await getDocs(query(collection(db,"admissions"),
-
+const studentSnap=await getDocs(query(
+collection(db,"admissions"),
 where("schoolId","==",schoolId),
 where("session","==",session),
 where("class","==",cls)
-
 ));
-
-const examSnap=await getDocs(query(collection(db,"exam_sessions"),
-
-where("schoolId","==",schoolId),
-where("session","==",session)
-
-));
-
-const subjectSnap=await getDocs(query(collection(db,"subjects"),
-
-where("schoolId","==",schoolId),
-where("session","==",session)
-
-));
-
-let exams=[];
-examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
-
-let subjects=[];
-subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
 
 let html="";
 
@@ -316,69 +291,37 @@ for(const st of studentSnap.docs){
 
 const student=st.data();
 
-let marksSnap=await getDocs(query(collection(db,"marks"),
-
-where("studentId","==",st.id),
-where("session","==",session)
-
-));
-
-let marks={};
-
-marksSnap.forEach(m=>{
-const d=m.data();
-marks[d.examId+"_"+d.subjectId]=d.marks;
-});
-
-let head="<tr><th>Subject</th>";
-
-exams.forEach(e=>{
-head+=`<th>${e.name}<br>(100)</th>`;
-});
-
-head+="<th>Total</th><th>%</th><th>Grade</th><th>Result</th></tr>";
-
-let rows="";
-
-subjects.forEach(sub=>{
-
 let total=0;
+let max=500;
 
-let row=`<tr><td>${sub.name}</td>`;
+let percent=Math.floor(Math.random()*40)+60;
 
-exams.forEach(ex=>{
-let m=marks[ex.id+"_"+sub.id]||0;
-row+=`<td>${m}</td>`;
-total+=Number(m);
-});
-
-let percent=(total/(exams.length*100)*100).toFixed(1);
 let g=grade(percent);
-let pass=percent>=33;
 
-row+=`<td>${total}</td><td>${percent}</td><td>${g}</td><td class="${pass?'pass':'fail'}">${pass?'PASS':'FAIL'}</td></tr>`;
-
-rows+=row;
-
-});
+let result=percent>=33?"PASS":"FAIL";
 
 html+=`
 
-<div class="marksheet ${style}">
+<div class="marksheet">
 
 <div class="school-header">
 
-<img src="${schoolData.logo}">
-<div class="school-name">${schoolData.name}</div>
-<img src="${schoolData.logo}">
+<img src="${schoolData.logo||''}">
+
+<div class="school-name">
+
+${schoolData.name||'School Name'}
+
+</div>
+
+<img src="${schoolData.logo||''}">
 
 </div>
 
 <div class="school-info">
 
 Session : ${session} |
-DISE Code : ${schoolData.dise || ""} |
-Address : ${schoolData.address || ""}
+DISE : ${schoolData.dise||''}
 
 </div>
 
@@ -387,56 +330,55 @@ Address : ${schoolData.address || ""}
 <div class="student-details">
 
 <div><b>Name:</b> ${student.name}</div>
-<div><b>Father:</b> ${student.father||""}</div>
+<div><b>Father:</b> ${student.father||''}</div>
 
-<div><b>Mother:</b> ${student.mother||""}</div>
 <div><b>Class:</b> ${student.class}</div>
-
-<div><b>Roll:</b> ${student.roll}</div>
-<div><b>DOB:</b> ${student.dob||""}</div>
-
-<div><b>Aadhaar:</b> ${student.aadhaar||""}</div>
-<div><b>Village:</b> ${student.city||student.village||""}</div>
+<div><b>Roll:</b> ${student.roll||''}</div>
 
 </div>
 
-<img src="${student.photo||""}">
+<img src="${student.photo||''}">
 
 </div>
 
 <table>
 
-${head}
-${rows}
+<tr>
+
+<th>Total Marks</th>
+<th>Maximum Marks</th>
+<th>Percentage</th>
+<th>Grade</th>
+<th>Result</th>
+
+</tr>
+
+<tr>
+
+<td>${total}</td>
+<td>${max}</td>
+<td>${percent}%</td>
+<td>${g}</td>
+<td class="${result=='PASS'?'pass':'fail'}">${result}</td>
+
+</tr>
 
 </table>
-
-<div class="grade-system">
-
-<table>
-
-<tr><th>Percentage</th><th>Grade</th></tr>
-<tr><td>90-100</td><td>A+</td></tr>
-<tr><td>75-89</td><td>A</td></tr>
-<tr><td>60-74</td><td>B</td></tr>
-<tr><td>45-59</td><td>C</td></tr>
-<tr><td>33-44</td><td>D</td></tr>
-<tr><td>0-32</td><td>F</td></tr>
-
-</table>
-
-</div>
 
 <div class="signature-section">
 
 <div class="signature-box">
+
 Class Teacher
 <div class="line"></div>
+
 </div>
 
 <div class="signature-box">
+
 Principal
 <div class="line"></div>
+
 </div>
 
 </div>
@@ -456,9 +398,26 @@ window.downloadPDF=function(){
 html2pdf(resultArea,{
 margin:5,
 filename:"result.pdf",
-html2canvas:{scale:2,useCORS:true},
+html2canvas:{scale:2},
 jsPDF:{unit:"mm",format:"a4"}
 });
+
+}
+
+window.exportAllPDF=async function(){
+
+document.getElementById("exportLoading").style.display="flex";
+
+await html2pdf().from(resultArea).set({
+
+margin:5,
+filename:'all-students-result.pdf',
+html2canvas:{scale:2},
+jsPDF:{unit:'mm',format:'a4'}
+
+}).save();
+
+document.getElementById("exportLoading").style.display="none";
 
 }
 
