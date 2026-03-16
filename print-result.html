@@ -10,12 +10,25 @@
 <style>
 
 body{font-family:Arial;margin:0;background:#f2f4f8;}
-header{display:none;}
 .container{max-width:1200px;margin:auto;padding:20px;}
-.card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
 
 select,button{padding:10px;margin:5px;}
-button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
+
+button{
+background:#004aad;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+}
 
 .marksheet{
 width:210mm;
@@ -25,7 +38,6 @@ padding:20px;
 margin:auto;
 border:2px solid #004aad;
 page-break-after:always;
-position:relative;
 box-sizing:border-box;
 }
 
@@ -58,10 +70,7 @@ margin-bottom:10px;
 text-align:center;
 font-size:26px;
 font-weight:bold;
-margin-bottom:5px;
 }
-
-/* STUDENT DETAILS */
 
 .student{
 display:flex;
@@ -82,8 +91,6 @@ height:100px;
 object-fit:cover;
 border:1px solid #ccc;
 }
-
-/* TABLE */
 
 table{
 width:100%;
@@ -110,35 +117,11 @@ margin-top:10px;
 font-size:16px;
 }
 
-/* WATERMARK */
-
-.watermark-logo{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-opacity:0.05;
-width:220px;
-}
-
-.watermark-text{
-position:absolute;
-top:40%;
-left:20%;
-font-size:60px;
-opacity:0.05;
-transform:rotate(-30deg);
-}
-
-/* RESULT SUMMARY */
-
 .summary{
 margin-top:10px;
 font-weight:bold;
 font-size:14px;
 }
-
-/* SIGNATURE */
 
 .signature-section{
 display:flex;
@@ -146,9 +129,7 @@ justify-content:space-between;
 margin-top:40px;
 }
 
-.signature-box{
-text-align:center;
-}
+.signature-box{text-align:center;}
 
 .signature-box .line{
 border-top:1px solid #000;
@@ -157,34 +138,11 @@ margin:auto;
 margin-top:30px;
 }
 
-/* Grade Table */
-
-.grade-system{
-margin-top:10px;
-}
-
-.grade-system th,.grade-system td{
-border:1px solid #004aad;
-padding:5px;
-font-size:12px;
-}
-
 .pass{color:green;font-weight:bold;}
 .fail{color:red;font-weight:bold;}
 
-/* Styles */
-
-.cbse{border-color:#004aad;} .cbse th{background:#004aad;}
-.icse{border-color:#ff5733;} .icse th{background:#ff5733;}
-.state{border-color:#28a745;} .state th{background:#28a745;}
-.pro1{border-color:#6f42c1;} .pro1 th{background:#6f42c1;}
-.pro2{border-color:#fd7e14;} .pro2 th{background:#fd7e14;}
-.pro3{border-color:#17a2b8;} .pro3 th{background:#17a2b8;}
-.pro4{border-color:#e83e8c;} .pro4 th{background:#e83e8c;}
-
 @media print{
 .card{display:none;}
-table,th,td{border:1px solid #000 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 }
 
 </style>
@@ -201,25 +159,15 @@ table,th,td{border:1px solid #000 !important;-webkit-print-color-adjust:exact;pr
 <select id="classSelect">
 <option value="">Select Class</option>
 <option>Nursery</option><option>LKG</option><option>UKG</option>
-<option>1</option><option>2</option><option>3</option><option>4</option>
-<option>5</option><option>6</option><option>7</option><option>8</option>
-<option>9</option><option>10</option><option>11</option><option>12</option>
+<option>1</option><option>2</option><option>3</option>
+<option>4</option><option>5</option><option>6</option>
+<option>7</option><option>8</option><option>9</option>
+<option>10</option><option>11</option><option>12</option>
 </select>
 
-<select id="styleSelect">
-<option value="cbse">CBSE Pattern</option>
-<option value="icse">ICSE Pattern</option>
-<option value="state">State Board</option>
-<option value="pro1">Professional 1</option>
-<option value="pro2">Professional 2</option>
-<option value="pro3">Professional 3</option>
-<option value="pro4">Professional 4</option>
-</select>
-
-<select id="watermark">
-<option value="off">Watermark OFF</option>
-<option value="logo">Logo Watermark</option>
-<option value="name">School Name Watermark</option>
+<select id="resultType">
+<option value="marks">Marks Marksheet</option>
+<option value="grade">Grade Marksheet</option>
 </select>
 
 <br>
@@ -252,39 +200,67 @@ const schoolId=localStorage.getItem("schoolId")||"school_001";
 let schoolData={};
 
 async function loadSchool(){
+
 const snap=await getDoc(doc(db,"schools",schoolId));
+
 if(snap.exists()){
 schoolData=snap.data();
+
 const sessions=schoolData.sessions||[];
-sessionSelect.innerHTML='<option value="">Select Session</option>'+sessions.map(s=>`<option>${s}</option>`).join("");
+
+sessionSelect.innerHTML=
+'<option value="">Select Session</option>'+
+sessions.map(s=>`<option>${s}</option>`).join("");
+
 }
+
 }
+
 loadSchool();
 
 function grade(p){
+
 if(p>=90)return"A+";
 if(p>=75)return"A";
 if(p>=60)return"B";
 if(p>=45)return"C";
 if(p>=33)return"D";
+
 return"F";
+
 }
 
 window.generateResults=async function(){
 
 const session=sessionSelect.value;
 const cls=classSelect.value;
-const style=styleSelect.value;
-const watermark=document.getElementById("watermark").value;
+const resultType=document.getElementById("resultType").value;
 
-if(!session||!cls){alert("Select Session and Class");return;}
+if(!session||!cls){
 
-const studentSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId),where("session","==",session),where("class","==",cls)));
-const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
-const subjectSnap=await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",session)));
+alert("Select Session and Class");
 
-let exams=[]; examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
-let subjects=[]; subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
+return;
+
+}
+
+const studentSnap=await getDocs(
+query(
+collection(db,"admissions"),
+where("schoolId","==",schoolId),
+where("session","==",session),
+where("class","==",cls)
+));
+
+const subjectSnap=await getDocs(
+query(
+collection(db,"subjects"),
+where("schoolId","==",schoolId),
+where("session","==",session)
+));
+
+let subjects=[];
+subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
 
 let html="";
 
@@ -292,62 +268,63 @@ for(const st of studentSnap.docs){
 
 const student=st.data();
 
-let marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
+let marksSnap=await getDocs(
+query(
+collection(db,"marks"),
+where("studentId","==",st.id),
+where("session","==",session)
+));
+
 let marks={};
 
 marksSnap.forEach(m=>{
 const d=m.data();
-marks[d.examId+"_"+d.subjectId]=Number(d.marks);
+marks[d.subjectId]=Number(d.marks);
 });
 
-let overallTotal=0;
-let maxTotal=0;
+let total=0;
+
 let rows="";
 
 subjects.forEach(sub=>{
 
-let total=0;
-let maxMarks=exams.length*100;
+let m=marks[sub.id]||0;
 
-let row=`<tr><td>${sub.name}</td>`;
+let percent=m;
 
-exams.forEach(ex=>{
-let m=marks[ex.id+"_"+sub.id]||0;
-row+=`<td>${m}</td>`;
+let g=grade(percent);
+
 total+=m;
-});
 
-const percent=((total/maxMarks)*100).toFixed(1);
-const g=grade(percent);
+if(resultType=="grade"){
 
-overallTotal+=total;
-maxTotal+=maxMarks;
+rows+=`<tr><td>${sub.name}</td><td>${g}</td></tr>`;
 
-row+=`<td>${total}</td><td>${maxMarks}</td><td>${percent}</td><td>${g}</td></tr>`;
+}else{
 
-rows+=row;
+rows+=`<tr>
+<td>${sub.name}</td>
+<td>${m}</td>
+<td>100</td>
+<td>${percent}</td>
+<td>${g}</td>
+</tr>`;
 
-});
-
-const finalPercent=((overallTotal/maxTotal)*100).toFixed(1);
-const finalGrade=grade(finalPercent);
-const finalResult=finalPercent>=33?"PASS":"FAIL";
-
-let watermarkHTML="";
-
-if(watermark=="logo"){
-watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;
 }
 
-if(watermark=="name"){
-watermarkHTML=`<div class="watermark-text">${schoolData.name}</div>`;
-}
+});
+
+let maxTotal=subjects.length*100;
+
+let finalPercent=((total/maxTotal)*100).toFixed(1);
+
+let finalGrade=grade(finalPercent);
+
+let finalResult=finalPercent>=33?"PASS":"FAIL";
 
 html+=`
 
-<div class="marksheet ${style}">
-
-${watermarkHTML}
+<div class="marksheet">
 
 <div class="school-header">
 <img src="${schoolData.logo}">
@@ -356,7 +333,9 @@ ${watermarkHTML}
 </div>
 
 <div class="school-info">
-${schoolData.address||""} | DISE Code : ${schoolData.dise||""} | Session : ${session}
+${schoolData.address||""} |
+DISE Code : ${schoolData.dise||""} |
+Session : ${session}
 </div>
 
 <div class="report-title">Report Card</div>
@@ -364,12 +343,25 @@ ${schoolData.address||""} | DISE Code : ${schoolData.dise||""} | Session : ${ses
 <div class="student">
 
 <div class="student-details">
+
 <div><b>Name:</b> ${student.name}</div>
 <div><b>Father:</b> ${student.father}</div>
 <div><b>Mother:</b> ${student.mother||""}</div>
 <div><b>Class:</b> ${student.class}</div>
 <div><b>Roll:</b> ${student.roll}</div>
 <div><b>DOB:</b> ${student.dob||""}</div>
+
+<div><b>Aadhar:</b> ${student.adhar||""}</div>
+<div><b>Scholar:</b> ${student.scholer||""}</div>
+
+<div><b>Village:</b> ${student.village||""}</div>
+<div><b>City:</b> ${student.city||""}</div>
+
+<div><b>Post:</b> ${student.post||""}</div>
+<div><b>District:</b> ${student.district||""}</div>
+
+<div><b>State:</b> ${student.state||""}</div>
+
 </div>
 
 <img src="${student.photo||""}">
@@ -380,43 +372,46 @@ ${schoolData.address||""} | DISE Code : ${schoolData.dise||""} | Session : ${ses
 
 <table>
 
-<tr>
-<th>Subject</th>
-${exams.map(e=>`<th>${e.name}</th>`).join("")}
-<th>Total</th>
-<th>Max Marks</th>
-<th>%</th>
-<th>Grade</th>
-</tr>
+${resultType=="grade"
+?`<tr><th>Subject</th><th>Grade</th></tr>`
+:`<tr><th>Subject</th><th>Marks</th><th>Max</th><th>%</th><th>Grade</th></tr>`}
 
 ${rows}
 
 </table>
 
 <div class="summary">
-Overall Total : ${overallTotal}/${maxTotal} <br>
+
+Total : ${total}/${maxTotal} <br>
 Final Percentage : ${finalPercent}% <br>
-Result : <span class="${finalResult=='PASS'?'pass':'fail'}">${finalResult}</span> <br>
+Result :
+<span class="${finalResult=='PASS'?'pass':'fail'}">${finalResult}</span>
+<br>
 Final Grade : ${finalGrade}
+
 </div>
 
-<div class="table-title">Sports / Activity Attendance</div>
+<div class="table-title">Sports / Activity / Attendance</div>
 
 <table>
-<tr><th>Activity</th><th>Status</th></tr>
-<tr><td>Sports</td><td>${student.sports||"Good"}</td></tr>
-<tr><td>Activity</td><td>${student.activity||"Good"}</td></tr>
-<tr><td>Attendance</td><td>${student.attendance||"Good"}</td></tr>
-</table>
 
-<table class="grade-system">
-<tr><th>Percentage</th><th>Grade</th></tr>
-<tr><td>90-100</td><td>A+</td></tr>
-<tr><td>75-89</td><td>A</td></tr>
-<tr><td>60-74</td><td>B</td></tr>
-<tr><td>45-59</td><td>C</td></tr>
-<tr><td>33-44</td><td>D</td></tr>
-<tr><td>0-32</td><td>F</td></tr>
+<tr><th>Type</th><th>Status</th></tr>
+
+<tr>
+<td>Sports</td>
+<td>${student.sports||"Good"}</td>
+</tr>
+
+<tr>
+<td>Activity</td>
+<td>${student.activity||"Good"}</td>
+</tr>
+
+<tr>
+<td>Attendance</td>
+<td>${student.attendance||"Good"}</td>
+</tr>
+
 </table>
 
 <div class="signature-section">
@@ -460,4 +455,4 @@ jsPDF:{unit:"mm",format:"a4"}
 </script>
 
 </body>
-                       </html>
+  </html>
