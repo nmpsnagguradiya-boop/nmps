@@ -3,7 +3,7 @@
 <head>
 
 <meta charset="UTF-8">
-<title>Student Admission Form</title>
+<title>Admission Print</title>
 
 <style>
 
@@ -19,9 +19,11 @@ text-align:center;
 margin-bottom:10px;
 }
 
-button{
-padding:8px 14px;
+button,select{
+padding:8px;
+margin:4px;
 cursor:pointer;
+font-size:16px;
 }
 
 .form{
@@ -29,20 +31,20 @@ width:190mm;
 margin:auto;
 background:white;
 padding:12px;
-border:1px solid #004aad;
-box-sizing:border-box;
+border:2px solid #004aad;
 position:relative;
+box-sizing:border-box;
 }
 
 .header{
 text-align:center;
 border-bottom:1px solid #000;
 padding-bottom:6px;
-margin-bottom:8px;
+margin-bottom:10px;
 }
 
 .school{
-font-size:24px;
+font-size:26px;
 font-weight:bold;
 }
 
@@ -59,7 +61,7 @@ width:60px;
 .photo{
 position:absolute;
 right:20px;
-top:100px;
+top:110px;
 }
 
 .photo img{
@@ -83,12 +85,12 @@ height:60px !important;
 table{
 width:100%;
 border-collapse:collapse;
-font-size:18px;
 }
 
 table td{
 border:1px solid #000;
-padding:5px;
+padding:6px;
+font-size:18px;
 }
 
 .label{
@@ -103,15 +105,41 @@ margin-top:25px;
 font-size:18px;
 }
 
+/* THEMES */
+
+.blue{
+border-color:#004aad;
+}
+
+.blue .header{
+color:#004aad;
+}
+
+.green{
+border-color:#2e7d32;
+}
+
+.green .header{
+color:#2e7d32;
+}
+
+.maroon{
+border-color:#800000;
+}
+
+.maroon .header{
+color:#800000;
+}
+
 @media print{
+
+.controls{
+display:none;
+}
 
 body{
 background:white;
 padding:0;
-}
-
-.controls{
-display:none;
 }
 
 .form{
@@ -128,10 +156,18 @@ border:none;
 <body>
 
 <div class="controls">
+
+<select id="themeSelect">
+<option value="blue">Blue Theme</option>
+<option value="green">Green Theme</option>
+<option value="maroon">Maroon Theme</option>
+</select>
+
 <button onclick="window.print()">Print</button>
+
 </div>
 
-<div class="form">
+<div class="form blue" id="form">
 
 <div class="logo">
 <img id="schoolLogo">
@@ -143,7 +179,7 @@ border:none;
 
 <div id="schoolAddress"></div>
 
-DISE Code : <span id="schoolDise"></span><br>
+DISE Code : <span id="schoolDise"></span> |
 Session : <span id="schoolSession"></span>
 
 <h2>Student Admission Form</h2>
@@ -186,8 +222,10 @@ Student ID : <span id="studentID"></span>
 </table>
 
 <div class="signature">
+
 <div>Parent Signature</div>
 <div>Principal Signature</div>
+
 </div>
 
 </div>
@@ -208,8 +246,30 @@ projectId:"nmpsnagguradiya-b9b94"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
+const schoolId=localStorage.getItem("schoolId")||"school_001";
+const session=localStorage.getItem("activeSession")||"2025-26";
+
 const params=new URLSearchParams(window.location.search);
 const id=params.get("id");
+
+async function loadSchool(){
+
+const snap=await getDoc(doc(db,"schools",schoolId));
+
+if(snap.exists()){
+
+const s=snap.data();
+
+document.getElementById("schoolName").innerText=s.name||"";
+document.getElementById("schoolAddress").innerText=s.address||"";
+document.getElementById("schoolDise").innerText=s.dise||"";
+document.getElementById("schoolSession").innerText=session;
+
+document.getElementById("schoolLogo").src=s.logo||"";
+
+}
+
+}
 
 async function loadStudent(){
 
@@ -251,6 +311,17 @@ QRCode.toCanvas(document.getElementById("qr"),window.location.href);
 
 }
 
+document.getElementById("themeSelect").addEventListener("change",function(){
+
+const form=document.getElementById("form");
+
+form.classList.remove("blue","green","maroon");
+
+form.classList.add(this.value);
+
+});
+
+loadSchool();
 loadStudent();
 
 </script>
