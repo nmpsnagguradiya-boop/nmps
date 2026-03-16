@@ -26,15 +26,13 @@ cursor:pointer;
 
 .form{
 width:210mm;
-height:297mm;
+min-height:297mm;
 background:white;
 margin:auto;
 padding:20px;
 border:4px solid #004aad;
 position:relative;
 box-sizing:border-box;
-overflow:hidden;
-transform-origin:top left;
 }
 
 .header{
@@ -109,19 +107,28 @@ display:flex;
 justify-content:space-between;
 }
 
-@media print{
-
-.controls{
-display:none;
+@page{
+size:A4;
+margin:0;
 }
+
+@media print{
 
 body{
 background:white;
 padding:0;
 }
 
+.controls{
+display:none;
+}
+
 .form{
-margin:0;
+transform:scale(0.96);
+transform-origin:top left;
+width:100%;
+min-height:auto;
+border:3px solid #000;
 page-break-after:avoid;
 }
 
@@ -322,12 +329,11 @@ if(snap.exists()){
 
 let s=snap.data();
 
-document.getElementById("schoolName").innerText=s.name||"";
-document.getElementById("schoolAddress").innerText="Address : "+(s.address||"");
-document.getElementById("schoolDise").innerText=s.dise||"";
-document.getElementById("schoolSession").innerText=session;
-
-document.getElementById("schoolLogo").src=s.logo||"";
+schoolName.innerText=s.name||"";
+schoolAddress.innerText="Address : "+(s.address||"");
+schoolDise.innerText=s.dise||"";
+schoolSession.innerText=session;
+schoolLogo.src=s.logo||"";
 
 }
 
@@ -342,31 +348,30 @@ if(snap.exists()){
 
 let s=snap.data();
 
-let studentID="STU-"+id.substring(0,6).toUpperCase();
-document.getElementById("studentID").innerText=studentID;
+studentID.innerText="STU-"+id.substring(0,6).toUpperCase();
 
-document.getElementById("name").innerText=s.name||"";
-document.getElementById("father").innerText=s.father||"";
-document.getElementById("mother").innerText=s.mother||"";
-document.getElementById("mobile").innerText=s.mobile||"";
-document.getElementById("class").innerText=s.class||"";
-document.getElementById("dob").innerText=s.dob||"";
-document.getElementById("admissionDate").innerText=s.admissionDate||"";
-document.getElementById("village").innerText=s.village||"";
-document.getElementById("city").innerText=s.city||"";
-document.getElementById("post").innerText=s.post||"";
-document.getElementById("district").innerText=s.district||"";
-document.getElementById("state").innerText=s.state||"";
-document.getElementById("adhar").innerText=s.adhar||"";
-document.getElementById("apar").innerText=s.apar||"";
-document.getElementById("sssm").innerText=s.sssm||"";
-document.getElementById("family").innerText=s.family||"";
-document.getElementById("roll").innerText=s.roll||"";
-document.getElementById("scholer").innerText=s.scholer||"";
-document.getElementById("caste").innerText=s.caste||"";
-document.getElementById("category").innerText=s.category||"";
+name.innerText=s.name||"";
+father.innerText=s.father||"";
+mother.innerText=s.mother||"";
+mobile.innerText=s.mobile||"";
+class.innerText=s.class||"";
+dob.innerText=s.dob||"";
+admissionDate.innerText=s.admissionDate||"";
+village.innerText=s.village||"";
+city.innerText=s.city||"";
+post.innerText=s.post||"";
+district.innerText=s.district||"";
+state.innerText=s.state||"";
+adhar.innerText=s.adhar||"";
+apar.innerText=s.apar||"";
+sssm.innerText=s.sssm||"";
+family.innerText=s.family||"";
+roll.innerText=s.roll||"";
+scholer.innerText=s.scholer||"";
+caste.innerText=s.caste||"";
+category.innerText=s.category||"";
 
-document.getElementById("photo").src=s.photo||"";
+photo.src=s.photo||"";
 
 QRCode.toCanvas(document.getElementById("qr"),window.location.href);
 
@@ -378,37 +383,17 @@ function downloadPDF(){
 window.print();
 }
 
-document.getElementById("designSelect").addEventListener("change",function(){
-
-let form=document.getElementById("form");
+designSelect.addEventListener("change",function(){
 
 form.classList.remove("design1","design2","design3");
-
 form.classList.add(this.value);
 
 });
 
-function autoFit(){
-
-const form=document.getElementById("form");
-const maxHeight=1122;
-
-if(form.scrollHeight>maxHeight){
-
-let scale=maxHeight/form.scrollHeight;
-form.style.transform="scale("+scale+")";
-
-}
-
-}
-
-window.onload=()=>{
 loadSchool();
 loadStudent();
-setTimeout(autoFit,800);
-};
 
 </script>
 
 </body>
-</html>
+  </html>
