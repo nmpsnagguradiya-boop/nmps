@@ -6,51 +6,46 @@
 
 <style>
 
-body{
-font-family:Arial;
-margin:0;
-background:#f2f2f2;
-}
+body{font-family:Arial;margin:0;background:#f2f2f2;}
 
 header{
 background:#004aad;
 color:white;
-padding:18px;
+padding:15px;
 text-align:center;
-font-size:24px;
+font-size:22px;
 }
 
 .container{
 padding:20px;
-max-width:900px;
+max-width:800px;
 margin:auto;
 }
 
 form{
 background:white;
-padding:25px;
+padding:20px;
 border-radius:10px;
 box-shadow:0 0 10px rgba(0,0,0,0.2);
 }
 
 input,select,textarea{
 width:100%;
-padding:12px;
-margin-top:12px;
-border-radius:6px;
+padding:10px;
+margin-top:10px;
+border-radius:5px;
 border:1px solid #ccc;
-font-size:15px;
 }
 
 button{
-margin-top:18px;
+margin-top:15px;
 background:#004aad;
 color:white;
-padding:14px;
+padding:12px;
 border:none;
 width:100%;
-border-radius:6px;
-font-size:17px;
+border-radius:5px;
+font-size:16px;
 cursor:pointer;
 }
 
@@ -58,7 +53,6 @@ cursor:pointer;
 color:green;
 text-align:center;
 margin-top:10px;
-font-size:16px;
 }
 
 table{
@@ -70,14 +64,8 @@ border-collapse:collapse;
 
 table th,table td{
 border:1px solid #ccc;
-padding:10px;
+padding:8px;
 text-align:center;
-font-size:14px;
-}
-
-table th{
-background:#004aad;
-color:white;
 }
 
 img{
@@ -87,44 +75,6 @@ border-radius:5px;
 
 .filter{
 margin-top:20px;
-}
-
-/* MOBILE RESPONSIVE */
-
-@media (max-width:768px){
-
-.container{
-padding:12px;
-}
-
-form{
-padding:20px;
-}
-
-input,select,textarea{
-padding:14px;
-font-size:17px;
-}
-
-button{
-padding:16px;
-font-size:18px;
-}
-
-table th,table td{
-font-size:16px;
-padding:12px;
-}
-
-header{
-font-size:22px;
-padding:16px;
-}
-
-img{
-width:60px;
-}
-
 }
 
 </style>
@@ -254,7 +204,268 @@ width:60px;
 
 </div>
 
-<!-- ⚠️ आपका पूरा Firebase JS नीचे वही रहेगा (कोई बदलाव नहीं) -->
+<script type="module">
+
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+getDocs,
+doc,
+updateDoc,
+deleteDoc
+}
+
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94"
+};
+
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
+
+const schoolId = localStorage.getItem("schoolId") || "school_001";
+const session = localStorage.getItem("activeSession") || "2025-26";
+
+let students=[];
+
+async function uploadImgBB(file){
+
+const formData=new FormData();
+
+formData.append("image",file);
+
+const res=await fetch("https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",{
+
+method:"POST",
+body:formData
+
+});
+
+const data=await res.json();
+
+return data.data.url;
+
+}
+
+const form=document.getElementById("form");
+
+form.addEventListener("submit", async function(e){
+
+e.preventDefault();
+
+const id=document.getElementById("studentId").value;
+
+let photoURL=document.getElementById("previewPhoto").src || "";
+
+const file=document.getElementById("photo").files[0];
+
+if(file){
+
+photoURL=await uploadImgBB(file);
+
+}
+
+const studentData={
+
+schoolId,
+session,
+
+name:document.getElementById("name").value,
+father:document.getElementById("father").value,
+mother:document.getElementById("mother").value,
+mobile:document.getElementById("mobile").value,
+
+village:document.getElementById("village").value,
+city:document.getElementById("city").value,
+post:document.getElementById("post").value,
+district:document.getElementById("district").value,
+state:document.getElementById("state").value,
+national:document.getElementById("national").value,
+
+sssm:document.getElementById("sssm").value,
+family:document.getElementById("family").value,
+apar:document.getElementById("apar").value,
+adhar:document.getElementById("adhar").value,
+
+caste:document.getElementById("caste").value,
+category:document.getElementById("category").value,
+
+roll:document.getElementById("roll").value,
+scholer:document.getElementById("scholer").value,
+
+admissionDate:document.getElementById("admissionDate").value,
+class:document.getElementById("class").value,
+
+dob:document.getElementById("dob").value,
+message:document.getElementById("message").value,
+
+photo:photoURL
+
+};
+
+if(id){
+
+await updateDoc(doc(db,"admissions",id), studentData);
+
+document.getElementById("msg").innerText="Admission Updated Successfully";
+
+}else{
+
+await addDoc(collection(db,"admissions"), studentData);
+
+document.getElementById("msg").innerText="Admission Submitted Successfully";
+
+}
+
+form.reset();
+
+document.getElementById("studentId").value="";
+
+document.getElementById("previewPhoto").style.display="none";
+
+loadStudents();
+
+});
+
+async function loadStudents(){
+
+const querySnapshot=await getDocs(collection(db,"admissions"));
+
+let html="";
+
+let count=0;
+
+students=[];
+
+const classFilter=document.getElementById("classFilter").value;
+
+querySnapshot.forEach(docSnap=>{
+
+const data=docSnap.data();
+
+data.id=docSnap.id;
+
+if(data.schoolId!==schoolId) return;
+
+if(data.session!==session) return;
+
+if(classFilter && data.class!==classFilter) return;
+
+students.push(data);
+
+count++;
+
+html+=`<tr>
+
+<td>${data.name}</td>
+
+<td>${data.class}</td>
+
+<td>${data.mobile}</td>
+
+<td><img src="${data.photo||''}"></td>
+
+<td>
+
+<button onclick="editStudent('${data.id}')">Edit</button>
+
+<button onclick="deleteStudent('${data.id}')">Delete</button>
+
+</td>
+
+</tr>`;
+
+});
+
+document.getElementById("studentList").innerHTML=html;
+
+document.getElementById("total").innerText=count;
+
+}
+
+window.editStudent=function(id){
+
+const s=students.find(x=>x.id===id);
+
+if(!s)return;
+
+document.getElementById("studentId").value=s.id;
+
+document.getElementById("name").value=s.name||"";
+
+document.getElementById("father").value=s.father||"";
+
+document.getElementById("mother").value=s.mother||"";
+
+document.getElementById("mobile").value=s.mobile||"";
+
+document.getElementById("village").value=s.village||"";
+
+document.getElementById("city").value=s.city||"";
+
+document.getElementById("post").value=s.post||"";
+
+document.getElementById("district").value=s.district||"";
+
+document.getElementById("state").value=s.state||"";
+
+document.getElementById("national").value=s.national||"";
+
+document.getElementById("sssm").value=s.sssm||"";
+
+document.getElementById("family").value=s.family||"";
+
+document.getElementById("apar").value=s.apar||"";
+
+document.getElementById("adhar").value=s.adhar||"";
+
+document.getElementById("caste").value=s.caste||"";
+
+document.getElementById("category").value=s.category||"";
+
+document.getElementById("roll").value=s.roll||"";
+
+document.getElementById("scholer").value=s.scholer||"";
+
+document.getElementById("admissionDate").value=s.admissionDate||"";
+
+document.getElementById("class").value=s.class||"";
+
+document.getElementById("dob").value=s.dob||"";
+
+document.getElementById("message").value=s.message||"";
+
+if(s.photo){
+
+document.getElementById("previewPhoto").src=s.photo;
+
+document.getElementById("previewPhoto").style.display="block";
+
+}
+
+}
+
+window.deleteStudent=async function(id){
+
+if(confirm("Delete Student?")){
+
+await deleteDoc(doc(db,"admissions",id));
+
+loadStudents();
+
+}
+
+}
+
+loadStudents();
+
+</script>
 
 </body>
   </html>
