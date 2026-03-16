@@ -10,125 +10,113 @@
 body{
 font-family:Arial;
 background:#eee;
-padding:15px;
+margin:0;
+padding:10px;
 }
 
 .controls{
 text-align:center;
-margin-bottom:15px;
+margin-bottom:10px;
 }
 
-button,select{
-padding:8px;
-margin:4px;
+button{
+padding:8px 14px;
 cursor:pointer;
 }
 
 .form{
-width:200mm;
-height:285mm;
-background:white;
+width:190mm;
 margin:auto;
-padding:15px;
-border:2px solid #004aad;
-position:relative;
+background:white;
+padding:12px;
+border:1px solid #004aad;
 box-sizing:border-box;
-font-size:18px;
+position:relative;
 }
 
 .header{
 text-align:center;
-border-bottom:2px solid #000;
-padding-bottom:8px;
-margin-bottom:10px;
+border-bottom:1px solid #000;
+padding-bottom:6px;
+margin-bottom:8px;
 }
 
 .school{
-font-size:26px;
+font-size:24px;
 font-weight:bold;
 }
 
 .logo{
 position:absolute;
-left:20px;
-top:20px;
+left:10px;
+top:10px;
 }
 
 .logo img{
-width:70px;
+width:60px;
 }
 
 .photo{
 position:absolute;
-right:30px;
-top:120px;
+right:20px;
+top:100px;
 }
 
 .photo img{
-width:100px;
-height:120px;
+width:90px;
+height:110px;
+border:1px solid #000;
 object-fit:cover;
-border:2px solid #000;
 }
 
 .qr{
 position:absolute;
-right:30px;
-bottom:100px;
+right:20px;
+bottom:80px;
 }
 
 .qr canvas{
-width:80px !important;
-height:80px !important;
+width:60px !important;
+height:60px !important;
 }
 
 table{
 width:100%;
 border-collapse:collapse;
+font-size:18px;
 }
 
 table td{
 border:1px solid #000;
-padding:6px;
-font-size:18px;
+padding:5px;
 }
 
 .label{
-width:30%;
 font-weight:bold;
+width:35%;
 }
 
-.design1{border-color:#004aad;}
-.design1 .header{color:#004aad;}
-
-.design2{border-color:#2e7d32;}
-.design2 .header{color:#2e7d32;}
-
-.design3{border-color:#8e0038;}
-.design3 .header{color:#8e0038;}
-
 .signature{
-position:absolute;
-bottom:20px;
-left:20px;
-right:20px;
 display:flex;
 justify-content:space-between;
+margin-top:25px;
+font-size:18px;
 }
 
 @media print{
-
-.controls{
-display:none;
-}
 
 body{
 background:white;
 padding:0;
 }
 
+.controls{
+display:none;
+}
+
 .form{
-margin:0;
+width:100%;
+border:none;
 }
 
 }
@@ -140,18 +128,10 @@ margin:0;
 <body>
 
 <div class="controls">
-
-<select id="designSelect">
-<option value="design1">Blue Design</option>
-<option value="design2">Green Design</option>
-<option value="design3">Maroon Design</option>
-</select>
-
 <button onclick="window.print()">Print</button>
-
 </div>
 
-<div class="form design1" id="form">
+<div class="form">
 
 <div class="logo">
 <img id="schoolLogo">
@@ -162,6 +142,7 @@ margin:0;
 <div class="school" id="schoolName"></div>
 
 <div id="schoolAddress"></div>
+
 DISE Code : <span id="schoolDise"></span><br>
 Session : <span id="schoolSession"></span>
 
@@ -181,118 +162,32 @@ Student ID : <span id="studentID"></span>
 
 <table>
 
-<tr>
-<td class="label">Student Name</td>
-<td id="name"></td>
-</tr>
-
-<tr>
-<td class="label">Father Name</td>
-<td id="father"></td>
-</tr>
-
-<tr>
-<td class="label">Mother Name</td>
-<td id="mother"></td>
-</tr>
-
-<tr>
-<td class="label">Mobile</td>
-<td id="mobile"></td>
-</tr>
-
-<tr>
-<td class="label">Class</td>
-<td id="class"></td>
-</tr>
-
-<tr>
-<td class="label">Date of Birth</td>
-<td id="dob"></td>
-</tr>
-
-<tr>
-<td class="label">Admission Date</td>
-<td id="admissionDate"></td>
-</tr>
-
-<tr>
-<td class="label">Village</td>
-<td id="village"></td>
-</tr>
-
-<tr>
-<td class="label">City</td>
-<td id="city"></td>
-</tr>
-
-<tr>
-<td class="label">Post</td>
-<td id="post"></td>
-</tr>
-
-<tr>
-<td class="label">District</td>
-<td id="district"></td>
-</tr>
-
-<tr>
-<td class="label">State</td>
-<td id="state"></td>
-</tr>
-
-<tr>
-<td class="label">Aadhar</td>
-<td id="adhar"></td>
-</tr>
-
-<tr>
-<td class="label">APAR ID</td>
-<td id="apar"></td>
-</tr>
-
-<tr>
-<td class="label">SSSM ID</td>
-<td id="sssm"></td>
-</tr>
-
-<tr>
-<td class="label">Family ID</td>
-<td id="family"></td>
-</tr>
-
-<tr>
-<td class="label">Roll Number</td>
-<td id="roll"></td>
-</tr>
-
-<tr>
-<td class="label">Scholar Number</td>
-<td id="scholer"></td>
-</tr>
-
-<tr>
-<td class="label">Caste</td>
-<td id="caste"></td>
-</tr>
-
-<tr>
-<td class="label">Category</td>
-<td id="category"></td>
-</tr>
+<tr><td class="label">Student Name</td><td id="name"></td></tr>
+<tr><td class="label">Father Name</td><td id="father"></td></tr>
+<tr><td class="label">Mother Name</td><td id="mother"></td></tr>
+<tr><td class="label">Mobile</td><td id="mobile"></td></tr>
+<tr><td class="label">Class</td><td id="class"></td></tr>
+<tr><td class="label">Date of Birth</td><td id="dob"></td></tr>
+<tr><td class="label">Admission Date</td><td id="admissionDate"></td></tr>
+<tr><td class="label">Village</td><td id="village"></td></tr>
+<tr><td class="label">City</td><td id="city"></td></tr>
+<tr><td class="label">Post</td><td id="post"></td></tr>
+<tr><td class="label">District</td><td id="district"></td></tr>
+<tr><td class="label">State</td><td id="state"></td></tr>
+<tr><td class="label">Aadhar</td><td id="adhar"></td></tr>
+<tr><td class="label">APAR ID</td><td id="apar"></td></tr>
+<tr><td class="label">SSSM ID</td><td id="sssm"></td></tr>
+<tr><td class="label">Family ID</td><td id="family"></td></tr>
+<tr><td class="label">Roll Number</td><td id="roll"></td></tr>
+<tr><td class="label">Scholar Number</td><td id="scholer"></td></tr>
+<tr><td class="label">Caste</td><td id="caste"></td></tr>
+<tr><td class="label">Category</td><td id="category"></td></tr>
 
 </table>
 
 <div class="signature">
-
-<div>
-Parent Signature
-</div>
-
-<div>
-Principal Signature
-</div>
-
+<div>Parent Signature</div>
+<div>Principal Signature</div>
 </div>
 
 </div>
@@ -313,30 +208,8 @@ projectId:"nmpsnagguradiya-b9b94"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-const schoolId=localStorage.getItem("schoolId")||"school_001";
-const session=localStorage.getItem("activeSession")||"2025-26";
-
 const params=new URLSearchParams(window.location.search);
 const id=params.get("id");
-
-async function loadSchool(){
-
-const snap=await getDoc(doc(db,"schools",schoolId));
-
-if(snap.exists()){
-
-let s=snap.data();
-
-schoolName.innerText=s.name||"";
-schoolAddress.innerText="Address : "+(s.address||"");
-schoolDise.innerText=s.dise||"";
-schoolSession.innerText=session;
-
-schoolLogo.src=s.logo||"";
-
-}
-
-}
 
 async function loadStudent(){
 
@@ -345,32 +218,32 @@ const snap=await getDoc(ref);
 
 if(snap.exists()){
 
-let s=snap.data();
+const s=snap.data();
 
-studentID.innerText="STU-"+id.substring(0,6).toUpperCase();
+document.getElementById("studentID").innerText=id;
 
-name.innerText=s.name||"";
-father.innerText=s.father||"";
-mother.innerText=s.mother||"";
-mobile.innerText=s.mobile||"";
-class.innerText=s.class||"";
-dob.innerText=s.dob||"";
-admissionDate.innerText=s.admissionDate||"";
-village.innerText=s.village||"";
-city.innerText=s.city||"";
-post.innerText=s.post||"";
-district.innerText=s.district||"";
-state.innerText=s.state||"";
-adhar.innerText=s.adhar||"";
-apar.innerText=s.apar||"";
-sssm.innerText=s.sssm||"";
-family.innerText=s.family||"";
-roll.innerText=s.roll||"";
-scholer.innerText=s.scholer||"";
-caste.innerText=s.caste||"";
-category.innerText=s.category||"";
+document.getElementById("name").innerText=s.name||"";
+document.getElementById("father").innerText=s.father||"";
+document.getElementById("mother").innerText=s.mother||"";
+document.getElementById("mobile").innerText=s.mobile||"";
+document.getElementById("class").innerText=s.class||"";
+document.getElementById("dob").innerText=s.dob||"";
+document.getElementById("admissionDate").innerText=s.admissionDate||"";
+document.getElementById("village").innerText=s.village||"";
+document.getElementById("city").innerText=s.city||"";
+document.getElementById("post").innerText=s.post||"";
+document.getElementById("district").innerText=s.district||"";
+document.getElementById("state").innerText=s.state||"";
+document.getElementById("adhar").innerText=s.adhar||"";
+document.getElementById("apar").innerText=s.apar||"";
+document.getElementById("sssm").innerText=s.sssm||"";
+document.getElementById("family").innerText=s.family||"";
+document.getElementById("roll").innerText=s.roll||"";
+document.getElementById("scholer").innerText=s.scholer||"";
+document.getElementById("caste").innerText=s.caste||"";
+document.getElementById("category").innerText=s.category||"";
 
-photo.src=s.photo||"";
+document.getElementById("photo").src=s.photo||"";
 
 QRCode.toCanvas(document.getElementById("qr"),window.location.href);
 
@@ -378,17 +251,9 @@ QRCode.toCanvas(document.getElementById("qr"),window.location.href);
 
 }
 
-designSelect.addEventListener("change",function(){
-
-form.classList.remove("design1","design2","design3");
-form.classList.add(this.value);
-
-});
-
-loadSchool();
 loadStudent();
 
 </script>
 
 </body>
-</html>
+  </html>
