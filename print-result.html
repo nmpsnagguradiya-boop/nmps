@@ -10,7 +10,6 @@
 <style>
 
 body{font-family:Arial;margin:0;background:#f2f4f8;}
-
 .container{max-width:1200px;margin:auto;padding:20px;}
 
 .card{
@@ -21,32 +20,23 @@ margin-bottom:20px;
 box-shadow:0 2px 6px rgba(0,0,0,0.1);
 }
 
-select,button{
-padding:10px;
-margin:5px;
-}
-
-button{
-background:#004aad;
-color:white;
-border:none;
-border-radius:5px;
-cursor:pointer;
-}
+select,button{padding:10px;margin:5px;}
+button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
 
 /* REPORT CARD */
 
 .marksheet{
 width:210mm;
-height:297mm;
+min-height:297mm;
 background:white;
-padding:20px;
+padding:18px;
 margin:auto;
 border:2px solid #004aad;
 box-sizing:border-box;
 display:flex;
 flex-direction:column;
 position:relative;
+page-break-after:always;
 }
 
 .school-header{
@@ -54,53 +44,52 @@ display:flex;
 justify-content:space-between;
 align-items:center;
 border-bottom:3px solid #004aad;
-padding-bottom:10px;
-margin-bottom:10px;
+padding-bottom:8px;
+margin-bottom:6px;
 }
 
-.school-header img{width:50px;}
+.school-header img{width:45px;}
 
 .school-name{
 flex:1;
 text-align:center;
-font-size:28px;
+font-size:26px;
 font-weight:bold;
 color:#004aad;
 }
 
 .school-info{
 text-align:center;
-font-size:14px;
-margin-bottom:10px;
+font-size:13px;
+margin-bottom:5px;
 }
 
 .report-title{
 text-align:center;
-font-size:22px;
+font-size:20px;
 font-weight:bold;
-margin:8px 0;
-color:#000;
+margin:6px 0;
 }
 
-/* STUDENT AREA */
+/* STUDENT */
 
 .student{
 display:flex;
 justify-content:space-between;
-margin-top:10px;
+margin-top:8px;
 }
 
 .student-details{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:6px 30px;
-font-size:14px;
+gap:4px 25px;
+font-size:13px;
 line-height:1.4;
 }
 
 .student img{
-width:80px;
-height:100px;
+width:75px;
+height:95px;
 object-fit:cover;
 border:1px solid #ccc;
 }
@@ -110,20 +99,23 @@ border:1px solid #ccc;
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:12px;
+margin-top:10px;
 }
 
 th,td{
 border:1px solid #ccc;
-padding:6px;
+padding:5px;
 text-align:center;
-font-size:13px;
+font-size:12px;
 }
 
 th{
 background:#004aad;
 color:white;
 }
+
+.pass{color:green;font-weight:bold;}
+.fail{color:red;font-weight:bold;}
 
 /* WATERMARK */
 
@@ -145,7 +137,7 @@ opacity:0.05;
 transform:rotate(-30deg);
 }
 
-/* SIGNATURE */
+/* SIGN */
 
 .signature-section{
 margin-top:auto;
@@ -159,29 +151,24 @@ text-align:center;
 
 .signature-box .line{
 border-top:1px solid #000;
-width:150px;
+width:140px;
 margin:auto;
-margin-top:30px;
+margin-top:25px;
 }
 
-/* GRADE TABLE */
+/* GRADE */
 
 .grade-system{
-margin-top:12px;
+margin-top:10px;
 }
 
 .grade-system th,.grade-system td{
 border:1px solid #004aad;
-padding:5px;
-font-size:12px;
+padding:4px;
+font-size:11px;
 }
 
-/* PASS FAIL */
-
-.pass{color:green;font-weight:bold;}
-.fail{color:red;font-weight:bold;}
-
-/* STYLE VARIANTS */
+/* STYLE */
 
 .cbse{border-color:#004aad;} .cbse th{background:#004aad;}
 .icse{border-color:#ff5733;} .icse th{background:#ff5733;}
@@ -190,11 +177,6 @@ font-size:12px;
 .pro2{border-color:#fd7e14;} .pro2 th{background:#fd7e14;}
 .pro3{border-color:#17a2b8;} .pro3 th{background:#17a2b8;}
 .pro4{border-color:#e83e8c;} .pro4 th{background:#e83e8c;}
-
-@page{
-size:A4;
-margin:5mm;
-}
 
 @media print{
 .card{display:none;}
@@ -299,10 +281,16 @@ window.generateResults=async function(){
 const session=sessionSelect.value;
 const cls=classSelect.value;
 const style=styleSelect.value;
+const type=resultType.value;
 
 if(!session||!cls){alert("Select Session and Class");return;}
 
 const studentSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId),where("session","==",session),where("class","==",cls)));
+const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
+const subjectSnap=await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",session)));
+
+let exams=[]; examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
+let subjects=[]; subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
 
 let html="";
 
@@ -343,40 +331,34 @@ Address: ${schoolData.address||""} | DISE Code: ${schoolData.dise||""} | Session
 
 </div>
 
-<!-- MARKS TABLE SAME AS YOUR CODE -->
+<!-- MARKS TABLE SAME SYSTEM -->
+<table>
+<tr><th>Subject</th>${exams.map(e=>`<th>${e.name}</th>`).join("")}<th>Total</th></tr>
+${subjects.map(s=>`<tr><td>${s.name}</td>${exams.map(()=>`<td></td>`).join("")}<td></td></tr>`).join("")}
+</table>
 
 <div class="signature-section">
-
-<div class="signature-box">
-Class Teacher
-<div class="line"></div>
-</div>
-
-<div class="signature-box">
-Principal
-<div class="line"></div>
+<div class="signature-box">Class Teacher<div class="line"></div></div>
+<div class="signature-box">Principal<div class="line"></div></div>
 </div>
 
 </div>
 
-</div>
 `;
 
 }
 
-document.getElementById("resultArea").innerHTML=html;
+resultArea.innerHTML=html;
 
 }
 
 window.downloadPDF=function(){
-
-html2pdf(document.getElementById("resultArea"),{
+html2pdf(resultArea,{
 margin:5,
 filename:"report-card.pdf",
 html2canvas:{scale:2,useCORS:true},
 jsPDF:{unit:"mm",format:"a4"}
 });
-
 }
 
 </script>
