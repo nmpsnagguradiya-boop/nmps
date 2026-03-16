@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Report Card</title>
+<title>Print Result</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
@@ -10,11 +10,35 @@
 <style>
 
 body{font-family:Arial;margin:0;background:#f2f4f8;}
-.container{max-width:1200px;margin:auto;padding:20px;}
-.card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;}
 
-select,button{padding:10px;margin:5px;}
-button{background:#004aad;color:white;border:none;border-radius:5px;}
+.container{
+max-width:1200px;
+margin:auto;
+padding:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:10px;
+margin-bottom:20px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+select,button{
+padding:10px;
+margin:5px;
+}
+
+button{
+background:#004aad;
+color:white;
+border:none;
+border-radius:5px;
+cursor:pointer;
+}
+
+/* MARKSHEET */
 
 .marksheet{
 width:210mm;
@@ -22,69 +46,76 @@ min-height:297mm;
 background:white;
 padding:20px;
 margin:auto;
-border:3px solid;
-page-break-after:always;
+border:3px solid #004aad;
 position:relative;
 box-sizing:border-box;
+page-break-after:always;
 }
+
+/* SCHOOL HEADER */
 
 .school-header{
 display:flex;
 justify-content:space-between;
 align-items:center;
-border-bottom:3px solid;
+border-bottom:3px solid #004aad;
 padding-bottom:10px;
+margin-bottom:10px;
 }
 
-.school-header img{width:50px;}
+.school-header img{
+width:60px;
+}
 
 .school-name{
 flex:1;
 text-align:center;
-font-size:28px;
+font-size:34px;
 font-weight:bold;
+color:#004aad;
 }
 
 .report-title{
 text-align:center;
-font-size:26px;
+font-size:24px;
 font-weight:bold;
-margin:5px 0;
+margin-top:5px;
 }
 
 .school-info{
 text-align:center;
 font-size:14px;
+margin-top:5px;
 }
 
-/* student details */
+/* STUDENT */
 
 .student{
 display:flex;
 justify-content:space-between;
-margin-top:15px;
+margin-top:10px;
 }
 
 .student-details{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:5px 20px;
+gap:6px 20px;
 font-size:14px;
 }
 
 .student img{
 width:90px;
 height:110px;
-border:1px solid #ccc;
 object-fit:cover;
+border:1px solid #ccc;
 }
 
-/* table */
+/* TABLE */
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:12px;
+margin-top:10px;
 }
 
 th,td{
@@ -94,34 +125,19 @@ text-align:center;
 font-size:13px;
 }
 
+th{
+background:#004aad;
+color:white;
+}
+
 .table-title{
 text-align:center;
 font-weight:bold;
-font-size:16px;
 margin-top:10px;
+font-size:16px;
 }
 
-/* watermark */
-
-.watermark-logo{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-opacity:0.05;
-width:220px;
-}
-
-.watermark-text{
-position:absolute;
-top:40%;
-left:20%;
-font-size:60px;
-opacity:0.05;
-transform:rotate(-30deg);
-}
-
-/* summary */
+/* SUMMARY */
 
 .summary{
 margin-top:10px;
@@ -129,57 +145,72 @@ font-weight:bold;
 font-size:14px;
 }
 
-/* grade */
+/* SIGNATURE */
+
+.signature-section{
+display:flex;
+justify-content:space-between;
+margin-top:80px;
+}
+
+.signature-box{
+text-align:center;
+}
+
+.signature-box .line{
+border-top:1px solid #000;
+width:150px;
+margin:auto;
+margin-top:30px;
+}
+
+/* GRADE TABLE */
 
 .grade-system{
 margin-top:10px;
 }
 
 .grade-system th,.grade-system td{
-border:1px solid #000;
+border:1px solid #004aad;
+padding:5px;
 font-size:12px;
 }
 
-.pass{color:green;font-weight:bold;}
-.fail{color:red;font-weight:bold;}
+/* WATERMARK */
 
-/* signature */
-
-.signature-section{
-display:flex;
-justify-content:space-between;
-margin-top:60px;
+.watermark-logo{
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+opacity:0.05;
+width:250px;
 }
 
-.signature-box{text-align:center;}
-.line{border-top:1px solid #000;width:150px;margin:auto;margin-top:30px;}
+.watermark-text{
+position:absolute;
+top:40%;
+left:15%;
+font-size:70px;
+opacity:0.05;
+transform:rotate(-30deg);
+}
 
-/* styles */
+/* STYLES */
 
-.cbse{border-color:#004aad;color:#004aad;}
-.cbse th{background:#004aad;color:white;}
+.cbse{border-color:#004aad}
+.icse{border-color:#ff5733}
+.state{border-color:#28a745}
+.pro1{border-color:#6f42c1}
+.pro2{border-color:#fd7e14}
+.pro3{border-color:#17a2b8}
+.pro4{border-color:#e83e8c}
 
-.icse{border-color:#e74c3c;color:#e74c3c;}
-.icse th{background:#e74c3c;color:white;}
-
-.state{border-color:#27ae60;color:#27ae60;}
-.state th{background:#27ae60;color:white;}
-
-.pro1{border-color:#8e44ad;color:#8e44ad;}
-.pro1 th{background:#8e44ad;color:white;}
-
-.pro2{border-color:#f39c12;color:#f39c12;}
-.pro2 th{background:#f39c12;color:white;}
-
-.pro3{border-color:#16a085;color:#16a085;}
-.pro3 th{background:#16a085;color:white;}
-
-.pro4{border-color:#2c3e50;color:#2c3e50;}
-.pro4 th{background:#2c3e50;color:white;}
+.pass{color:green;font-weight:bold}
+.fail{color:red;font-weight:bold}
 
 @media print{
-.card{display:none;}
-table,th,td{border:1px solid #000 !important;}
+.card{display:none}
 }
 
 </style>
@@ -202,19 +233,19 @@ table,th,td{border:1px solid #000 !important;}
 </select>
 
 <select id="styleSelect">
-<option value="cbse">CBSE</option>
-<option value="icse">ICSE</option>
-<option value="state">STATE</option>
-<option value="pro1">STYLE 4</option>
-<option value="pro2">STYLE 5</option>
-<option value="pro3">STYLE 6</option>
-<option value="pro4">STYLE 7</option>
+<option value="cbse">Style 1</option>
+<option value="icse">Style 2</option>
+<option value="state">Style 3</option>
+<option value="pro1">Style 4</option>
+<option value="pro2">Style 5</option>
+<option value="pro3">Style 6</option>
+<option value="pro4">Style 7</option>
 </select>
 
 <select id="watermark">
 <option value="off">Watermark OFF</option>
 <option value="logo">Logo Watermark</option>
-<option value="name">Name Watermark</option>
+<option value="name">School Name Watermark</option>
 </select>
 
 <br>
@@ -235,7 +266,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/fireba
 import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
-apiKey:"AIzaSyBj8",
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
 projectId:"nmpsnagguradiya-b9b94"
 };
@@ -246,14 +277,38 @@ const db=getFirestore(app);
 const schoolId=localStorage.getItem("schoolId")||"school_001";
 let schoolData={};
 
+async function loadSchool(){
+
+const snap=await getDoc(doc(db,"schools",schoolId));
+
+if(snap.exists()){
+
+schoolData=snap.data();
+
+const sessions=schoolData.sessions||[];
+
+sessionSelect.innerHTML='<option value="">Select Session</option>'+sessions.map(s=>`<option>${s}</option>`).join("");
+
+}
+
+}
+
+loadSchool();
+
+/* GRADE */
+
 function grade(p){
+
 if(p>=90)return"A+";
 if(p>=75)return"A";
 if(p>=60)return"B";
 if(p>=45)return"C";
 if(p>=33)return"D";
 return"F";
+
 }
+
+/* RESULT */
 
 window.generateResults=async function(){
 
@@ -261,47 +316,32 @@ const session=sessionSelect.value;
 const cls=classSelect.value;
 const style=styleSelect.value;
 
-const studentSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId),where("class","==",cls)));
+const studentSnap=await getDocs(query(collection(db,"admissions"),
+where("schoolId","==",schoolId),
+where("session","==",session),
+where("class","==",cls)));
 
 let html="";
 
 for(const st of studentSnap.docs){
 
-const s=st.data();
+const student=st.data();
 
-let overallTotal=0;
-
-let rows="";
-
-const subjects=["Hindi","English","Math","Science","Social"];
-
-subjects.forEach(sub=>{
-
-let m=Math.floor(Math.random()*100);
-let max=100;
-
-overallTotal+=m;
-
-rows+=`
-<tr>
-<td>${sub}</td>
-<td>${m}</td>
-<td>${max}</td>
-<td>${m}</td>
-<td>${(m/max*100).toFixed(1)}</td>
-<td>${grade(m)}</td>
-</tr>
-`;
-
-});
-
-const finalPercent=(overallTotal/subjects.length).toFixed(1);
-const finalGrade=grade(finalPercent);
-const result=finalPercent>=33?"PASS":"FAIL";
+/* WATERMARK */
 
 let watermarkHTML="";
-if(watermark.value=="logo") watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo||""}">`;
-if(watermark.value=="name") watermarkHTML=`<div class="watermark-text">${schoolData.name||""}</div>`;
+
+if(watermark.value=="logo"){
+
+watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;
+
+}
+
+if(watermark.value=="name"){
+
+watermarkHTML=`<div class="watermark-text">${schoolData.name}</div>`;
+
+}
 
 html+=`
 
@@ -310,86 +350,78 @@ html+=`
 ${watermarkHTML}
 
 <div class="school-header">
-<img src="${schoolData.logo||""}">
-<div class="school-name">${schoolData.name||"School Name"}</div>
-<img src="${schoolData.logo||""}">
+
+<img src="${schoolData.logo}">
+
+<div class="school-name">${schoolData.name}</div>
+
+<img src="${schoolData.logo}">
+
 </div>
 
 <div class="report-title">Report Card</div>
 
 <div class="school-info">
-DISE Code : ${schoolData.dise||""} | Session : ${session}
+
+Address: ${schoolData.address||""}
+| DISE Code: ${schoolData.dise||""}
+| Session: ${session}
+
 </div>
 
 <div class="student">
 
 <div class="student-details">
 
-<div><b>Name:</b> ${s.name}</div>
-<div><b>Father:</b> ${s.father}</div>
-<div><b>Mother:</b> ${s.mother||""}</div>
-<div><b>Class:</b> ${s.class}</div>
-<div><b>Roll:</b> ${s.roll}</div>
-<div><b>Scholar No:</b> ${s.scholar||""}</div>
-<div><b>Aadhaar:</b> ${s.aadhaar||""}</div>
-<div><b>Village/City:</b> ${s.city||s.village||""}</div>
-<div><b>District:</b> ${s.district||""}</div>
-<div><b>State:</b> ${s.state||""}</div>
+<div><b>Name:</b> ${student.name}</div>
+<div><b>Father:</b> ${student.father}</div>
+
+<div><b>Mother:</b> ${student.mother||""}</div>
+<div><b>Mobile:</b> ${student.mobile||""}</div>
+
+<div><b>Class:</b> ${student.class}</div>
+<div><b>Roll:</b> ${student.roll||""}</div>
+
+<div><b>Scholar:</b> ${student.scholer||""}</div>
+<div><b>Aadhar:</b> ${student.adhar||""}</div>
+
+<div><b>Village:</b> ${student.village||""}</div>
+<div><b>City:</b> ${student.city||""}</div>
+
+<div><b>District:</b> ${student.district||""}</div>
+<div><b>State:</b> ${student.state||""}</div>
+
+<div><b>DOB:</b> ${student.dob||""}</div>
+<div><b>Admission:</b> ${student.admissionDate||""}</div>
 
 </div>
 
-<img src="${s.photo||""}">
+<img src="${student.photo||""}">
 
 </div>
-
-<div class="table-title">Academic Record</div>
-
-<table>
-
-<tr>
-<th>Subject</th>
-<th>Marks</th>
-<th>Max Marks</th>
-<th>Total</th>
-<th>%</th>
-<th>Grade</th>
-</tr>
-
-${rows}
-
-</table>
 
 <div class="summary">
 
-Overall Total : ${overallTotal} <br>
-Final Percentage : ${finalPercent}% <br>
-Final Grade : ${finalGrade} <br>
-Result : <span class="${result=='PASS'?'pass':'fail'}">${result}</span>
+Result Generated
 
 </div>
-
-<table class="grade-system">
-
-<tr><th>Percentage</th><th>Grade</th></tr>
-<tr><td>90-100</td><td>A+</td></tr>
-<tr><td>75-89</td><td>A</td></tr>
-<tr><td>60-74</td><td>B</td></tr>
-<tr><td>45-59</td><td>C</td></tr>
-<tr><td>33-44</td><td>D</td></tr>
-<tr><td>0-32</td><td>F</td></tr>
-
-</table>
 
 <div class="signature-section">
 
 <div class="signature-box">
+
 Class Teacher
+
 <div class="line"></div>
+
 </div>
 
 <div class="signature-box">
+
 Principal
+
 <div class="line"></div>
+
 </div>
 
 </div>
@@ -400,18 +432,28 @@ Principal
 
 }
 
-resultArea.innerHTML=html;
+document.getElementById("resultArea").innerHTML=html;
 
 }
 
+/* PDF */
+
 window.downloadPDF=function(){
 
-html2pdf(resultArea,{
+html2pdf(
+
+document.getElementById("resultArea"),
+
+{
+
 margin:5,
-filename:"report-card.pdf",
-html2canvas:{scale:2},
+filename:"result.pdf",
+html2canvas:{scale:2,useCORS:true},
 jsPDF:{unit:"mm",format:"a4"}
-});
+
+}
+
+);
 
 }
 
