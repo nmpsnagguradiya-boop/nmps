@@ -9,72 +9,56 @@
 
 <style>
 
-@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
-
 body{font-family:Arial;margin:0;background:#f2f4f8;}
 header{display:none;}
 .container{max-width:1200px;margin:auto;padding:20px;}
-
-.card{
-background:white;
-padding:20px;
-border-radius:10px;
-margin-bottom:20px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
+.card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
 
 select,button{padding:10px;margin:5px;}
 button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
 
-/* MARKSHEET */
-
 .marksheet{
 width:210mm;
-height:297mm;
+min-height:297mm;
 background:white;
-padding:15px;
+padding:20px;
 margin:auto;
 border:2px solid #004aad;
 page-break-after:always;
 position:relative;
 box-sizing:border-box;
-display:flex;
-flex-direction:column;
 }
-
-/* HEADER */
 
 .school-header{
 display:flex;
 justify-content:space-between;
 align-items:center;
 border-bottom:3px solid #004aad;
-padding-bottom:8px;
-margin-bottom:5px;
+padding-bottom:10px;
+margin-bottom:10px;
 }
 
-.school-header img{width:45px;}
+.school-header img{width:50px;}
 
 .school-name{
 flex:1;
 text-align:center;
-font-size:26px;
+font-size:28px;
 font-weight:bold;
 color:#004aad;
 }
 
 .report-title{
 text-align:center;
-font-family:'Pacifico',cursive;
-font-size:28px;
-margin-top:5px;
+font-size:26px;
+font-weight:bold;
 margin-bottom:5px;
 }
 
 .school-info{
 text-align:center;
-font-size:13px;
-margin-bottom:5px;
+font-size:14px;
+margin-bottom:10px;
 }
 
 /* STUDENT DETAILS */
@@ -82,19 +66,19 @@ margin-bottom:5px;
 .student{
 display:flex;
 justify-content:space-between;
-margin-top:10px;
+margin-top:15px;
 }
 
 .student-details{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:6px 20px;
-font-size:13px;
+gap:5px 20px;
+font-size:14px;
 }
 
 .student img{
-width:75px;
-height:95px;
+width:80px;
+height:100px;
 object-fit:cover;
 border:1px solid #ccc;
 }
@@ -104,14 +88,14 @@ border:1px solid #ccc;
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:8px;
+margin-top:12px;
 }
 
 th,td{
 border:1px solid #ccc;
-padding:5px;
+padding:6px;
 text-align:center;
-font-size:12px;
+font-size:13px;
 }
 
 th{
@@ -122,7 +106,8 @@ color:white;
 .table-title{
 text-align:center;
 font-weight:bold;
-margin-top:8px;
+margin-top:10px;
+font-size:16px;
 }
 
 /* WATERMARK */
@@ -145,15 +130,25 @@ opacity:0.05;
 transform:rotate(-30deg);
 }
 
+/* RESULT SUMMARY */
+
+.summary{
+margin-top:10px;
+font-weight:bold;
+font-size:14px;
+}
+
 /* SIGNATURE */
 
 .signature-section{
-margin-top:auto;
 display:flex;
 justify-content:space-between;
+margin-top:40px;
 }
 
-.signature-box{text-align:center;}
+.signature-box{
+text-align:center;
+}
 
 .signature-box .line{
 border-top:1px solid #000;
@@ -165,13 +160,13 @@ margin-top:30px;
 /* Grade Table */
 
 .grade-system{
-margin-top:8px;
+margin-top:10px;
 }
 
 .grade-system th,.grade-system td{
 border:1px solid #004aad;
-padding:4px;
-font-size:11px;
+padding:5px;
+font-size:12px;
 }
 
 .pass{color:green;font-weight:bold;}
@@ -227,11 +222,6 @@ table,th,td{border:1px solid #000 !important;-webkit-print-color-adjust:exact;pr
 <option value="name">School Name Watermark</option>
 </select>
 
-<select id="resultType">
-<option value="percent">Percentage System</option>
-<option value="gradeOnly">Grade Only System</option>
-</select>
-
 <br>
 
 <button onclick="generateResults()">Generate Result</button>
@@ -285,7 +275,6 @@ window.generateResults=async function(){
 const session=sessionSelect.value;
 const cls=classSelect.value;
 const style=styleSelect.value;
-const type=resultType.value;
 
 if(!session||!cls){alert("Select Session and Class");return;}
 
@@ -293,8 +282,8 @@ const studentSnap=await getDocs(query(collection(db,"admissions"),where("schoolI
 const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
 const subjectSnap=await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",session)));
 
-let exams=[];examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
-let subjects=[];subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
+let exams=[]; examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
+let subjects=[]; subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
 
 let html="";
 
@@ -309,20 +298,8 @@ const d=m.data();
 marks[d.examId+"_"+d.subjectId]=d.marks;
 });
 
-let attSnap=await getDoc(doc(db,"attendance",`${st.id}_${session}`));
-let work=0,present=0,absent=0,sports="",activity="";
-if(attSnap.exists()){
-const d=attSnap.data();
-work=d.workingDays||0;
-present=d.present||0;
-absent=d.absent||0;
-sports=d.sports||"";
-activity=d.activity||"";
-}
-
-let head="<tr><th>Subject</th>";
-exams.forEach(e=>{head+=`<th>${e.name}</th>`;});
-head+="<th>Total</th><th>%</th><th>Grade</th><th>Result</th></tr>";
+let overallTotal=0;
+let subjectCount=0;
 
 let rows="";
 
@@ -339,26 +316,23 @@ total+=Number(m);
 
 const percent=(total/exams.length).toFixed(1);
 const g=grade(percent);
-const pass=percent>=33;
 
-row+=`<td>${total}</td>
-<td>${percent}</td>
-<td>${g}</td>
-<td class="${pass?'pass':'fail'}">${pass?'PASS':'FAIL'}</td></tr>`;
+overallTotal+=Number(total);
+subjectCount++;
+
+row+=`<td>${total}</td><td>${percent}</td><td>${g}</td></tr>`;
 
 rows+=row;
 
 });
 
-let watermarkHTML="";
-if(watermark.value=="logo")watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;
-if(watermark.value=="name")watermarkHTML=`<div class="watermark-text">${schoolData.name}</div>`;
+const finalPercent=(overallTotal/subjectCount).toFixed(1);
+const finalGrade=grade(finalPercent);
+const finalResult=finalPercent>=33?"PASS":"FAIL";
 
 html+=`
 
 <div class="marksheet ${style}">
-
-${watermarkHTML}
 
 <div class="school-header">
 <img src="${schoolData.logo}">
@@ -369,9 +343,7 @@ ${watermarkHTML}
 <div class="report-title">Report Card</div>
 
 <div class="school-info">
-Address: ${schoolData.address||""} |
-DISE Code: ${schoolData.dise||""} |
-Session: ${session}
+Address: ${schoolData.address||""} | DISE Code: ${schoolData.dise||""} | Session: ${session}
 </div>
 
 <div class="student">
@@ -383,8 +355,6 @@ Session: ${session}
 <div><b>Mother:</b> ${student.mother||""}</div>
 <div><b>Class:</b> ${student.class}</div>
 <div><b>Roll:</b> ${student.roll}</div>
-<div><b>Aadhaar:</b> ${student.aadhaar||""}</div>
-<div><b>Village/City:</b> ${student.city||student.village||""}</div>
 <div><b>DOB:</b> ${student.dob||""}</div>
 
 </div>
@@ -397,29 +367,36 @@ Session: ${session}
 
 <table>
 
-${head}
+<tr>
+<th>Subject</th>
+${exams.map(e=>`<th>${e.name}</th>`).join("")}
+<th>Total</th>
+<th>%</th>
+<th>Grade</th>
+</tr>
 
 ${rows}
 
 </table>
 
-<table>
+<div class="summary">
 
-<tr>
-<th>Sports</th>
-<th>Activity</th>
-<th>Working Days</th>
-<th>Present</th>
-<th>Absent</th>
-</tr>
+Overall Total : ${overallTotal} <br>
+Final Percentage : ${finalPercent}% <br>
+Result : <span class="${finalResult=='PASS'?'pass':'fail'}">${finalResult}</span> <br>
+Final Grade : ${finalGrade}
 
-<tr>
-<td>${sports}</td>
-<td>${activity}</td>
-<td>${work}</td>
-<td>${present}</td>
-<td>${absent}</td>
-</tr>
+</div>
+
+<table class="grade-system">
+
+<tr><th>Percentage</th><th>Grade</th></tr>
+<tr><td>90-100</td><td>A+</td></tr>
+<tr><td>75-89</td><td>A</td></tr>
+<tr><td>60-74</td><td>B</td></tr>
+<tr><td>45-59</td><td>C</td></tr>
+<tr><td>33-44</td><td>D</td></tr>
+<tr><td>0-32</td><td>F</td></tr>
 
 </table>
 
@@ -464,4 +441,4 @@ jsPDF:{unit:"mm",format:"a4"}
 </script>
 
 </body>
-                                      </html>
+</html>
