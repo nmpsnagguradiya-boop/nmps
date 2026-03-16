@@ -42,7 +42,7 @@ margin-bottom:20px;
 }
 
 .school{
-font-size:24px;
+font-size:26px;
 font-weight:bold;
 }
 
@@ -105,10 +105,6 @@ display:flex;
 justify-content:space-between;
 }
 
-.signature img{
-width:120px;
-}
-
 @media print{
 
 .controls{
@@ -143,15 +139,16 @@ background:white;
 <div class="form design1" id="form">
 
 <div class="logo">
-<img src="school-logo.png">
+<img id="schoolLogo">
 </div>
 
 <div class="header">
 
-<div class="school">YOUR SCHOOL NAME</div>
+<div class="school" id="schoolName"></div>
 
-Address : Your School Address <br>
-Mobile : 9999999999 <br>
+<div id="schoolAddress"></div>
+DISE Code : <span id="schoolDise"></span><br>
+Session : <span id="schoolSession"></span>
 
 <h2>Student Admission Form</h2>
 
@@ -177,6 +174,11 @@ Student ID : <span id="studentID"></span>
 <tr>
 <td class="label">Father Name</td>
 <td id="father"></td>
+</tr>
+
+<tr>
+<td class="label">Mother Name</td>
+<td id="mother"></td>
 </tr>
 
 <tr>
@@ -273,7 +275,6 @@ Parent Signature
 </div>
 
 <div>
-<img src="principal-sign.png"><br>
 Principal Signature
 </div>
 
@@ -291,17 +292,36 @@ import { getFirestore,doc,getDoc } from "https://www.gstatic.com/firebasejs/10.1
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
 authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
-projectId:"nmpsnagguradiya-b9b94",
-storageBucket:"nmpsnagguradiya-b9b94.firebasestorage.app",
-messagingSenderId:"811957568318",
-appId:"1:811957568318:web:7058de9ba52df9d6bae26f"
+projectId:"nmpsnagguradiya-b9b94"
 };
 
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
+const schoolId=localStorage.getItem("schoolId")||"school_001";
+const session=localStorage.getItem("activeSession")||"2025-26";
+
 const params=new URLSearchParams(window.location.search);
 const id=params.get("id");
+
+async function loadSchool(){
+
+const snap=await getDoc(doc(db,"schools",schoolId));
+
+if(snap.exists()){
+
+let s=snap.data();
+
+document.getElementById("schoolName").innerText=s.name||"";
+document.getElementById("schoolAddress").innerText="Address : "+(s.address||"");
+document.getElementById("schoolDise").innerText=s.dise||"";
+document.getElementById("schoolSession").innerText=session;
+
+document.getElementById("schoolLogo").src=s.logo||"";
+
+}
+
+}
 
 async function loadStudent(){
 
@@ -317,6 +337,7 @@ document.getElementById("studentID").innerText=studentID;
 
 document.getElementById("name").innerText=s.name||"";
 document.getElementById("father").innerText=s.father||"";
+document.getElementById("mother").innerText=s.mother||"";
 document.getElementById("mobile").innerText=s.mobile||"";
 document.getElementById("class").innerText=s.class||"";
 document.getElementById("dob").innerText=s.dob||"";
@@ -344,9 +365,7 @@ QRCode.toCanvas(document.getElementById("qr"),window.location.href);
 }
 
 function downloadPDF(){
-
 window.print();
-
 }
 
 document.getElementById("designSelect").addEventListener("change",function(){
@@ -359,9 +378,10 @@ form.classList.add(this.value);
 
 });
 
+loadSchool();
 loadStudent();
 
 </script>
 
 </body>
-</html>
+  </html>
