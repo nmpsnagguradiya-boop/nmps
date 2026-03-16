@@ -2,14 +2,17 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Report Card</title>
+<title>Print Result</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
 
 <style>
 
+@import url('https://fonts.googleapis.com/css2?family=Pacifico&display=swap');
+
 body{font-family:Arial;margin:0;background:#f2f4f8;}
+header{display:none;}
 .container{max-width:1200px;margin:auto;padding:20px;}
 
 .card{
@@ -23,21 +26,23 @@ box-shadow:0 2px 6px rgba(0,0,0,0.1);
 select,button{padding:10px;margin:5px;}
 button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
 
-/* REPORT CARD */
+/* MARKSHEET */
 
 .marksheet{
 width:210mm;
-min-height:297mm;
+height:297mm;
 background:white;
-padding:18px;
+padding:15px;
 margin:auto;
 border:2px solid #004aad;
+page-break-after:always;
+position:relative;
 box-sizing:border-box;
 display:flex;
 flex-direction:column;
-position:relative;
-page-break-after:always;
 }
+
+/* HEADER */
 
 .school-header{
 display:flex;
@@ -45,7 +50,7 @@ justify-content:space-between;
 align-items:center;
 border-bottom:3px solid #004aad;
 padding-bottom:8px;
-margin-bottom:6px;
+margin-bottom:5px;
 }
 
 .school-header img{width:45px;}
@@ -58,33 +63,33 @@ font-weight:bold;
 color:#004aad;
 }
 
+.report-title{
+text-align:center;
+font-family:'Pacifico',cursive;
+font-size:28px;
+margin-top:5px;
+margin-bottom:5px;
+}
+
 .school-info{
 text-align:center;
 font-size:13px;
 margin-bottom:5px;
 }
 
-.report-title{
-text-align:center;
-font-size:20px;
-font-weight:bold;
-margin:6px 0;
-}
-
-/* STUDENT */
+/* STUDENT DETAILS */
 
 .student{
 display:flex;
 justify-content:space-between;
-margin-top:8px;
+margin-top:10px;
 }
 
 .student-details{
 display:grid;
 grid-template-columns:1fr 1fr;
-gap:4px 25px;
+gap:6px 20px;
 font-size:13px;
-line-height:1.4;
 }
 
 .student img{
@@ -99,7 +104,7 @@ border:1px solid #ccc;
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:10px;
+margin-top:8px;
 }
 
 th,td{
@@ -114,8 +119,11 @@ background:#004aad;
 color:white;
 }
 
-.pass{color:green;font-weight:bold;}
-.fail{color:red;font-weight:bold;}
+.table-title{
+text-align:center;
+font-weight:bold;
+margin-top:8px;
+}
 
 /* WATERMARK */
 
@@ -137,7 +145,7 @@ opacity:0.05;
 transform:rotate(-30deg);
 }
 
-/* SIGN */
+/* SIGNATURE */
 
 .signature-section{
 margin-top:auto;
@@ -145,21 +153,19 @@ display:flex;
 justify-content:space-between;
 }
 
-.signature-box{
-text-align:center;
-}
+.signature-box{text-align:center;}
 
 .signature-box .line{
 border-top:1px solid #000;
-width:140px;
+width:150px;
 margin:auto;
-margin-top:25px;
+margin-top:30px;
 }
 
-/* GRADE */
+/* Grade Table */
 
 .grade-system{
-margin-top:10px;
+margin-top:8px;
 }
 
 .grade-system th,.grade-system td{
@@ -168,7 +174,10 @@ padding:4px;
 font-size:11px;
 }
 
-/* STYLE */
+.pass{color:green;font-weight:bold;}
+.fail{color:red;font-weight:bold;}
+
+/* Styles */
 
 .cbse{border-color:#004aad;} .cbse th{background:#004aad;}
 .icse{border-color:#ff5733;} .icse th{background:#ff5733;}
@@ -180,11 +189,7 @@ font-size:11px;
 
 @media print{
 .card{display:none;}
-table,th,td{
-border:1px solid #000 !important;
--webkit-print-color-adjust: exact;
-print-color-adjust: exact;
-}
+table,th,td{border:1px solid #000 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
 }
 
 </style>
@@ -252,8 +257,8 @@ projectId:"nmpsnagguradiya-b9b94"
 
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
-const schoolId=localStorage.getItem("schoolId")||"school_001";
 
+const schoolId=localStorage.getItem("schoolId")||"school_001";
 let schoolData={};
 
 async function loadSchool(){
@@ -264,7 +269,6 @@ const sessions=schoolData.sessions||[];
 sessionSelect.innerHTML='<option value="">Select Session</option>'+sessions.map(s=>`<option>${s}</option>`).join("");
 }
 }
-
 loadSchool();
 
 function grade(p){
@@ -289,8 +293,8 @@ const studentSnap=await getDocs(query(collection(db,"admissions"),where("schoolI
 const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
 const subjectSnap=await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",session)));
 
-let exams=[]; examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
-let subjects=[]; subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
+let exams=[];examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
+let subjects=[];subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
 
 let html="";
 
@@ -298,9 +302,63 @@ for(const st of studentSnap.docs){
 
 const student=st.data();
 
+let marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
+let marks={};
+marksSnap.forEach(m=>{
+const d=m.data();
+marks[d.examId+"_"+d.subjectId]=d.marks;
+});
+
+let attSnap=await getDoc(doc(db,"attendance",`${st.id}_${session}`));
+let work=0,present=0,absent=0,sports="",activity="";
+if(attSnap.exists()){
+const d=attSnap.data();
+work=d.workingDays||0;
+present=d.present||0;
+absent=d.absent||0;
+sports=d.sports||"";
+activity=d.activity||"";
+}
+
+let head="<tr><th>Subject</th>";
+exams.forEach(e=>{head+=`<th>${e.name}</th>`;});
+head+="<th>Total</th><th>%</th><th>Grade</th><th>Result</th></tr>";
+
+let rows="";
+
+subjects.forEach(sub=>{
+
+let total=0;
+let row=`<tr><td>${sub.name}</td>`;
+
+exams.forEach(ex=>{
+let m=marks[ex.id+"_"+sub.id]||0;
+row+=`<td>${m}</td>`;
+total+=Number(m);
+});
+
+const percent=(total/exams.length).toFixed(1);
+const g=grade(percent);
+const pass=percent>=33;
+
+row+=`<td>${total}</td>
+<td>${percent}</td>
+<td>${g}</td>
+<td class="${pass?'pass':'fail'}">${pass?'PASS':'FAIL'}</td></tr>`;
+
+rows+=row;
+
+});
+
+let watermarkHTML="";
+if(watermark.value=="logo")watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;
+if(watermark.value=="name")watermarkHTML=`<div class="watermark-text">${schoolData.name}</div>`;
+
 html+=`
 
 <div class="marksheet ${style}">
+
+${watermarkHTML}
 
 <div class="school-header">
 <img src="${schoolData.logo}">
@@ -308,38 +366,75 @@ html+=`
 <img src="${schoolData.logo}">
 </div>
 
-<div class="school-info">
-Address: ${schoolData.address||""} | DISE Code: ${schoolData.dise||""} | Session: ${session}
-</div>
+<div class="report-title">Report Card</div>
 
-<div class="report-title">REPORT CARD</div>
+<div class="school-info">
+Address: ${schoolData.address||""} |
+DISE Code: ${schoolData.dise||""} |
+Session: ${session}
+</div>
 
 <div class="student">
 
 <div class="student-details">
+
 <div><b>Name:</b> ${student.name}</div>
-<div><b>Class:</b> ${student.class}</div>
 <div><b>Father:</b> ${student.father}</div>
 <div><b>Mother:</b> ${student.mother||""}</div>
+<div><b>Class:</b> ${student.class}</div>
 <div><b>Roll:</b> ${student.roll}</div>
-<div><b>DOB:</b> ${student.dob||""}</div>
 <div><b>Aadhaar:</b> ${student.aadhaar||""}</div>
 <div><b>Village/City:</b> ${student.city||student.village||""}</div>
+<div><b>DOB:</b> ${student.dob||""}</div>
+
 </div>
 
 <img src="${student.photo||""}">
 
 </div>
 
-<!-- MARKS TABLE SAME SYSTEM -->
+<div class="table-title">Academic Record</div>
+
 <table>
-<tr><th>Subject</th>${exams.map(e=>`<th>${e.name}</th>`).join("")}<th>Total</th></tr>
-${subjects.map(s=>`<tr><td>${s.name}</td>${exams.map(()=>`<td></td>`).join("")}<td></td></tr>`).join("")}
+
+${head}
+
+${rows}
+
+</table>
+
+<table>
+
+<tr>
+<th>Sports</th>
+<th>Activity</th>
+<th>Working Days</th>
+<th>Present</th>
+<th>Absent</th>
+</tr>
+
+<tr>
+<td>${sports}</td>
+<td>${activity}</td>
+<td>${work}</td>
+<td>${present}</td>
+<td>${absent}</td>
+</tr>
+
 </table>
 
 <div class="signature-section">
-<div class="signature-box">Class Teacher<div class="line"></div></div>
-<div class="signature-box">Principal<div class="line"></div></div>
+
+<div class="signature-box">
+Class Teacher
+<div class="line"></div>
+</div>
+
+<div class="signature-box">
+Principal
+<div class="line"></div>
+</div>
+
 </div>
 
 </div>
@@ -348,20 +443,25 @@ ${subjects.map(s=>`<tr><td>${s.name}</td>${exams.map(()=>`<td></td>`).join("")}<
 
 }
 
-resultArea.innerHTML=html;
+document.getElementById("resultArea").innerHTML=html;
 
 }
 
 window.downloadPDF=function(){
-html2pdf(resultArea,{
+
+html2pdf(
+document.getElementById("resultArea"),
+{
 margin:5,
-filename:"report-card.pdf",
+filename:"result.pdf",
 html2canvas:{scale:2,useCORS:true},
 jsPDF:{unit:"mm",format:"a4"}
-});
+}
+);
+
 }
 
 </script>
 
 </body>
-  </html>
+                                      </html>
