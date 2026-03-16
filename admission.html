@@ -2,224 +2,219 @@
 <html>
 <head>
 <meta charset="UTF-8">
-<title>Print Result</title>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<title>Student Admission</title>
 
 <style>
 
-body{font-family:Arial;margin:0;background:#f2f4f8;}
-header{display:none;}
-.container{max-width:1200px;margin:auto;padding:20px;}
-.card{background:white;padding:20px;border-radius:10px;margin-bottom:20px;box-shadow:0 2px 6px rgba(0,0,0,0.1);}
+body{font-family:Arial;margin:0;background:#f2f2f2;}
 
-select,button{padding:10px;margin:5px;}
-button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
+header{
+background:#004aad;
+color:white;
+padding:15px;
+text-align:center;
+font-size:22px;
+}
 
-.marksheet{
-width:210mm;
-min-height:297mm;
+.container{
+padding:20px;
+max-width:800px;
+margin:auto;
+}
+
+form{
 background:white;
 padding:20px;
-margin:auto;
-border:2px solid #004aad;
-page-break-after:always;
-position:relative;
-box-sizing:border-box;
+border-radius:10px;
+box-shadow:0 0 10px rgba(0,0,0,0.2);
 }
 
-.school-header{
-display:flex;
-justify-content:space-between;
-align-items:center;
-border-bottom:3px solid #004aad;
-padding-bottom:10px;
-margin-bottom:10px;
-}
-
-.school-header img{width:50px;}
-
-.school-name{
-flex:1;
-text-align:center;
-font-size:28px;
-font-weight:bold;
-color:#004aad;
-}
-
-.school-info{
-text-align:center;
-font-size:14px;
-margin-bottom:10px;
-}
-
-.report-title{
-text-align:center;
-font-size:26px;
-font-weight:bold;
-margin-bottom:5px;
-}
-
-.student{
-display:flex;
-justify-content:space-between;
-margin-top:15px;
-}
-
-.student-details{
-display:grid;
-grid-template-columns:1fr 1fr;
-gap:5px 20px;
-font-size:14px;
-}
-
-.student img{
-width:80px;
-height:100px;
-object-fit:cover;
+input,select,textarea{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:5px;
 border:1px solid #ccc;
+}
+
+button{
+margin-top:15px;
+background:#004aad;
+color:white;
+padding:12px;
+border:none;
+width:100%;
+border-radius:5px;
+font-size:16px;
+cursor:pointer;
+}
+
+.success{
+color:green;
+text-align:center;
+margin-top:10px;
 }
 
 table{
 width:100%;
+margin-top:20px;
+background:white;
 border-collapse:collapse;
-margin-top:12px;
 }
 
-th,td{
+table th,table td{
 border:1px solid #ccc;
-padding:6px;
+padding:8px;
 text-align:center;
-font-size:13px;
 }
 
-th{
-background:#004aad;
-color:white;
+img{
+width:50px;
+border-radius:5px;
 }
 
-.table-title{
-text-align:center;
-font-weight:bold;
-margin-top:10px;
-font-size:16px;
-}
-
-.watermark-logo{
-position:absolute;
-top:50%;
-left:50%;
-transform:translate(-50%,-50%);
-opacity:0.05;
-width:220px;
-}
-
-.watermark-text{
-position:absolute;
-top:40%;
-left:20%;
-font-size:60px;
-opacity:0.05;
-transform:rotate(-30deg);
-}
-
-.summary{
-margin-top:10px;
-font-weight:bold;
-font-size:14px;
-}
-
-.signature-section{
-display:flex;
-justify-content:space-between;
-margin-top:40px;
-}
-
-.signature-box{text-align:center;}
-
-.signature-box .line{
-border-top:1px solid #000;
-width:150px;
-margin:auto;
-margin-top:30px;
-}
-
-.grade-system{margin-top:10px;}
-
-.grade-system th,.grade-system td{
-border:1px solid #004aad;
-padding:5px;
-font-size:12px;
-}
-
-.pass{color:green;font-weight:bold;}
-.fail{color:red;font-weight:bold;}
-
-.cbse{border-color:#004aad;} .cbse th{background:#004aad;}
-.icse{border-color:#ff5733;} .icse th{background:#ff5733;}
-.state{border-color:#28a745;} .state th{background:#28a745;}
-.pro1{border-color:#6f42c1;} .pro1 th{background:#6f42c1;}
-.pro2{border-color:#fd7e14;} .pro2 th{background:#fd7e14;}
-.pro3{border-color:#17a2b8;} .pro3 th{background:#17a2b8;}
-.pro4{border-color:#e83e8c;} .pro4 th{background:#e83e8c;}
-
-@media print{
-.card{display:none;}
-table,th,td{border:1px solid #000 !important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+.filter{
+margin-top:20px;
 }
 
 </style>
+
 </head>
 
 <body>
 
+<header>Student Admission Form</header>
+
 <div class="container">
 
-<div class="card">
+<form id="form">
 
-<select id="sessionSelect"></select>
+<input type="hidden" id="studentId">
 
-<select id="classSelect">
-<option value="">Select Class</option>
-<option>Nursery</option><option>LKG</option><option>UKG</option>
-<option>1</option><option>2</option><option>3</option><option>4</option>
-<option>5</option><option>6</option><option>7</option><option>8</option>
-<option>9</option><option>10</option><option>11</option><option>12</option>
+<input type="text" id="name" placeholder="Student Name" required>
+<input type="text" id="father" placeholder="Father Name" required>
+<input type="text" id="mother" placeholder="Mother Name">
+
+<input type="text" id="mobile" placeholder="Mobile Number" required>
+
+<input type="text" id="village" placeholder="Village">
+<input type="text" id="city" placeholder="City">
+<input type="text" id="post" placeholder="Post">
+<input type="text" id="district" placeholder="District">
+<input type="text" id="state" placeholder="State">
+<input type="text" id="national" placeholder="Nationality">
+
+<input type="text" id="sssm" placeholder="SSSM ID">
+<input type="text" id="family" placeholder="Family ID">
+<input type="text" id="apar" placeholder="APAR ID">
+<input type="text" id="adhar" placeholder="Aadhar Card">
+
+<input type="text" id="caste" placeholder="Caste">
+<input type="text" id="category" placeholder="Category">
+
+<input type="text" id="roll" placeholder="Roll Number">
+<input type="text" id="scholer" placeholder="Scholar Number">
+
+<input type="text" id="admissionDate" placeholder="Admission Date (dd/mm/yyyy)">
+
+<select id="class">
+
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+<option>11</option>
+<option>12</option>
+
 </select>
 
-<select id="styleSelect">
-<option value="cbse">CBSE Pattern</option>
-<option value="icse">ICSE Pattern</option>
-<option value="state">State Board</option>
-<option value="pro1">Professional 1</option>
-<option value="pro2">Professional 2</option>
-<option value="pro3">Professional 3</option>
-<option value="pro4">Professional 4</option>
+<input type="text" id="dob" placeholder="Date Of Birth (dd/mm/yyyy)">
+
+<textarea id="message" placeholder="Message"></textarea>
+
+<label>Student Photo</label>
+<input type="file" id="photo">
+
+<img id="previewPhoto" src="" style="margin-top:10px;max-width:100px;display:none;border-radius:5px;">
+
+<button type="submit">Submit Admission</button>
+
+<div class="success" id="msg"></div>
+
+</form>
+
+<h3>Total Students : <span id="total">0</span></h3>
+
+<div class="filter">
+
+<select id="classFilter" onchange="loadStudents()">
+
+<option value="">All Classes</option>
+
+<option>Nursery</option>
+<option>LKG</option>
+<option>UKG</option>
+<option>1</option>
+<option>2</option>
+<option>3</option>
+<option>4</option>
+<option>5</option>
+<option>6</option>
+<option>7</option>
+<option>8</option>
+<option>9</option>
+<option>10</option>
+<option>11</option>
+<option>12</option>
+
 </select>
-
-<select id="watermark">
-<option value="off">Watermark OFF</option>
-<option value="logo">Logo Watermark</option>
-<option value="name">School Name Watermark</option>
-</select>
-
-<br>
-
-<button onclick="generateResults()">Generate Result</button>
-<button onclick="window.print()">Print</button>
-<button onclick="downloadPDF()">PDF</button>
 
 </div>
 
-<div id="resultArea"></div>
+<table>
+
+<thead>
+
+<tr>
+<th>Name</th>
+<th>Class</th>
+<th>Mobile</th>
+<th>Photo</th>
+<th>Action</th>
+</tr>
+
+</thead>
+
+<tbody id="studentList"></tbody>
+
+</table>
 
 </div>
 
 <script type="module">
 
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+import {
+getFirestore,
+collection,
+addDoc,
+getDocs,
+doc,
+updateDoc,
+deleteDoc
+}
+
+from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
 const firebaseConfig={
 apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
@@ -230,232 +225,210 @@ projectId:"nmpsnagguradiya-b9b94"
 const app=initializeApp(firebaseConfig);
 const db=getFirestore(app);
 
-const schoolId=localStorage.getItem("schoolId")||"school_001";
-let schoolData={};
+const schoolId = localStorage.getItem("schoolId") || "school_001";
+const session = localStorage.getItem("activeSession") || "2025-26";
 
-async function loadSchool(){
-const snap=await getDoc(doc(db,"schools",schoolId));
-if(snap.exists()){
-schoolData=snap.data();
-const sessions=schoolData.sessions||[];
-sessionSelect.innerHTML='<option value="">Select Session</option>'+sessions.map(s=>`<option>${s}</option>`).join("");
+let students=[];
+
+async function uploadImgBB(file){
+
+const formData=new FormData();
+formData.append("image",file);
+
+const res=await fetch(
+"https://api.imgbb.com/1/upload?key=21000d5a5d14fcef4b6af4d13647da5a",
+{
+method:"POST",
+body:formData
+});
+
+const data=await res.json();
+
+return data.data.url;
+
 }
+
+const form=document.getElementById("form");
+
+form.addEventListener("submit", async function(e){
+
+e.preventDefault();
+
+const id=document.getElementById("studentId").value;
+
+let photoURL=document.getElementById("previewPhoto").src || "";
+
+const file=document.getElementById("photo").files[0];
+
+if(file){
+photoURL=await uploadImgBB(file);
 }
-loadSchool();
 
-function grade(p){
-if(p>=90)return"A+";
-if(p>=75)return"A";
-if(p>=60)return"B";
-if(p>=45)return"C";
-if(p>=33)return"D";
-return"F";
+const studentData={
+
+schoolId,
+session,
+
+name:document.getElementById("name").value,
+father:document.getElementById("father").value,
+mother:document.getElementById("mother").value,
+mobile:document.getElementById("mobile").value,
+
+village:document.getElementById("village").value,
+city:document.getElementById("city").value,
+post:document.getElementById("post").value,
+district:document.getElementById("district").value,
+state:document.getElementById("state").value,
+national:document.getElementById("national").value,
+
+sssm:document.getElementById("sssm").value,
+family:document.getElementById("family").value,
+apar:document.getElementById("apar").value,
+adhar:document.getElementById("adhar").value,
+
+caste:document.getElementById("caste").value,
+category:document.getElementById("category").value,
+
+roll:document.getElementById("roll").value,
+scholer:document.getElementById("scholer").value,
+
+admissionDate:document.getElementById("admissionDate").value,
+class:document.getElementById("class").value,
+
+dob:document.getElementById("dob").value,
+message:document.getElementById("message").value,
+
+photo:photoURL
+
+};
+
+if(id){
+
+await updateDoc(doc(db,"admissions",id), studentData);
+
+document.getElementById("msg").innerText="Admission Updated Successfully";
+
+}else{
+
+await addDoc(collection(db,"admissions"), studentData);
+
+document.getElementById("msg").innerText="Admission Submitted Successfully";
+
 }
 
-window.generateResults=async function(){
+form.reset();
 
-const session=sessionSelect.value;
-const cls=classSelect.value;
-const style=styleSelect.value;
-const watermark=document.getElementById("watermark").value;
+document.getElementById("studentId").value="";
+document.getElementById("previewPhoto").style.display="none";
 
-if(!session||!cls){alert("Select Session and Class");return;}
+loadStudents();
 
-const studentSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId),where("session","==",session),where("class","==",cls)));
-const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
-const subjectSnap=await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",session)));
+});
 
-let exams=[]; examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
-let subjects=[]; subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
+async function loadStudents(){
+
+const querySnapshot=await getDocs(collection(db,"admissions"));
 
 let html="";
+let count=0;
 
-for(const st of studentSnap.docs){
+students=[];
 
-const student=st.data();
+const classFilter=document.getElementById("classFilter").value;
 
-const attendanceSnap=await getDocs(query(collection(db,"attendance"),where("studentId","==",st.id),where("session","==",session)));
-let attendance={};
-attendanceSnap.forEach(a=>attendance=a.data());
+querySnapshot.forEach(docSnap=>{
 
-let marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
-let marks={};
+const data=docSnap.data();
+data.id=docSnap.id;
 
-marksSnap.forEach(m=>{
-const d=m.data();
-marks[d.examId+"_"+d.subjectId]=Number(d.marks);
-});
+if(data.schoolId!==schoolId) return;
+if(data.session!==session) return;
+if(classFilter && data.class!==classFilter) return;
 
-let overallTotal=0;
-let maxTotal=0;
-let rows="";
+students.push(data);
 
-subjects.forEach(sub=>{
+count++;
 
-let total=0;
-let maxMarks=exams.length*100;
+html+=`<tr>
 
-let row=`<tr><td>${sub.name}</td>`;
+<td>${data.name}</td>
+<td>${data.class}</td>
+<td>${data.mobile}</td>
+<td><img src="${data.photo||''}"></td>
 
-exams.forEach(ex=>{
-let m=marks[ex.id+"_"+sub.id]||0;
-row+=`<td>${m}</td>`;
-total+=m;
-});
+<td>
+<button onclick="editStudent('${data.id}')">Edit</button>
+<button onclick="deleteStudent('${data.id}')">Delete</button>
+</td>
 
-const percent=((total/maxMarks)*100).toFixed(1);
-const g=grade(percent);
-
-overallTotal+=total;
-maxTotal+=maxMarks;
-
-row+=`<td>${total}</td><td>${maxMarks}</td><td>${percent}</td><td>${g}</td></tr>`;
-
-rows+=row;
+</tr>`;
 
 });
 
-const finalPercent=((overallTotal/maxTotal)*100).toFixed(1);
-const finalGrade=grade(finalPercent);
-const finalResult=finalPercent>=33?"PASS":"FAIL";
-
-let watermarkHTML="";
-if(watermark=="logo"){watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;}
-if(watermark=="name"){watermarkHTML=`<div class="watermark-text">${schoolData.name}</div>`;}
-
-html+=`
-
-<div class="marksheet ${style}">
-
-${watermarkHTML}
-
-<div class="school-header">
-<img src="${schoolData.logo}">
-<div class="school-name">${schoolData.name}</div>
-<img src="${schoolData.logo}">
-</div>
-
-<div class="school-info">
-${schoolData.address||""} | DISE Code : ${schoolData.dise||""} | Session : ${session}
-</div>
-
-<div class="report-title">Report Card</div>
-
-<div class="student">
-
-<div class="student-details">
-<div><b>Name:</b> ${student.name}</div>
-<div><b>Father:</b> ${student.father}</div>
-<div><b>Mother:</b> ${student.mother||""}</div>
-<div><b>Class:</b> ${student.class}</div>
-<div><b>Roll:</b> ${student.roll}</div>
-<div><b>DOB:</b> ${student.dob||""}</div>
-<div><b>Aadhar:</b> ${student.adhar||""}</div>
-<div><b>Scholar:</b> ${student.scholer||""}</div>
-<div><b>Village:</b> ${student.village||""}</div>
-<div><b>City:</b> ${student.city||""}</div>
-<div><b>Post:</b> ${student.post||""}</div>
-<div><b>District:</b> ${student.district||""}</div>
-<div><b>State:</b> ${student.state||""}</div>
-</div>
-
-<img src="${student.photo||""}">
-
-</div>
-
-<div class="table-title">Academic Record</div>
-
-<table>
-
-<tr>
-<th>Subject</th>
-${exams.map(e=>`<th>${e.name}</th>`).join("")}
-<th>Total</th>
-<th>Max Marks</th>
-<th>%</th>
-<th>Grade</th>
-</tr>
-
-${rows}
-
-</table>
-
-<div class="summary">
-Overall Total : ${overallTotal}/${maxTotal} <br>
-Final Percentage : ${finalPercent}% <br>
-Result : <span class="${finalResult=='PASS'?'pass':'fail'}">${finalResult}</span> <br>
-Final Grade : ${finalGrade}
-</div>
-
-<div class="table-title">Sports / Activity / Attendance</div>
-
-<table>
-<tr>
-<th>Sports</th>
-<th>Activity</th>
-<th>Working Days</th>
-<th>Present</th>
-<th>Absent</th>
-</tr>
-
-<tr>
-<td>${attendance.sports||""}</td>
-<td>${attendance.activity||""}</td>
-<td>${attendance.work||""}</td>
-<td>${attendance.present||""}</td>
-<td>${attendance.absent||""}</td>
-</tr>
-</table>
-
-<table class="grade-system">
-<tr><th>Percentage</th><th>Grade</th></tr>
-<tr><td>90-100</td><td>A+</td></tr>
-<tr><td>75-89</td><td>A</td></tr>
-<tr><td>60-74</td><td>B</td></tr>
-<tr><td>45-59</td><td>C</td></tr>
-<tr><td>33-44</td><td>D</td></tr>
-<tr><td>0-32</td><td>F</td></tr>
-</table>
-
-<div class="signature-section">
-
-<div class="signature-box">
-Class Teacher
-<div class="line"></div>
-</div>
-
-<div class="signature-box">
-Principal
-<div class="line"></div>
-</div>
-
-</div>
-
-</div>
-
-`;
+document.getElementById("studentList").innerHTML=html;
+document.getElementById("total").innerText=count;
 
 }
 
-document.getElementById("resultArea").innerHTML=html;
+window.editStudent=function(id){
+
+const s=students.find(x=>x.id===id);
+if(!s)return;
+
+document.getElementById("studentId").value=s.id;
+
+document.getElementById("name").value=s.name||"";
+document.getElementById("father").value=s.father||"";
+document.getElementById("mother").value=s.mother||"";
+document.getElementById("mobile").value=s.mobile||"";
+
+document.getElementById("village").value=s.village||"";
+document.getElementById("city").value=s.city||"";
+document.getElementById("post").value=s.post||"";
+document.getElementById("district").value=s.district||"";
+document.getElementById("state").value=s.state||"";
+
+document.getElementById("national").value=s.national||"";
+
+document.getElementById("sssm").value=s.sssm||"";
+document.getElementById("family").value=s.family||"";
+document.getElementById("apar").value=s.apar||"";
+document.getElementById("adhar").value=s.adhar||"";
+
+document.getElementById("caste").value=s.caste||"";
+document.getElementById("category").value=s.category||"";
+
+document.getElementById("roll").value=s.roll||"";
+document.getElementById("scholer").value=s.scholer||"";
+
+document.getElementById("admissionDate").value=s.admissionDate||"";
+document.getElementById("class").value=s.class||"";
+
+document.getElementById("dob").value=s.dob||"";
+document.getElementById("message").value=s.message||"";
+
+if(s.photo){
+document.getElementById("previewPhoto").src=s.photo;
+document.getElementById("previewPhoto").style.display="block";
+}
 
 }
 
-window.downloadPDF=function(){
+window.deleteStudent=async function(id){
 
-html2pdf(
-document.getElementById("resultArea"),
-{
-margin:5,
-filename:"result.pdf",
-html2canvas:{scale:2,useCORS:true},
-jsPDF:{unit:"mm",format:"a4"}
-}
-);
+if(confirm("Delete Student?")){
+
+await deleteDoc(doc(db,"admissions",id));
+
+loadStudents();
 
 }
+
+}
+
+loadStudents();
 
 </script>
 
 </body>
-</html>
+  </html>
