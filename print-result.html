@@ -19,18 +19,14 @@ button{background:#004aad;color:white;border:none;border-radius:5px;cursor:point
 
 .marksheet{
 width:210mm;
-height:297mm;
+min-height:287mm;
 background:white;
-padding:12mm;
-margin:auto;
+padding:20px;
+margin:20mm;
 border:2px solid #004aad;
-box-sizing:border-box;
 page-break-after:always;
-overflow:hidden;
-
-/* MAIN FIX */
-display:flex;
-flex-direction:column;
+position:relative;
+box-sizing:border-box;
 }
 
 .school-header{
@@ -135,16 +131,9 @@ font-size:14px;
 }
 
 .signature-section{
-margin-top:auto;
 display:flex;
 justify-content:space-between;
-}
-
-@media print{
-.marksheet{
-page-break-after:always;
-margin-bottom:6mm;
-}
+margin-top:40px;
 }
 
 .signature-box{text-align:center;}
@@ -452,9 +441,7 @@ Principal
 }
 
 document.getElementById("resultArea").innerHTML=html;
-setTimeout(()=>{
-window.print();
-},500);
+
 }
 
 window.downloadPDF=function(){
@@ -474,4 +461,4 @@ jsPDF:{unit:"mm",format:"a4"}
 </script>
 
 </body>
-  </html>
+</html>
