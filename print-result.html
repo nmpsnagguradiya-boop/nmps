@@ -19,14 +19,18 @@ button{background:#004aad;color:white;border:none;border-radius:5px;cursor:point
 
 .marksheet{
 width:210mm;
-min-height:297mm;
+height:297mm;
 background:white;
-padding:20px;
-margin:20mm;
+padding:10mm;
+margin:5mm;
 border:2px solid #004aad;
-page-break-after:always;
-position:relative;
 box-sizing:border-box;
+page-break-after:always;
+overflow:hidden;
+
+/* MAIN FIX */
+display:flex;
+flex-direction:column;
 }
 
 .school-header{
@@ -43,7 +47,7 @@ margin-bottom:10px;
 .school-name{
 flex:1;
 text-align:center;
-font-size:36px;
+font-size:28px;
 font-weight:bold;
 color:#004aad;
 }
@@ -131,9 +135,16 @@ font-size:14px;
 }
 
 .signature-section{
+margin-top:auto;
 display:flex;
 justify-content:space-between;
-margin-top:40px;
+}
+
+@media print{
+.marksheet{
+page-break-after:always;
+margin-bottom:6mm;
+}
 }
 
 .signature-box{text-align:center;}
@@ -264,9 +275,37 @@ if(!session||!cls){alert("Select Session and Class");return;}
 const studentSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId),where("session","==",session),where("class","==",cls)));
 const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
 const subjectSnap=await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",session)));
+const ttSnap = await getDocs(
+query(
+collection(db,"timetable"),
+where("schoolId","==",schoolId),
+where("session","==",session)
+)
+);
+
+let timetable=[];
+ttSnap.forEach(d=>{
+timetable.push(d.data());
+});
 
 let exams=[]; examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
-let subjects=[]; subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
+let subjects=[];
+
+subjectSnap.forEach(s=>{
+
+const subData = {
+id:s.id,
+name:s.data().name
+};
+
+/* check timetable */
+let exists = timetable.some(t=>t.subjectId===s.id && t.class===cls);
+
+if(exists){
+subjects.push(subData);
+}
+
+});
 
 let html="";
 
@@ -441,7 +480,9 @@ Principal
 }
 
 document.getElementById("resultArea").innerHTML=html;
-
+setTimeout(()=>{
+window.print();
+},500);
 }
 
 window.downloadPDF=function(){
@@ -461,4 +502,4 @@ jsPDF:{unit:"mm",format:"a4"}
 </script>
 
 </body>
-  </html>
+</html>
