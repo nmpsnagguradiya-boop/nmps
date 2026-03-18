@@ -17,110 +17,145 @@ header{display:none;}
 select,button{padding:10px;margin:5px;}
 button{background:#004aad;color:white;border:none;border-radius:5px;cursor:pointer;}
 
-/* 🔥 FINAL MARKSHEET FIX */
 .marksheet{
 width:210mm;
 height:297mm;
 background:white;
-padding:20px;
-margin:25px auto;
+padding:15mm;
+margin:auto;
 border:2px solid #004aad;
+page-break-after:always;
 position:relative;
 box-sizing:border-box;
-overflow:hidden;
-page-break-after:always;
 
+/* 🔥 FIX */
 display:flex;
 flex-direction:column;
+justify-content:space-between;
 }
 
-.marksheet:not(:last-child){
-margin-bottom:40px;
-}
-
-/* content wrapper */
-.marksheet-content{
-flex:1;
-display:flex;
-flex-direction:column;
-}
-
-/* signature bottom */
-.signature-section{
+.school-header{
 display:flex;
 justify-content:space-between;
-margin-top:auto;
-padding-top:20px;
+align-items:center;
+border-bottom:3px solid #004aad;
+padding-bottom:8px;
+margin-bottom:8px;
 }
 
-/* बाकी सब SAME */
-.school-header{
-display:flex;justify-content:space-between;align-items:center;
-border-bottom:3px solid #004aad;padding-bottom:10px;margin-bottom:10px;
-}
-.school-header img{width:50px;}
+.school-header img{width:45px;}
 
 .school-name{
-flex:1;text-align:center;font-size:28px;font-weight:bold;color:#004aad;
+flex:1;
+text-align:center;
+font-size:26px;
+font-weight:bold;
+color:#004aad;
 }
 
-.school-info{text-align:center;font-size:14px;margin-bottom:10px;}
-.report-title{text-align:center;font-size:26px;font-weight:bold;margin-bottom:5px;}
+.school-info{
+text-align:center;
+font-size:13px;
+margin-bottom:8px;
+}
 
-.student{display:flex;justify-content:space-between;margin-top:15px;}
+.report-title{
+text-align:center;
+font-size:22px;
+font-weight:bold;
+margin-bottom:5px;
+}
+
+.student{
+display:flex;
+justify-content:space-between;
+margin-top:10px;
+}
 
 .student-details{
-display:grid;grid-template-columns:1fr 1fr;gap:5px 20px;font-size:14px;
+display:grid;
+grid-template-columns:1fr 1fr;
+gap:4px 15px;
+font-size:13px;
 }
 
-.student img{width:80px;height:100px;object-fit:cover;border:1px solid #ccc;}
+.student img{
+width:75px;
+height:95px;
+object-fit:cover;
+border:1px solid #ccc;
+}
 
-table{width:100%;border-collapse:collapse;margin-top:12px;table-layout:fixed;}
+table{
+width:100%;
+border-collapse:collapse;
+margin-top:10px;
+}
 
 th,td{
-border:1px solid #ccc;padding:6px;text-align:center;font-size:13px;
-word-wrap:break-word;
+border:1px solid #ccc;
+padding:5px;
+text-align:center;
+font-size:12px;
 }
 
-th{background:#004aad;color:white;}
+th{
+background:#004aad;
+color:white;
+}
 
-.table-title{text-align:center;font-weight:bold;margin-top:10px;font-size:16px;}
+.table-title{
+text-align:center;
+font-weight:bold;
+margin-top:8px;
+font-size:14px;
+}
 
 .watermark-logo{
-position:absolute;top:50%;left:50%;
-transform:translate(-50%,-50%);opacity:0.05;width:220px;
+position:absolute;
+top:50%;
+left:50%;
+transform:translate(-50%,-50%);
+opacity:0.05;
+width:200px;
 }
 
 .watermark-text{
-position:absolute;top:40%;left:20%;
-font-size:60px;opacity:0.05;transform:rotate(-30deg);
+position:absolute;
+top:40%;
+left:20%;
+font-size:50px;
+opacity:0.05;
+transform:rotate(-30deg);
 }
 
-.summary{margin-top:10px;font-weight:bold;font-size:14px;}
+.summary{
+margin-top:8px;
+font-weight:bold;
+font-size:13px;
+}
+
+.signature-section{
+display:flex;
+justify-content:space-between;
+margin-top:auto; /* 🔥 always bottom */
+}
 
 .signature-box{text-align:center;}
+
 .signature-box .line{
-border-top:1px solid #000;width:150px;margin:auto;margin-top:30px;
+border-top:1px solid #000;
+width:130px;
+margin:auto;
+margin-top:25px;
 }
 
-.grade-system{margin-top:10px;}
+.grade-system{margin-top:8px;}
+
 .grade-system th,.grade-system td{
-border:1px solid #004aad;padding:5px;font-size:12px;
-}
-
-/* 🔥 AUTO FIT MODE */
-.compact table th,
-.compact table td{
-padding:4px !important;
-font-size:12px !important;
-}
-
-.compact .student-details{
-font-size:12px !important;
-}
-
-.compact .report-title{
-font-size:22px !important;
+border:1px solid #004aad;
+padding:4px;
+font-size:11px;
 }
 
 .pass{color:green;font-weight:bold;}
@@ -135,12 +170,16 @@ font-size:22px !important;
 .pro4{border-color:#e83e8c;} .pro4 th{background:#e83e8c;}
 
 @media print{
+
 .card{display:none;}
+
 body{margin:0;}
+
 .container{padding:0;}
 
 .marksheet{
-margin:0 auto 10mm auto;
+page-break-after:always;
+margin-bottom:10mm; /* 🔥 gap */
 }
 
 table,th,td{
@@ -148,6 +187,7 @@ border:1px solid #000 !important;
 -webkit-print-color-adjust:exact;
 print-color-adjust:exact;
 }
+
 }
 
 </style>
@@ -155,79 +195,171 @@ print-color-adjust:exact;
 
 <body>
 
-<!-- 🔥 BODY SAME -->
 <div class="container">
+
 <div class="card">
+
 <select id="sessionSelect"></select>
-<select id="classSelect"></select>
-<select id="styleSelect"></select>
-<select id="watermark"></select>
+
+<select id="classSelect">
+<option value="">Select Class</option>
+<option>Nursery</option><option>LKG</option><option>UKG</option>
+<option>1</option><option>2</option><option>3</option><option>4</option>
+<option>5</option><option>6</option><option>7</option><option>8</option>
+<option>9</option><option>10</option><option>11</option><option>12</option>
+</select>
+
+<select id="styleSelect">
+<option value="cbse">CBSE Pattern</option>
+<option value="icse">ICSE Pattern</option>
+<option value="state">State Board</option>
+<option value="pro1">Professional 1</option>
+<option value="pro2">Professional 2</option>
+<option value="pro3">Professional 3</option>
+<option value="pro4">Professional 4</option>
+</select>
+
+<select id="watermark">
+<option value="off">Watermark OFF</option>
+<option value="logo">Logo Watermark</option>
+<option value="name">School Name Watermark</option>
+</select>
+
+<br>
+
 <button onclick="generateResults()">Generate Result</button>
 <button onclick="window.print()">Print</button>
 <button onclick="downloadPDF()">PDF</button>
+
 </div>
 
 <div id="resultArea"></div>
+
 </div>
 
 <script type="module">
 
-// ✅ तुम्हारा पूरा original JS SAME रहेगा (कुछ नहीं हटाया)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getFirestore,collection,getDocs,doc,getDoc,query,where } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-/* 🔥 AUTO FIT FINAL */
-function autoFitAll(){
+const firebaseConfig={
+apiKey:"AIzaSyBj8_SjhJ9QtXu-4DigToqjBos5waZEXYw",
+authDomain:"nmpsnagguradiya-b9b94.firebaseapp.com",
+projectId:"nmpsnagguradiya-b9b94"
+};
 
-const sheets=document.querySelectorAll(".marksheet");
+const app=initializeApp(firebaseConfig);
+const db=getFirestore(app);
 
-sheets.forEach(sheet=>{
+const schoolId=localStorage.getItem("schoolId")||"school_001";
+let schoolData={};
 
-// wrap auto add (no edit needed)
-if(!sheet.querySelector(".marksheet-content")){
-let content=document.createElement("div");
-content.className="marksheet-content";
-
-while(sheet.firstChild){
-content.appendChild(sheet.firstChild);
+async function loadSchool(){
+const snap=await getDoc(doc(db,"schools",schoolId));
+if(snap.exists()){
+schoolData=snap.data();
+const sessions=schoolData.sessions||[];
+sessionSelect.innerHTML='<option value="">Select Session</option>'+sessions.map(s=>`<option>${s}</option>`).join("");
 }
-sheet.appendChild(content);
 }
+loadSchool();
 
-const content=sheet.querySelector(".marksheet-content");
-
-/* step 1 compact */
-if(content.scrollHeight > sheet.clientHeight){
-sheet.classList.add("compact");
-}
-
-/* step 2 scale */
-setTimeout(()=>{
-if(content.scrollHeight > sheet.clientHeight){
-
-let scale=1;
-
-while(content.scrollHeight > sheet.clientHeight && scale > 0.75){
-scale -= 0.01;
-content.style.transform=`scale(${scale})`;
-content.style.transformOrigin="top left";
-content.style.width=(100/scale)+"%";
+function grade(p){
+if(p>=90)return"A+";
+if(p>=75)return"A";
+if(p>=60)return"B";
+if(p>=45)return"C";
+if(p>=33)return"D";
+return"F";
 }
 
-}
-},100);
+window.generateResults=async function(){
 
+const session=sessionSelect.value;
+const cls=classSelect.value;
+const style=styleSelect.value;
+const watermark=document.getElementById("watermark").value;
+
+if(!session||!cls){alert("Select Session and Class");return;}
+
+const studentSnap=await getDocs(query(collection(db,"admissions"),where("schoolId","==",schoolId),where("session","==",session),where("class","==",cls)));
+const examSnap=await getDocs(query(collection(db,"exam_sessions"),where("schoolId","==",schoolId),where("session","==",session)));
+const subjectSnap=await getDocs(query(collection(db,"subjects"),where("schoolId","==",schoolId),where("session","==",session)));
+
+let exams=[]; examSnap.forEach(e=>exams.push({id:e.id,name:e.data().examName}));
+let subjects=[]; subjectSnap.forEach(s=>subjects.push({id:s.id,name:s.data().name}));
+
+let html="";
+
+for(const st of studentSnap.docs){
+
+const student=st.data();
+
+let attendance={};
+const attDoc=await getDoc(doc(db,"attendance",`${st.id}_${session}`));
+if(attDoc.exists()){attendance=attDoc.data();}
+
+let marksSnap=await getDocs(query(collection(db,"marks"),where("studentId","==",st.id),where("session","==",session)));
+let marks={};
+
+marksSnap.forEach(m=>{
+const d=m.data();
+marks[d.examId+"_"+d.subjectId]=Number(d.marks);
 });
 
+let overallTotal=0;
+let maxTotal=0;
+let rows="";
+
+subjects.forEach(sub=>{
+let total=0;
+let maxMarks=exams.length*100;
+let row=`<tr><td>${sub.name}</td>`;
+
+exams.forEach(ex=>{
+let m=marks[ex.id+"_"+sub.id]||0;
+row+=`<td>${m}</td>`;
+total+=m;
+});
+
+const percent=((total/maxMarks)*100).toFixed(1);
+const g=grade(percent);
+
+overallTotal+=total;
+maxTotal+=maxMarks;
+
+row+=`<td>${total}</td><td>${maxMarks}</td><td>${percent}</td><td>${g}</td></tr>`;
+rows+=row;
+});
+
+const finalPercent=((overallTotal/maxTotal)*100).toFixed(1);
+const finalGrade=grade(finalPercent);
+const finalResult=finalPercent>=33?"PASS":"FAIL";
+
+let watermarkHTML="";
+if(watermark=="logo"){watermarkHTML=`<img class="watermark-logo" src="${schoolData.logo}">`;}
+if(watermark=="name"){watermarkHTML=`<div class="watermark-text">${schoolData.name}</div>`;}
+
+html+=`<div class="marksheet ${style}">${watermarkHTML} ... </div>`;
 }
 
-/* 🔥 hook */
-const oldGenerate = window.generateResults;
+document.getElementById("resultArea").innerHTML=html;
 
-window.generateResults = async function(){
-await oldGenerate();
-setTimeout(()=>autoFitAll(),500);
-};
+/* 🔥 AUTO PRINT */
+setTimeout(()=>{window.print();},500);
+
+}
+
+window.downloadPDF=function(){
+html2pdf(document.getElementById("resultArea"),{
+margin:5,
+filename:"result.pdf",
+html2canvas:{scale:2,useCORS:true},
+jsPDF:{unit:"mm",format:"a4"}
+});
+}
 
 </script>
 
 </body>
-</html>
+  </html>
